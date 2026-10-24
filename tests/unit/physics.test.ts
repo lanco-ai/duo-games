@@ -17,6 +17,7 @@ import {
   JUMP_KEY,
   GRAB,
   RIGHT,
+  LEFT,
 } from "../../shared/games/red-thread/sim";
 import * as bounce from "../../shared/games/heart-bounce/sim";
 function fixture(
@@ -123,6 +124,40 @@ describe("deterministic Q8 platform simulation", () => {
     expect(dx * dx + dy * dy).toBeLessThanOrEqual(89 * 89);
     for (let tick = 0; tick < 24; tick++) step(state, [GRAB, JUMP_KEY], level);
     expect(read(state).players[1].y).toBeLessThan(held.players[1].y - 8);
+  });
+  it("climbs at bounded speed without accumulating sideways acceleration", () => {
+    const level = createLevel("1"),
+      state = init(level);
+    for (let t = 0; t < 40; t++) step(state, [LEFT, LEFT], level);
+    for (let t = 0; t < 40; t++) step(state, [GRAB, RIGHT], level);
+    let climbingTicks = 0;
+    for (let t = 0; t < 25; t++) {
+      step(state, [GRAB, JUMP_KEY], level);
+      const p = read(state).players[1];
+      if (p.hanging) {
+        climbingTicks++;
+        expect(Math.hypot(p.vx, p.vy)).toBeLessThanOrEqual(1.01);
+      }
+    }
+    expect(climbingTicks).toBeGreaterThanOrEqual(8);
+  });
+  it("does not count two independent wall grips as mutual rescues", () => {
+    const level = fixture([], {
+      stamina: true,
+      spawn: [
+        { x: 21, y: 100 },
+        { x: 21, y: 188 },
+      ],
+    });
+    const state = init(level);
+    for (let t = 0; t < 60; t++) step(state, [GRAB, GRAB], level);
+    const v = read(state);
+    expect(v.players.map((p) => [p.x, p.y])).toEqual([
+      [21, 100],
+      [21, 188],
+    ]);
+    expect(v.players.every((p) => p.grabbing && !p.hanging)).toBe(true);
+    expect(v.rescues).toBe(0);
   });
   it("exhausts grip after four seconds and requires releasing before regripping", () => {
     const level = fixture([], { stamina: true }),

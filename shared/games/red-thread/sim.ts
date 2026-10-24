@@ -297,7 +297,7 @@ function updatePlayer(s: Int32Array, l: Level, seat: number, input: number) {
   const d = isqrt(dx * dx + dy * dy);
   const hanging =
     anchor &&
-    !(touching & GROUNDED) &&
+    !(s[at(seat, P.FLAGS)] & (GROUNDED | GRABBING)) &&
     (oldFlags & HANGING || d >= l.ropeLength * Q - Q);
   if (hanging) {
     s[at(seat, P.FLAGS)] |= HANGING;
@@ -331,7 +331,7 @@ function updatePlayer(s: Int32Array, l: Level, seat: number, input: number) {
     const climbing = hanging && input & JUMP_KEY && !pressed && d > 12 * Q;
     if (climbing) {
       // Inward velocity shortens the hanging distance; gravity pauses while holding jump.
-      s[at(seat, P.VX)] -= Math.trunc((dx * Q) / d);
+      s[at(seat, P.VX)] = -Math.trunc((dx * Q) / d);
       s[at(seat, P.VY)] = -Math.trunc((dy * Q) / d);
     } else s[at(seat, P.VY)] = Math.min(MAX_FALL, s[at(seat, P.VY)] + GRAVITY);
     if (s[at(seat, P.BUFFER)] && s[at(seat, P.COYOTE)]) {

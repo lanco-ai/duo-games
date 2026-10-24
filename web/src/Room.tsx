@@ -15,17 +15,11 @@ import {
   type TalkView,
   type Settings,
 } from "../../shared/protocol";
-import { api, BASE, profile, remember, roomLink } from "./api";
+import { api, BASE, profile, remember, roomLink, roomStorageKey } from "./api";
 import { Transport } from "./net/transport";
 import { Catalog, GameInfo } from "./ui/catalog";
-import {
-  Couple,
-  Modal,
-  ProfileForm,
-  copyText,
-  unlockSound,
-} from "./ui/common";
-import { Critter, GameIcon, Scene } from "./art/ui";
+import { Couple, Modal, ProfileForm, copyText, unlockSound } from "./ui/common";
+import { Critter, GameIcon, Scene, TetheredPair } from "./art/ui";
 import { Icon } from "./ui/icons";
 import { drawCritter, kindOf } from "./art/critter";
 import { chunkyText, cloud, rope, sky as paintSky } from "./art/paint";
@@ -42,7 +36,7 @@ type PublicRoom = {
 };
 export function Room({ code }: { code: string }) {
   const [token, setToken] = useState(
-      localStorage.getItem("duo.token." + code) || "",
+      localStorage.getItem(roomStorageKey("token." + code)) || "",
     ),
     [publicRoom, setPublicRoom] = useState<PublicRoom | null>(null),
     [room, setRoom] = useState<RoomView | null>(null),
@@ -114,7 +108,7 @@ export function Room({ code }: { code: string }) {
           setRoom(m.room);
           current.current = m.room;
           setGame(m.game);
-          localStorage.setItem("duo.lastRoom", code);
+          localStorage.setItem(roomStorageKey("lastRoom"), code);
         }
         if (m.t === "room") {
           setRoom(m.room);
@@ -132,7 +126,7 @@ export function Room({ code }: { code: string }) {
         }
         if (m.t === "evt") {
           if (m.e.type === "deleted") {
-            localStorage.removeItem("duo.token." + code);
+            localStorage.removeItem(roomStorageKey("token." + code));
             setFatal("房间已解散，愿下次相见还有新的故事。");
           } else if (m.e.type === "react") {
             setReaction(m.e.emoji);
@@ -170,10 +164,10 @@ export function Room({ code }: { code: string }) {
     if (
       room &&
       ["lobby", "waiting"].includes(room.phase) &&
-      sessionStorage.getItem("duo.propose." + code)
+      sessionStorage.getItem(roomStorageKey("propose." + code))
     ) {
-      const wanted = sessionStorage.getItem("duo.propose." + code)!;
-      sessionStorage.removeItem("duo.propose." + code);
+      const wanted = sessionStorage.getItem(roomStorageKey("propose." + code))!;
+      sessionStorage.removeItem(roomStorageKey("propose." + code));
       void send({ type: "propose", gameId: wanted });
     }
   }, [room?.phase]);
@@ -251,8 +245,7 @@ export function Room({ code }: { code: string }) {
     isPlaying = room && ["playing", "countdown", "paused"].includes(room.phase);
   const p0 = room?.profiles[0],
     p1 = room?.profiles[1] || null,
-    night =
-      !!isPlaying && ["talk-cards", "heartbeat"].includes(activeGame.id),
+    night = !!isPlaying && ["talk-cards", "heartbeat"].includes(activeGame.id),
     proposer = room?.proposal?.by;
   function saveResult() {
     if (!room?.result) return;
@@ -282,14 +275,18 @@ export function Room({ code }: { code: string }) {
     c.font = '30px "DuoLatin", "DuoDisplay", sans-serif';
     c.textAlign = "center";
     c.fillText(room.result.primary.label, 360, 300);
-    chunkyText(c, room.result.primary.value, 360, 400, 92, "#FF6B6B", "#7A1E2E");
+    chunkyText(
+      c,
+      room.result.primary.value,
+      360,
+      400,
+      92,
+      "#FF6B6B",
+      "#7A1E2E",
+    );
     c.fillStyle = "#6B4F3A";
     c.font = "28px sans-serif";
-    c.fillText(
-      room.profiles.map((p) => p?.nickname).join("  ♥  "),
-      360,
-      505,
-    );
+    c.fillText(room.profiles.map((p) => p?.nickname).join("  ♥  "), 360, 505);
     room.profiles.forEach((p, i) => {
       if (p)
         drawCritter(c, kindOf(p.avatar), p.color, 210 + i * 300, 790, 190, {
@@ -443,36 +440,19 @@ export function Room({ code }: { code: string }) {
           <section class="couple-stage">
             <div class="island">
               <div class="island-couple">
-                <Critter
-                  avatar={p0!.avatar}
-                  color={p0!.color}
-                  mood={p1 && room.online[0] ? "joy" : "normal"}
+                <TetheredPair
+                  left={p0!}
+                  right={p1}
                   size={96}
-                  class={"hop" + (room.online[0] ? "" : " offline")}
+                  mood={p1 ? "joy" : "normal"}
+                  leftOnline={room.online[0]}
+                  rightOnline={room.online[1]}
                 />
-                <svg
-                  class="pair-rope"
-                  viewBox="0 0 100 40"
-                  preserveAspectRatio="none"
-                  aria-hidden="true"
+                <span
+                  class={"rope-heart" + (p1 && partnerOnline ? " beat" : "")}
                 >
-                  <path d="M0,12 Q50,46 100,12" fill="none" stroke="#3A2618" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke" />
-                  <path d="M0,12 Q50,46 100,12" fill="none" stroke="#E8364F" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke" />
-                </svg>
-                <span class={"rope-heart" + (p1 && partnerOnline ? " beat" : "")}>
                   ♥
                 </span>
-                {p1 ? (
-                  <Critter
-                    avatar={p1.avatar}
-                    color={p1.color}
-                    mood={room.online[1] ? "joy" : "normal"}
-                    size={96}
-                    class={"hop late" + (room.online[1] ? "" : " offline")}
-                  />
-                ) : (
-                  <span class="ghost-critter">?</span>
-                )}
               </div>
               <div class="couple-names">
                 <span class="name-tag" style={{ "--player": p0!.color }}>
@@ -518,7 +498,10 @@ export function Room({ code }: { code: string }) {
             )}
             {room.phase === "proposed" && room.proposal && (
               <div
-                class={"proposal bubble " + (proposer === 0 ? "from-left" : "from-right")}
+                class={
+                  "proposal bubble " +
+                  (proposer === 0 ? "from-left" : "from-right")
+                }
                 role="status"
               >
                 <GameIcon id={activeGame.id} />
@@ -526,8 +509,7 @@ export function Room({ code }: { code: string }) {
                   {proposer === seat
                     ? "你"
                     : room.profiles[room.proposal.by]?.nickname}
-                  想玩「{activeGame.name}」
-                  {!p1 ? "，等 TA 来一起玩" : ""}
+                  想玩「{activeGame.name}」{!p1 ? "，等 TA 来一起玩" : ""}
                 </span>
                 <div class="proposal-buttons">
                   {proposer !== seat && (
@@ -671,7 +653,10 @@ export function Room({ code }: { code: string }) {
           {room.phase === "countdown" && (
             <div class="game-overlay countdown">
               <Couple left={p0!} right={p1} size={78} />
-              <strong class="count-number" key={countdown > 3 ? "ready" : countdown}>
+              <strong
+                class="count-number"
+                key={countdown > 3 ? "ready" : countdown}
+              >
                 {countdown > 3 ? "准备" : countdown}
               </strong>
               <p>两个人的时间，就要开始。</p>
@@ -941,9 +926,7 @@ export function Room({ code }: { code: string }) {
               (p, i) =>
                 p && (
                   <div
-                    class={
-                      "ready-status" + (room.ready[i] ? " is-ready" : "")
-                    }
+                    class={"ready-status" + (room.ready[i] ? " is-ready" : "")}
                   >
                     <Critter
                       avatar={p.avatar}
@@ -952,9 +935,7 @@ export function Room({ code }: { code: string }) {
                       size={58}
                     />
                     <b>{p.nickname}</b>
-                    <small>
-                      {room.ready[i] ? "✓ 已准备" : "… 还在看规则"}
-                    </small>
+                    <small>{room.ready[i] ? "✓ 已准备" : "… 还在看规则"}</small>
                   </div>
                 ),
             )}
@@ -1193,7 +1174,7 @@ export function Room({ code }: { code: string }) {
                   onClick={async () => {
                     try {
                       await api("rooms/" + code, "DELETE", undefined, token);
-                      localStorage.removeItem("duo.token." + code);
+                      localStorage.removeItem(roomStorageKey("token." + code));
                       setFatal("房间已解散");
                       setPanel("");
                     } catch (e) {

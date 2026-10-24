@@ -1,10 +1,10 @@
 import { useState } from "preact/hooks";
 import { ALPHABET, type Profile } from "../../shared/protocol";
 import type { GameMeta } from "../../shared/catalog";
-import { api, BASE, profile, remember, roomLink } from "./api";
+import { api, BASE, profile, remember, roomLink, roomStorageKey } from "./api";
 import { Catalog, GameInfo } from "./ui/catalog";
 import { Modal, ProfileForm, copyText } from "./ui/common";
-import { Critter, Logo, Scene } from "./art/ui";
+import { Critter, Logo, Scene, TetheredPair } from "./art/ui";
 import { Icon } from "./ui/icons";
 export function Home() {
   const [creating, setCreating] = useState(false),
@@ -16,8 +16,8 @@ export function Home() {
     [joining, setJoining] = useState(false),
     [privacy, setPrivacy] = useState(false),
     [toast, setToast] = useState("");
-  const last = localStorage.getItem("duo.lastRoom"),
-    back = last && localStorage.getItem("duo.token." + last),
+  const last = localStorage.getItem(roomStorageKey("lastRoom")),
+    back = last && localStorage.getItem(roomStorageKey("token." + last)),
     me = profile();
   async function create(p: Profile) {
     setBusy(true);
@@ -26,7 +26,10 @@ export function Home() {
       const data = await api("rooms", "POST", { profile: p });
       remember(data, p);
       if (wantGame)
-        sessionStorage.setItem("duo.propose." + data.code, wantGame);
+        sessionStorage.setItem(
+          roomStorageKey("propose." + data.code),
+          wantGame,
+        );
       location.assign(roomLink(data.code));
     } catch (e) {
       setError((e as Error).message);
@@ -53,18 +56,29 @@ export function Home() {
         </header>
         <div class="home-title">
           <svg class="rainbow" viewBox="0 0 200 110" aria-hidden="true">
-            {["#FF6B6B", "#FFA94D", "#FFE066", "#8CE99A", "#74C0FC", "#B197FC"].map(
-              (c, i) => (
-                <path
-                  d={`M${12 + i * 7},104 A${88 - i * 7},${88 - i * 7} 0 0 1 ${188 - i * 7},104`}
-                  fill="none"
-                  stroke={c}
-                  stroke-width="7.4"
-                />
-              ),
-            )}
+            {[
+              "#FF6B6B",
+              "#FFA94D",
+              "#FFE066",
+              "#8CE99A",
+              "#74C0FC",
+              "#B197FC",
+            ].map((c, i) => (
+              <path
+                d={`M${12 + i * 7},104 A${88 - i * 7},${88 - i * 7} 0 0 1 ${188 - i * 7},104`}
+                fill="none"
+                stroke={c}
+                stroke-width="7.4"
+              />
+            ))}
           </svg>
-          <Critter avatar="🐱" color="#FFC93C" mood="joy" size={58} class="rainbow-rider" />
+          <Critter
+            avatar="🐱"
+            color="#FFC93C"
+            mood="joy"
+            size={58}
+            class="rainbow-rider"
+          />
           <Logo />
           <h1 class="ribbon">和 TA 一起玩的小游戏</h1>
         </div>
@@ -138,23 +152,13 @@ export function Home() {
           </button>
         </nav>
         <div class="hero-couple" aria-hidden="true">
-          <Critter
-            avatar={me?.avatar || "🐰"}
-            color={me?.color || "#FF6B6B"}
-            mood="joy"
+          <TetheredPair
             size={84}
-            class="hop"
-          />
-          <svg class="pair-rope" viewBox="0 0 100 40" preserveAspectRatio="none">
-            <path d="M0,10 Q50,44 100,10" fill="none" stroke="#3A2618" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke" />
-            <path d="M0,10 Q50,44 100,10" fill="none" stroke="#E8364F" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke" />
-          </svg>
-          <Critter
-            avatar={me?.avatar === "🐻" ? "🐰" : "🐻"}
-            color={me?.color === "#4D9DFF" ? "#FF6B6B" : "#4D9DFF"}
-            mood="joy"
-            size={84}
-            class="hop late"
+            left={{ avatar: me?.avatar || "🐰", color: me?.color || "#FF6B6B" }}
+            right={{
+              avatar: me?.avatar === "🐻" ? "🐰" : "🐻",
+              color: me?.color === "#4D9DFF" ? "#FF6B6B" : "#4D9DFF",
+            }}
           />
         </div>
       </section>

@@ -6,7 +6,8 @@ import {
   type GameOptions,
 } from "./games/types";
 export type Seat = 0 | 1;
-export const VERSION = 2;
+// Physics changes require matching client and server simulations.
+export const VERSION = 3;
 export const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 export const AVATARS = ["🐰", "🐻", "🐱", "🐶", "🦊", "🐧"];
 export const COLORS = [

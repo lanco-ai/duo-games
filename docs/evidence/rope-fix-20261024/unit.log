@@ -1,0 +1,35 @@
+
+> duo-games@1.0.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v3.2.7 /root/duo-games
+
+ ✓ tests/unit/physics.test.ts (15 tests) 4309ms
+   ✓ deterministic Q8 platform simulation > runs 100000 seeded frames with equal hashes, finite integer state and bounded players  4222ms
+ ✓ tests/unit/climbing-course.test.ts (8 tests) 1900ms
+   ✓ complete red-thread climbing courses > course 2 reaches the bridge using only real two-player inputs  305ms
+   ✓ complete red-thread climbing courses > course 4 reaches the bridge using only real two-player inputs  315ms
+(node:619047) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/integration/server.test.ts (8 tests) 518ms
+(node:619067) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/unit/games.test.ts (30 tests) 329ms
+(node:619090) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/integration/private-content.test.ts (3 tests) 254ms
+ ✓ tests/unit/rollback.test.ts (5 tests) 243ms
+(node:619130) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/unit/platform.test.ts (11 tests) 39ms
+ ✓ tests/unit/canvas-point.test.ts (4 tests) 10ms
+ ✓ tests/unit/transport.test.ts (4 tests) 21ms
+ ✓ tests/unit/talk.test.ts (7 tests) 12ms
+ ✓ tests/unit/held-controls.test.ts (3 tests) 5ms
+
+ Test Files  11 passed (11)
+      Tests  98 passed (98)
+   Start at  02:12:50
+   Duration  13.68s (transform 875ms, setup 0ms, collect 1.73s, tests 7.64s, environment 4ms, prepare 1.58s)
+

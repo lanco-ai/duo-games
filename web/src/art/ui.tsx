@@ -34,6 +34,86 @@ export function Critter({
     />
   );
 }
+/** Characters and tether share one coordinate system and one animation. */
+export function TetheredPair({
+  left,
+  right,
+  size = 96,
+  mood = "joy",
+  leftOnline = true,
+  rightOnline = true,
+}: {
+  left: { avatar?: string; color: string };
+  right?: { avatar?: string; color: string } | null;
+  size?: number;
+  mood?: Mood;
+  leftOnline?: boolean;
+  rightOnline?: boolean;
+}) {
+  return (
+    <svg
+      class={
+        "tethered-pair" + (right && leftOnline && rightOnline ? " hop" : "")
+      }
+      width={(size * 248) / 108}
+      height={size}
+      viewBox="-4 -8 248 108"
+      aria-hidden="true"
+    >
+      <g class="pair-thread" opacity={right ? 1 : 0.45}>
+        <path
+          d="M50,78 Q120,100 190,78"
+          fill="none"
+          stroke={INK}
+          stroke-width="5"
+          stroke-linecap="round"
+        />
+        <path
+          d="M50,78 Q120,100 190,78"
+          fill="none"
+          stroke="#E8364F"
+          stroke-width="3"
+          stroke-linecap="round"
+        />
+      </g>
+      <g
+        data-pair-seat="0"
+        class={leftOnline ? "" : "offline"}
+        dangerouslySetInnerHTML={{
+          __html: critterSVG(kindOf(left.avatar), left.color, mood),
+        }}
+      />
+      {right ? (
+        <g
+          data-pair-seat="1"
+          transform="translate(140 0)"
+          class={rightOnline ? "" : "offline"}
+          dangerouslySetInnerHTML={{
+            __html: critterSVG(kindOf(right.avatar), right.color, mood),
+          }}
+        />
+      ) : (
+        <g transform="translate(140 0)">
+          <rect
+            x="23"
+            y="28"
+            width="54"
+            height="68"
+            rx="24"
+            fill="#FFF8E6"
+            fill-opacity=".6"
+            stroke={INK}
+            stroke-width="3"
+            stroke-dasharray="5 4"
+          />
+          <text x="50" y="76" text-anchor="middle" fill={INK} font-size="38">
+            ?
+          </text>
+        </g>
+      )}
+    </svg>
+  );
+}
 const CLOUD =
   "M24,52C12,52 6,44 9,36C11,29 18,27 23,29C24,18 34,11 45,13C52,6 66,6 73,15C82,11 95,16 96,28C105,29 112,36 110,44C108,50 103,52 97,52Z";
 export function Cloud({ class: cls = "" }: { class?: string }) {

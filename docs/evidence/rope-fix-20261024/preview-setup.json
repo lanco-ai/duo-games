@@ -1,0 +1,7 @@
+{
+  "release": "/opt/duo-games/previews/rope-fix-20261024",
+  "configurationBackup": "/var/backups/duo-games-preview/20261024T091525Z",
+  "service": "duo-games-preview.service",
+  "data": "/var/lib/duo-games-preview",
+  "url": "https://lancoai.site/duo-preview/"
+}

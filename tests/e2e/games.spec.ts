@@ -658,6 +658,27 @@ test("red-thread — two seats complete and rematch with 200ms delay", async ({
     await expect(one.locator(".couple-names")).toContainText("游戏验收乙");
     await start(one, two, "red-thread", "一线牵", { level: "endless" });
     await expect(one.getByLabel("一线牵攀登画面")).toBeVisible();
+    const lastInput = () => one.evaluate(async () => {
+      const w = window as any, code = w.observed.room.code;
+      const r = await fetch("/api/rooms/" + code + "/game-data?run=" + w.observed.game.run + "&kind=replay", {
+        headers: { Authorization: "Bearer " + localStorage.getItem("duo.token." + code) },
+      });
+      return (await r.json()).frames[0].at(-1)?.[1];
+    });
+    await one.keyboard.down("ArrowRight");
+    await one.keyboard.down("d");
+    await one.keyboard.up("d");
+    await expect.poll(lastInput).toBe(2);
+    await one.keyboard.up("ArrowRight");
+    await expect.poll(lastInput).toBe(0);
+    await one.keyboard.down("ArrowRight");
+    await expect.poll(lastInput).toBe(2);
+    await one.getByRole("button", { name: "💬 聊天", exact: true }).click();
+    await one.getByLabel("聊天内容", { exact: true }).focus();
+    await one.keyboard.up("ArrowRight");
+    await expect.poll(lastInput).toBe(0);
+    await one.getByRole("button", { name: "关闭", exact: true }).click();
+
     await one.keyboard.down("ArrowRight");
     await two.keyboard.down("ArrowRight");
     await one.waitForTimeout(2500);

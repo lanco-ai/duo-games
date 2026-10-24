@@ -39,8 +39,11 @@ try {
   const fonts = await one.evaluate(async () => {
     const chinese = await document.fonts.load('16px "DuoDisplay"', "二人世界");
     const latin = await document.fonts.load('16px "DuoLatin"', "Duo123");
-    return chinese.length > 0 && latin.length > 0 &&
-      [...chinese, ...latin].every((font) => font.status === "loaded");
+    return (
+      chinese.length > 0 &&
+      latin.length > 0 &&
+      [...chinese, ...latin].every((font) => font.status === "loaded")
+    );
   });
   expect(fonts).toBe(true);
   console.log("PASS: both bundled fonts loaded successfully");
@@ -57,10 +60,13 @@ try {
   const createResponse = await created;
   expect(createResponse.status()).toBe(201);
   await expect(one.getByText("等 TA 加入…")).toBeVisible();
-  credentials = await one.evaluate(() => {
-    const code = localStorage.getItem("duo.lastRoom");
-    return { code, token: localStorage.getItem("duo.token." + code) };
-  });
+  credentials = await one.evaluate(
+    (prefix) => {
+      const code = localStorage.getItem(prefix + "lastRoom");
+      return { code, token: localStorage.getItem(prefix + "token." + code) };
+    },
+    new URL(url).pathname === "/duo-preview/" ? "duo.preview." : "duo.",
+  );
   expect(credentials.code).toMatch(/^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$/);
   expect(credentials.token).toBeTruthy();
   await two.goto(one.url());
@@ -220,8 +226,9 @@ try {
   if (!credentials && hostPage && !hostPage.isClosed()) {
     credentials = await hostPage
       .evaluate(() => {
-        const code = localStorage.getItem("duo.lastRoom");
-        return { code, token: localStorage.getItem("duo.token." + code) };
+        const prefix = location.pathname.startsWith("/duo-preview/") ? "duo.preview." : "duo.";
+        const code = localStorage.getItem(prefix + "lastRoom");
+        return { code, token: localStorage.getItem(prefix + "token." + code) };
       })
       .catch(() => undefined);
   }

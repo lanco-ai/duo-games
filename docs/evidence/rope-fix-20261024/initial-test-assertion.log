@@ -1,0 +1,66 @@
+
+> duo-games@1.0.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v3.2.7 /root/duo-games
+
+ ❯ tests/unit/physics.test.ts (15 tests | 1 failed) 4257ms
+   ✓ deterministic Q8 platform simulation > uses corrected integer roots and never truncates a large Q8 product 3ms
+   ✓ deterministic Q8 platform simulation > runs 100000 seeded frames with equal hashes, finite integer state and bounded players  4158ms
+   ✓ deterministic Q8 platform simulation > lands, jumps with variable height, and never moves into solid walls 7ms
+   ✓ deterministic Q8 platform simulation > holds a falling partner, counts a rescue once and permits climbing 3ms
+   × deterministic Q8 platform simulation > climbs at bounded speed without accumulating sideways acceleration 23ms
+     → expected 10 to be greater than 10
+   ✓ deterministic Q8 platform simulation > does not count two independent wall grips as mutual rescues 3ms
+   ✓ deterministic Q8 platform simulation > exhausts grip after four seconds and requires releasing before regripping 8ms
+   ✓ deterministic Q8 platform simulation > uses one-way platforms from above, while permitting upward passage 4ms
+   ✓ deterministic Q8 platform simulation > breaks crumbling surfaces after 30 ticks and restores them 180 ticks later 13ms
+   ✓ deterministic Q8 platform simulation > activates a checkpoint and respawns both after a spike without erasing hearts 2ms
+   ✓ deterministic Q8 platform simulation > opens a latched gate only when both separate pressure plates are occupied 0ms
+   ✓ deterministic Q8 platform simulation > requires thirty grounded ticks from both characters on the bridge 2ms
+   ✓ deterministic Q8 platform simulation > has distinct full-size levels and seed-dependent endless chunks above the preview 22ms
+   ✓ heart bounce deterministic flights > has a descending serve and constructs legal hits with an >=0.8s handoff 5ms
+   ✓ heart bounce deterministic flights > reflects walls, applies seeded wind and rejects forged trajectories 1ms
+ ✓ tests/unit/climbing-course.test.ts (8 tests) 2120ms
+   ✓ complete red-thread climbing courses > course 1 reaches the bridge using only real two-player inputs  457ms
+   ✓ complete red-thread climbing courses > course 2 reaches the bridge using only real two-player inputs  410ms
+   ✓ complete red-thread climbing courses > course 4 reaches the bridge using only real two-player inputs  322ms
+(node:618663) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/integration/server.test.ts (8 tests) 583ms
+(node:618683) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/unit/games.test.ts (30 tests) 317ms
+ ✓ tests/unit/rollback.test.ts (5 tests) 272ms
+(node:618723) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/integration/private-content.test.ts (3 tests) 282ms
+(node:618743) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/unit/platform.test.ts (11 tests) 40ms
+ ✓ tests/unit/talk.test.ts (7 tests) 9ms
+ ✓ tests/unit/transport.test.ts (4 tests) 12ms
+ ✓ tests/unit/canvas-point.test.ts (4 tests) 22ms
+ ✓ tests/unit/held-controls.test.ts (3 tests) 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/physics.test.ts > deterministic Q8 platform simulation > climbs at bounded speed without accumulating sideways acceleration
+AssertionError: expected 10 to be greater than 10
+ ❯ tests/unit/physics.test.ts:142:27
+    140|       }
+    141|     }
+    142|     expect(climbingTicks).toBeGreaterThan(10);
+       |                           ^
+    143|   });
+    144|   it("does not count two independent wall grips as mutual rescues", ()…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 10 passed (11)
+      Tests  1 failed | 97 passed (98)
+   Start at  02:11:05
+   Duration  13.31s (transform 931ms, setup 0ms, collect 1.75s, tests 7.92s, environment 4ms, prepare 1.36s)
+

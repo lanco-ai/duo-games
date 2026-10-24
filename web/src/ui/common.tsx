@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { AVATARS, COLORS, type Profile } from "../../../shared/protocol";
-import { Critter } from "../art/ui";
+import { Critter, TetheredPair } from "../art/ui";
 import { KIND_NAMES, kindOf, type Mood } from "../art/critter";
 export function Modal({
   title,
@@ -140,18 +140,7 @@ export function Couple({
 }) {
   return (
     <div class="couple-pair" style={{ "--size": size + "px" }}>
-      <Critter avatar={left.avatar} color={left.color} mood={mood} size={size} class="hop" />
-      <svg class="pair-rope" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M0,8 Q50,40 100,8" fill="none" stroke="#3A2618" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke" />
-        <path d="M0,8 Q50,40 100,8" fill="none" stroke="#E8364F" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke" />
-      </svg>
-      {right ? (
-        <Critter avatar={right.avatar} color={right.color} mood={mood} size={size} class="hop late" />
-      ) : (
-        <span class="ghost-critter" style={{ width: size + "px", height: size + "px" }}>
-          ?
-        </span>
-      )}
+      <TetheredPair left={left} right={right} mood={mood} size={size} />
     </div>
   );
 }

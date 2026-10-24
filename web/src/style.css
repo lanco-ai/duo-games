@@ -770,14 +770,11 @@ dialog[open] .sheet {
   display: flex;
   align-items: flex-end;
 }
-.hero-couple .pair-rope,
-.couple-pair .pair-rope,
-.island-couple .pair-rope {
-  width: 54px;
-  height: 30px;
-  margin: 0 -14px 38px;
-  position: relative;
-  z-index: 0;
+.tethered-pair {
+  display: block;
+  overflow: visible;
+  flex: none;
+  max-width: 100%;
 }
 .critter {
   display: block;
@@ -1332,9 +1329,6 @@ dialog[open] .sheet {
   align-items: flex-end;
   justify-content: center;
   padding-bottom: 66px;
-}
-.island-couple .pair-rope {
-  width: 70px;
 }
 .rope-heart {
   position: absolute;
@@ -3573,3 +3567,14 @@ dialog[open] .sheet {
     transition: none !important;
   }
 }
+
+.preview-notice {
+  position: relative;
+  z-index: 10;
+  padding: 8px 12px;
+  text-align: center;
+  background: #fff3b0;
+  color: #3a2618;
+  font-size: 13px;
+}
+.preview-notice a { margin-left: 8px; text-decoration: underline; }

@@ -1,5 +1,8 @@
 import type { Profile } from "../../shared/protocol";
 export const BASE = import.meta.env.BASE_URL;
+export const IS_PREVIEW = BASE === "/duo-preview/";
+export const roomStorageKey = (suffix: string) =>
+  (IS_PREVIEW ? "duo.preview." : "duo.") + suffix;
 export async function api(
   path: string,
   method = "GET",
@@ -33,8 +36,8 @@ export function profile(): Profile | undefined {
   }
 }
 export function remember(data: { code: string; token: string }, p?: Profile) {
-  localStorage.setItem("duo.token." + data.code, data.token);
-  localStorage.setItem("duo.lastRoom", data.code);
+  localStorage.setItem(roomStorageKey("token." + data.code), data.token);
+  localStorage.setItem(roomStorageKey("lastRoom"), data.code);
   if (p) localStorage.setItem("duo.profile", JSON.stringify(p));
 }
 export function roomLink(code: string) {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { api } from "../api";
+import { HeldControls } from "./held-controls";
 import { RollbackSession, type Frame } from "../../../shared/rollback";
 import { createLevel } from "../../../shared/games/red-thread/levels";
 import * as sim from "../../../shared/games/red-thread/sim";
@@ -58,7 +59,7 @@ export default function RedThread(p: GameProps) {
     ),
     canvas = useRef<HTMLCanvasElement>(null),
     session = useRef<RollbackSession>(),
-    bits = useRef(0),
+    controls = useRef(new HeldControls()),
     current = useLatest(p),
     epoch = useRef(d.epoch),
     pending = useRef<Frame[]>([]),
@@ -114,7 +115,10 @@ export default function RedThread(p: GameProps) {
       ? 0.5 - 0.5 * Math.cos((state.height / 260) * Math.PI * 2)
       : Math.max(
           0,
-          Math.min(1, (spawnY - (top + H * 0.56)) / Math.max(1, spawnY - goalY)),
+          Math.min(
+            1,
+            (spawnY - (top + H * 0.56)) / Math.max(1, spawnY - goalY),
+          ),
         );
     const colors = skyAt(progress),
       g = ctx.createLinearGradient(0, 0, 0, H);
@@ -149,7 +153,13 @@ export default function RedThread(p: GameProps) {
       cloud(ctx, x, y, 64 + (i % 3) * 24, cloudAlpha * (i % 2 ? 0.85 : 1));
     }
     const groundY = (level.height - 2) * 16 - top;
-    hills(ctx, W, H * 0.56 - 40 + (groundY - H * 0.56) * 0.6, 70, progress > 0.7);
+    hills(
+      ctx,
+      W,
+      H * 0.56 - 40 + (groundY - H * 0.56) * 0.6,
+      70,
+      progress > 0.7,
+    );
     ctx.save();
     ctx.translate(0, -top);
     const y0 = Math.floor(top / 16) - 1,
@@ -219,7 +229,15 @@ export default function RedThread(p: GameProps) {
       ctx.fillStyle = "#8E5A31";
       for (let i = 0; i < 26; i++) {
         ctx.beginPath();
-        ctx.ellipse((i * 53) % W, soilTop + 10 + ((i * 37) % 90), 2, 1.4, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          (i * 53) % W,
+          soilTop + 10 + ((i * 37) % 90),
+          2,
+          1.4,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
     }
@@ -313,7 +331,15 @@ export default function RedThread(p: GameProps) {
     if (state.deathDelay) {
       ctx.fillStyle = "rgba(255,240,245,.55)";
       ctx.fillRect(0, 0, W, H);
-      chunkyText(ctx, "拉住你，再来一次！", W / 2, H * 0.42, 24, "#FF6B8B", "#7A1E2E");
+      chunkyText(
+        ctx,
+        "拉住你，再来一次！",
+        W / 2,
+        H * 0.42,
+        24,
+        "#FF6B8B",
+        "#7A1E2E",
+      );
     } else if (state.won)
       chunkyText(ctx, "鹊桥相会！", W / 2, H * 0.3, 34, "#FFD23F", "#8A3F0A");
   }
@@ -420,15 +446,15 @@ export default function RedThread(p: GameProps) {
     session.current = undefined;
     pending.current = [];
     buffer.current = [];
-    bits.current = 0;
+    controls.current.clear();
     void restore();
   }, [d.epoch]);
   useEffect(() => {
-    if (p.disabled) bits.current = 0;
+    if (p.disabled) controls.current.clear();
   }, [p.disabled]);
   useEffect(() => {
     const key = (e: KeyboardEvent, on: boolean) => {
-      if (typing(e.target)) return;
+      if (on && (typing(e.target) || current.current.disabled)) return;
       const b = (
         {
           ArrowLeft: 1,
@@ -448,19 +474,24 @@ export default function RedThread(p: GameProps) {
         } as Record<string, number>
       )[e.key];
       if (b) {
-        e.preventDefault();
-        bits.current = on ? bits.current | b : bits.current & ~b;
+        if (!typing(e.target)) e.preventDefault();
+        controls.current.key(e.code || e.key, b, on);
       }
     };
     const down = (e: KeyboardEvent) => key(e, true),
       up = (e: KeyboardEvent) => key(e, false),
       blur = () => {
-        bits.current = 0;
+        controls.current.clear();
       };
+    const focus = (e: FocusEvent) => {
+      if (typing(e.target)) controls.current.clear();
+    };
+    window.addEventListener("focusin", focus);
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     window.addEventListener("blur", blur);
     return () => {
+      window.removeEventListener("focusin", focus);
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
       window.removeEventListener("blur", blur);
@@ -479,7 +510,7 @@ export default function RedThread(p: GameProps) {
         0,
         Math.floor((p.transport.now() - d.startAt) * 0.06),
       );
-      s.advance(Math.min(target, s.tick + 120), bits.current);
+      s.advance(Math.min(target, s.tick + 120), controls.current.bits);
       if (time - lastFlush.current >= 30) {
         flush();
         lastFlush.current = time;
@@ -538,16 +569,16 @@ export default function RedThread(p: GameProps) {
       onPointerDown={(e) => {
         e.preventDefault();
         e.currentTarget.setPointerCapture(e.pointerId);
-        bits.current |= bit;
+        controls.current.pointer(e.pointerId, bit, true);
       }}
-      onPointerUp={() => {
-        bits.current &= ~bit;
+      onPointerUp={(e) => {
+        controls.current.pointer(e.pointerId, bit, false);
       }}
-      onPointerCancel={() => {
-        bits.current &= ~bit;
+      onPointerCancel={(e) => {
+        controls.current.pointer(e.pointerId, bit, false);
       }}
-      onLostPointerCapture={() => {
-        bits.current &= ~bit;
+      onLostPointerCapture={(e) => {
+        controls.current.pointer(e.pointerId, bit, false);
       }}
     >
       {content}
