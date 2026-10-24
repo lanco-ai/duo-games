@@ -1,0 +1,35 @@
+{
+  "name": "duo-games",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "dev:server": "tsx server/index.ts",
+    "build": "node scripts/build.mjs",
+    "start": "node --disable-warning=ExperimentalWarning dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "check:size": "node scripts/check-size.mjs",
+    "check:physics": "node scripts/check-physics.mjs"
+  },
+  "dependencies": {
+    "ws": "8.22.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/node": "22.19.15",
+    "@types/ws": "8.18.1",
+    "esbuild": "0.25.12",
+    "preact": "10.29.3",
+    "prettier": "3.6.2",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "vite": "6.4.5",
+    "vitest": "3.2.7"
+  }
+}

@@ -1,0 +1,12 @@
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+response.json: Protocol error (Network.getResponseBody): No resource with given identifier found
+Response body is not available for a response that was navigated away from. Read response.body() before triggering any navigation.
+    at /root/duo-games/scripts/check-deployment.mjs:45:38 {
+  log: [],
+  name: 'Error'
+}
+
+Node.js v22.23.2

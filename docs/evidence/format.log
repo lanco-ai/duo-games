@@ -1,0 +1,81 @@
+shared/catalog.ts 196ms (unchanged)
+shared/clock.ts 42ms (unchanged)
+shared/commit-reveal.ts 27ms
+shared/consent.ts 14ms
+shared/content/cards.ts 167ms (unchanged)
+shared/content/questions.ts 57ms
+shared/content/words.ts 86ms
+shared/fixed.ts 43ms
+shared/games/heart-bounce/sim.ts 125ms
+shared/games/heartbeat/chart.ts 26ms
+shared/games/puzzle-us/shape.ts 88ms
+shared/games/red-thread/constants.ts 19ms
+shared/games/red-thread/levels.ts 180ms
+shared/games/red-thread/sim.ts 260ms
+shared/games/talk-cards/rules.ts 83ms (unchanged)
+shared/games/types.ts 58ms
+shared/protocol.ts 69ms
+shared/rng.ts 18ms (unchanged)
+shared/rollback/index.ts 183ms
+shared/room.ts 28ms
+shared/text.ts 20ms
+shared/wire.ts 34ms
+server/games/action.ts 189ms
+server/games/base.ts 49ms
+server/games/conversation.ts 167ms
+server/games/draw.ts 137ms
+server/games/gomoku.ts 56ms
+server/games/heartbeat.ts 40ms
+server/games/index.ts 12ms
+server/games/maze.ts 58ms
+server/games/puzzle.ts 61ms
+server/images.ts 15ms
+server/index.ts 116ms
+server/ratelimit.ts 2ms (unchanged)
+server/rooms.ts 219ms
+server/store.ts 94ms
+web/src/api.ts 29ms (unchanged)
+web/src/app.tsx 18ms (unchanged)
+web/src/games/audio.tsx 117ms
+web/src/games/Bounce.tsx 122ms
+web/src/games/common.ts 22ms
+web/src/games/Draw.tsx 115ms
+web/src/games/drawing.ts 15ms
+web/src/games/ExtraStage.tsx 26ms
+web/src/games/Eyes.tsx 167ms
+web/src/games/Gomoku.tsx 80ms
+web/src/games/Heartbeat.tsx 79ms
+web/src/games/image.ts 41ms
+web/src/games/Know.tsx 95ms
+web/src/games/Mind.tsx 31ms
+web/src/games/Puzzle.tsx 198ms
+web/src/games/RedThread.tsx 222ms
+web/src/games/Setup.tsx 180ms
+web/src/games/Talk.tsx 61ms (unchanged)
+web/src/Home.tsx 103ms (unchanged)
+web/src/net/transport.ts 124ms
+web/src/Room.tsx 451ms
+web/src/style.css 587ms
+web/src/ui/catalog.tsx 41ms
+web/src/ui/common.tsx 49ms (unchanged)
+web/src/ui/Keepsakes.tsx 66ms
+tests/e2e/duo.spec.ts 134ms
+tests/e2e/games.spec.ts 286ms
+tests/integration/private-content.test.ts 80ms
+tests/integration/server.test.ts 114ms (unchanged)
+tests/unit/climbing-course.test.ts 86ms
+tests/unit/games.test.ts 271ms
+tests/unit/physics.test.ts 90ms
+tests/unit/platform.test.ts 57ms (unchanged)
+tests/unit/rollback.test.ts 21ms
+tests/unit/talk.test.ts 13ms (unchanged)
+tests/unit/transport.test.ts 27ms
+scripts/build.mjs 29ms (unchanged)
+scripts/check-deployment.mjs 74ms
+scripts/check-physics.mjs 5ms
+scripts/check-size.mjs 7ms
+scripts/check-subpath.mjs 35ms (unchanged)
+scripts/serve-e2e.mjs 4ms
+playwright.config.ts 4ms (unchanged)
+vite.config.ts 4ms
+vitest.config.ts 2ms (unchanged)

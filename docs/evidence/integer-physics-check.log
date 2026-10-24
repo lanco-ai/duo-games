@@ -1,0 +1,5 @@
+
+> duo-games@1.0.0 check:physics
+> node scripts/check-physics.mjs
+
+PASS integer simulation lint: no floating literals or forbidden Math calls

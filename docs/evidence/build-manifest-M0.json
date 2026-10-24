@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-23",
+  "node": "v22.23.2",
+  "basePath": "/",
+  "assets": [
+    {
+      "name": "Talk-C51FcM6p.js",
+      "bytes": 2216,
+      "gzipBytes": 1130,
+      "sha256": "ced09a30c849cc0f0aa518d72db0fb1176f1fd18d5834e60cbdba2a3b4672508"
+    },
+    {
+      "name": "index-De0Z3PNF.css",
+      "bytes": 26245,
+      "gzipBytes": 6898,
+      "sha256": "16819c40a4b9299cc15a7f091a3936a7f16a1ef9d33d8cae3f7485bb429a302b"
+    },
+    {
+      "name": "index-DiKjzoHO.js",
+      "bytes": 62777,
+      "gzipBytes": 24918,
+      "sha256": "097c72100977fd886ec5fcfd906bcc85adb9c9d8c84a8baa731d61296d83e231"
+    }
+  ],
+  "server": {
+    "bytes": 63235,
+    "sha256": "7bf69a4e231242dbfd7993395975db1a2c15b8e1a6c7591b95bfd6d4990af003"
+  },
+  "productionDependencies": {
+    "ws": "8.22.0"
+  }
+}

@@ -1,0 +1,39 @@
+[Unit]
+Description=Duo Games
+After=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=duo-games
+Group=duo-games
+WorkingDirectory=/opt/duo-games/current
+# Relative entrypoint resolves inside the real release directory. This also
+# keeps the server's direct-execution check valid when current is a symlink.
+ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning server.js
+Environment=NODE_ENV=production
+Environment=PORT=8790
+Environment=BASE_PATH=/duo/
+Environment=DATA_DIR=/var/lib/duo-games
+Environment=TRUST_PROXY=1
+StateDirectory=duo-games
+StateDirectoryMode=0700
+UMask=0077
+Restart=always
+RestartSec=3
+TimeoutStopSec=20
+MemoryMax=200M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

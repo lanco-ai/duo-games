@@ -1,0 +1,10 @@
+node_modules/
+dist/
+data/
+playwright-report/
+test-results/
+*.log
+.env
+
+!docs/evidence/*.log
+!docs/evidence/**/*.log

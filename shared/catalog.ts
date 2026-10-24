@@ -1,0 +1,190 @@
+export interface GameMeta {
+  id: string;
+  name: string;
+  emoji: string;
+  tagline: string;
+  intro: string;
+  rules: string[];
+  tags: string[];
+  duration: string;
+  net: string;
+  gradient: string;
+  milestone: string;
+}
+export const games: GameMeta[] = [
+  {
+    id: "talk-cards",
+    name: "深夜聊天卡",
+    emoji: "🌙",
+    tagline: "抽一张卡，聊一个平时不会问的问题",
+    intro:
+      "四套卡组：轻松、走心、未来、小挑战。轮流抽卡，被问到的人认真回答；喜欢的卡可以收藏，想留下的回答可以写进你们的问答本。这里没有输赢，只有更懂彼此。",
+    rules: [
+      "选好卡组，轮到谁，谁来抽卡",
+      "两边同时翻开；问题问对方，小挑战由抽卡人完成",
+      "聊完点「下一张」，换对方抽",
+    ],
+    tags: ["默契"],
+    duration: "不限",
+    net: "延迟友好",
+    gradient: "#3B3F8C,#1E2140",
+    milestone: "M0",
+  },
+  {
+    id: "draw-guess",
+    name: "你画我猜",
+    emoji: "🎨",
+    tagline: "你画 TA 猜，画得越抽象笑得越大声",
+    intro:
+      "两人轮流当画手。猜中了，两个人一起得分。词库里藏着恋爱专属词，也可以写下只有你们才懂的回忆词。",
+    rules: [
+      "轮流当画手，从三个词里挑一个",
+      "80 秒内画出来，TA 来猜",
+      "猜中一起得分，越快分越高",
+    ],
+    tags: ["合作"],
+    duration: "10 分钟",
+    net: "延迟友好",
+    gradient: "#FFB86B,#FF6B6B",
+    milestone: "M1",
+  },
+  {
+    id: "mind-meld",
+    name: "心有灵犀",
+    emoji: "🔮",
+    tagline: "同时说一个词，直到你们说出同一个",
+    intro:
+      "从两个不同的词出发，一起寻找它们的联系。海和猫，也许会在鱼这里相遇。",
+    rules: [
+      "各自写一个词，同时揭晓",
+      "想一个和上轮两个词都有关的词",
+      "写出同一个词就成功",
+    ],
+    tags: ["默契"],
+    duration: "5 分钟",
+    net: "延迟友好",
+    gradient: "#B79BFF,#7B5CFF",
+    milestone: "M1",
+  },
+  {
+    id: "know-me",
+    name: "你懂我吗",
+    emoji: "💌",
+    tagline: "TA 最爱吃什么？最怕什么？答错了要解释哦",
+    intro: "主角如实回答，另一半来猜。猜错了正好聊一聊：原来你是这么想的。",
+    rules: [
+      "轮流当主角，回答自己的情况",
+      "另一半猜，双方都交了再揭晓",
+      "看看你们的默契指数",
+    ],
+    tags: ["默契"],
+    duration: "8 分钟",
+    net: "延迟友好",
+    gradient: "#FF9AB5,#FF4D6A",
+    milestone: "M1",
+  },
+  {
+    id: "gomoku",
+    name: "爱心五子棋",
+    emoji: "♟️",
+    tagline: "五子连珠，输的人请奶茶",
+    intro: "经典五子棋，配上一点小赌约。想悔棋得 TA 同意，让不让就看感情啦。",
+    rules: [
+      "轮流在棋盘上落子",
+      "横、竖、斜五子连成线就赢",
+      "悔棋和求和都需要 TA 同意",
+    ],
+    tags: ["较量"],
+    duration: "10 分钟",
+    net: "延迟友好",
+    gradient: "#8FD3C7,#2EC4A6",
+    milestone: "M1",
+  },
+  {
+    id: "red-thread",
+    name: "一线牵",
+    emoji: "🧶",
+    tagline: "一根红线绑住你们，一个掉下去，另一个得拉住",
+    intro:
+      "月老的红线把你们绑在一起，向上爬，到鹊桥上相会。喊出来，等一等，拉一把。",
+    rules: [
+      "左右移动、跳跃，按住「抓」成为锚点",
+      "用红线互相拉住，一起向上爬",
+      "两人都站上鹊桥就过关",
+    ],
+    tags: ["合作", "动作"],
+    duration: "15 分钟",
+    net: "需稳定网络",
+    gradient: "#FF7A7A,#D7263D",
+    milestone: "M2",
+  },
+  {
+    id: "my-eyes",
+    name: "你是我的眼",
+    emoji: "🔦",
+    tagline: "一个看得见地图，一个走在迷雾里",
+    intro: "一个看地图指挥，一个在迷雾中前进。放心把方向交给 TA。",
+    rules: [
+      "引路人看全图，行者看附近",
+      "靠信号和语音配合，拿钥匙找出口",
+      "每一关交换身份",
+    ],
+    tags: ["合作"],
+    duration: "10 分钟",
+    net: "延迟友好",
+    gradient: "#5A6378,#2B2F3F",
+    milestone: "M3",
+  },
+  {
+    id: "heart-bounce",
+    name: "颠颠爱心",
+    emoji: "💗",
+    tagline: "轮流把爱心颠起来，别让它落地",
+    intro: "同一个人不能连续接两次。把这一颗小爱心，好好交到 TA 手里。",
+    rules: [
+      "爱心亮谁的颜色，就轮到谁接",
+      "移动小托盘，轮流把爱心颠起来",
+      "落地三次结束，看看最高连击",
+    ],
+    tags: ["合作", "动作"],
+    duration: "5 分钟",
+    net: "一般网络即可",
+    gradient: "#FFD36E,#FF9A3C",
+    milestone: "M3",
+  },
+  {
+    id: "puzzle-us",
+    name: "拼出我们",
+    emoji: "🧩",
+    tagline: "用你们的合照做拼图，一起拼回来",
+    intro: "从一张合照出发，两个人在同一张桌子上，把记忆一点点拼回来。",
+    rules: [
+      "选图片和拼图块数",
+      "一起拖动拼图块，靠近就会吸附",
+      "完成的照片留在你们的画廊",
+    ],
+    tags: ["合作"],
+    duration: "15 分钟",
+    net: "延迟友好",
+    gradient: "#8EC5FF,#4D7CFF",
+    milestone: "M4",
+  },
+  {
+    id: "heartbeat",
+    name: "心跳节拍",
+    emoji: "🎶",
+    tagline: "跟着节拍一起点，你们的心跳同步了吗",
+    intro:
+      "在各自的节奏里，寻找一起合拍的瞬间。坐在一起时，记得只开一台的声音。",
+    rules: [
+      "先做一次简单的节拍校准",
+      "跟着音乐，点击左右两条轨道",
+      "一起点中爱心，看看同步率",
+    ],
+    tags: ["默契", "动作"],
+    duration: "3 分钟",
+    net: "延迟友好",
+    gradient: "#FF6FB5,#9B3CFF",
+    milestone: "M4",
+  },
+];

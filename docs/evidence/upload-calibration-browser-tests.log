@@ -1,0 +1,15 @@
+
+> duo-games@1.0.0 test:e2e
+> playwright test tests/e2e/games.spec.ts --grep puzzle-us|heartbeat
+
+[WebServer] (node:549250) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:549258) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/e2e/games.spec.ts:493:1 › puzzle-us — two seats complete and rematch with 200ms delay (1.3m)
+  ✓  2 tests/e2e/games.spec.ts:699:1 › heartbeat — two seats complete and rematch with 200ms delay (1.7m)
+
+  2 passed (3.1m)

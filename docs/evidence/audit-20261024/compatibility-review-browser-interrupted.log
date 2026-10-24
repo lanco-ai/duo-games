@@ -1,0 +1,61 @@
+
+> duo-games@1.0.0 test:e2e
+> playwright test
+
+[WebServer] (node:598117) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 14 tests using 1 worker
+
+(node:598125) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/e2e/duo.spec.ts:44:1 › two-person flow, synced cards, answers, favorites, conflict, results and replay (1.0m)
+  ✓   2 tests/e2e/duo.spec.ts:136:1 › 300ms bidirectional delay with jitter: chat, full game, replay, refresh and takeover (1.4m)
+  ✘   3 tests/e2e/duo.spec.ts:193:1 › actual 30-second offline interruption restores the same card on both phones (19.7s)
+
+
+  1) tests/e2e/duo.spec.ts:193:1 › actual 30-second offline interruption restores the same card on both phones 
+
+    Test was interrupted.
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: 'TA 掉线了，等 TA 回来…' })
+    Expected: visible
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('heading', { name: 'TA 掉线了，等 TA 回来…' }) with timeout 16000ms
+      - waiting for getByRole('heading', { name: 'TA 掉线了，等 TA 回来…' })
+      - Test ended.
+
+
+      201 |   await expect(
+      202 |     one.getByRole("heading", { name: "TA 掉线了，等 TA 回来…" }),
+    > 203 |   ).toBeVisible({ timeout: 16000 });
+          |     ^
+      204 |   await new Promise((r) => setTimeout(r, 30000));
+      205 |   await b.setOffline(false);
+      206 |   await expect(two.locator(".game-overlay")).toBeHidden({ timeout: 20000 });
+        at /root/duo-games/tests/e2e/duo.spec.ts:203:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/duo-actual-30-second-offli-34215-he-same-card-on-both-phones/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/duo-actual-30-second-offli-34215-he-same-card-on-both-phones/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/duo-actual-30-second-offli-34215-he-same-card-on-both-phones/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/duo-actual-30-second-offli-34215-he-same-card-on-both-phones/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 interrupted
+    tests/e2e/duo.spec.ts:193:1 › actual 30-second offline interruption restores the same card on both phones 
+  11 did not run
+  2 passed (2.9m)

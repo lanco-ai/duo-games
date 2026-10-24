@@ -1,0 +1,3 @@
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+PASS release switched and local protocol v2 health: /opt/duo-games/releases/20261023T115820Z

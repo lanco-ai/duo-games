@@ -1,0 +1,12 @@
+{
+  "preparedAt": "2026-10-23T11:58:21.058Z",
+  "release": "/opt/duo-games/releases/20261023T115820Z",
+  "previous": "/opt/duo-games/releases/20261023T103156Z",
+  "backup": "/var/backups/duo-games/20261023T115820Z",
+  "preReleaseCounts": {
+    "rooms": 1,
+    "journal": 0,
+    "matches": 1
+  },
+  "deployedAt": "2026-10-23T11:58:51.667Z"
+}

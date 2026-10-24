@@ -1,0 +1,29 @@
+
+> duo-games@1.0.0 test:e2e
+> playwright test
+
+[WebServer] (node:598550) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 14 tests using 1 worker
+
+(node:598558) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/e2e/duo.spec.ts:44:1 › two-person flow, synced cards, answers, favorites, conflict, results and replay (57.9s)
+  ✓   2 tests/e2e/duo.spec.ts:136:1 › 300ms bidirectional delay with jitter: chat, full game, replay, refresh and takeover (1.4m)
+  ✓   3 tests/e2e/duo.spec.ts:193:1 › actual 30-second offline interruption restores the same card on both phones (1.2m)
+  ✓   4 tests/e2e/duo.spec.ts:213:1 › desktop and smallest mobile layouts, categories and playable game descriptions (5.0s)
+  ✓   5 tests/e2e/duo.spec.ts:247:1 › 200ms delay at 360×640, clipboard fallback and high-delay terminal takeover (40.3s)
+  ✓   6 tests/e2e/games.spec.ts:178:1 › mind-meld — two seats complete and rematch with 200ms delay (31.9s)
+  ✓   7 tests/e2e/games.spec.ts:228:1 › gomoku — two seats complete and rematch with 200ms delay (30.4s)
+  ✓   8 tests/e2e/games.spec.ts:275:1 › draw-guess — two seats complete and rematch with 200ms delay (1.7m)
+  ✓   9 tests/e2e/games.spec.ts:379:1 › know-me — two seats complete and rematch with 200ms delay (47.8s)
+  ✓  10 tests/e2e/games.spec.ts:454:1 › my-eyes — two seats complete and rematch with 200ms delay (1.3m)
+  ✓  11 tests/e2e/games.spec.ts:538:1 › puzzle-us — two seats complete and rematch with 200ms delay (1.3m)
+  ✓  12 tests/e2e/games.spec.ts:636:1 › red-thread — two seats complete and rematch with 200ms delay (52.9s)
+  ✓  13 tests/e2e/games.spec.ts:709:1 › heart-bounce — two seats complete and rematch with 200ms delay (30.3s)
+  ✓  14 tests/e2e/games.spec.ts:752:1 › heartbeat — two seats complete and rematch with 200ms delay (2.0m)
+
+  Slow test file: tests/e2e/games.spec.ts (9.6m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  14 passed (13.9m)

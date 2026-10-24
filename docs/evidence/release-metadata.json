@@ -1,0 +1,8 @@
+{
+  "observedAt": "2026-10-24T02:03:18.246922+00:00",
+  "deployedAt": "2026-10-23T14:08:06Z",
+  "release": "/opt/duo-games/releases/20261023T140722Z",
+  "previous": "/opt/duo-games/releases/20261023T115820Z",
+  "backup": "/var/backups/duo-games/20261023T140722Z",
+  "sourceCommit": null
+}

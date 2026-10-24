@@ -1,0 +1,80 @@
+# 二人世界 · 十款双人游戏
+
+两个人在各自的手机或电脑上，一起玩聊天卡、画画猜词、默契问答、五子棋、红线攀登、迷宫、颠爱心、拼图和节奏游戏。十款游戏都已接入房间、同步、结算与再来一局。
+
+界面采用卡通场景、小动物角色和本地字体。改造说明见 [TOON-REDESIGN.md](docs/TOON-REDESIGN.md)，本次独立审核和回归记录见 [AUDIT-20261024.md](docs/AUDIT-20261024.md)。
+
+已部署：[打开二人世界](https://lancoai.site/duo/)。一人创建房间，把邀请链接发给另一人即可。部署、维护及回退说明见 [DEPLOYMENT.md](DEPLOYMENT.md)。
+
+## 本地运行
+
+需要 Node.js 22.13+（本次使用 22.23.2）。
+
+```bash
+npm ci
+npm run build
+npm start
+```
+
+访问 `http://127.0.0.1:8790/`。两个独立浏览器配置或无痕窗口分别建房、加入，即可体验双人流程。服务默认只监听 127.0.0.1；同一浏览器里的同一房间凭证只有一个页面能保持在线。
+
+开发时分别执行 `npm run dev:server` 和 `npm run dev`，访问 Vite 提供的本机地址。
+
+## 已实现
+
+- 首页、邀请加入页、大厅、简介和设置、准备与倒计时、游戏内通用界面、结算、双方确认再来一局。
+- 6 位房间码、两个固定座位、随机凭证、单座位连接接管、一次性换设备链接、解散与 30 天过期清理。
+- 服务器权威状态机、200 个动作 ID 去重、状态版本校验、断线暂停 60 秒、重连恢复、心跳和时钟同步。
+- 聊天、表情、网络延迟、声音开关、剪贴板降级、保存结算图片、轻量调试信息。
+- 深夜聊天卡四套卡组，每套 40 张；轮流抽卡、同时翻牌、下一张与跳过、独立收藏、问答本、已聊卡片去重。
+- SQLite 保存房间资料、凭证摘要、收藏、已聊卡片、问答本和结果。正在进行的对局只放内存；进程重启后回大厅并提示。
+
+- 其余九款：420 个画词、150 道默契题；四个攀登关卡与无尽模式；六关角色互换迷宫；双人交替接球；24/48/96/150 块拼图及私有照片上传；三首 Web Audio 生成音乐和设备校准。
+- 画廊保存笔画回放、灵犀链和完成的拼图，支持 PNG 与长按保存；战绩、自定义回忆词/题目和双方确认的小约定。
+- 未揭晓答案、画手谜底、行者地图均按座位裁剪。图片、图库、重连日志通过房间凭证读取，上传总量每房间最多 20 MiB。
+
+## 配置
+
+| 变量 | 默认值 | 用途 |
+|---|---|---|
+| `PORT` | `8790` | HTTP 和 WebSocket 共用端口 |
+| `BASE_PATH` | `/` | 路径前缀；构建和运行时必须一致，如 `/duo/` |
+| `DATA_DIR` | `./data` | SQLite 数据目录 |
+| `DUO_LAG_MS` | `0` | 服务端每个方向的人工消息延迟，毫秒 |
+| `TRUST_PROXY` | `0` | 仅当可信反向代理覆盖 `X-Real-IP` 时设为 `1` |
+
+子路径构建及运行：
+
+```bash
+BASE_PATH=/duo/ npm run build
+BASE_PATH=/duo/ DATA_DIR=./data npm start
+```
+
+WebSocket 使用第一帧 `hello` 鉴权；HTTP 私密接口使用 `Authorization: Bearer`。普通邀请 URL 不含凭证。换设备链接的短期秘密放在 URL fragment，仅使用一次，10 分钟后失效。
+
+`?lag=300&jitter=40` 在浏览器传输层的收、发两端注入延迟，并保持消息顺序。两台浏览器需各自带上参数。`?debug=1` 显示 RTT、时钟偏差、双人延迟与状态版本。一线牵会显示实际回滚次数、最大深度、冻结次数和输入延迟。
+
+## 验证
+
+```bash
+npm run typecheck
+npm test
+npm run build
+npm run check:size
+node scripts/check-physics.mjs
+node --disable-warning=ExperimentalWarning scripts/check-subpath.mjs
+npx playwright install chromium --only-shell
+npm run test:e2e
+```
+
+测试单进程串行运行。E2E 使用独立临时 SQLite 目录及 8791 端口，不触碰日常数据。测试结果和设备验证限制见 [DELIVERY.md](DELIVERY.md)，截图在 `docs/evidence/`。
+
+## 生产部署
+
+用户随后明确授权部署，已在现有 VPS 的 `https://lancoai.site/duo/` 上线。`duo-games.service` 以独立非 root 用户运行并开机自启；程序位于 `/opt/duo-games/current`，数据位于 `/var/lib/duo-games`。nginx 转发 `/duo/` 的 HTTP 和 WebSocket。
+
+生产运行只依赖 `ws`；其余包都用于构建或开发。`dist/server.js` 和 `dist/web/` 是构建产物，配合仅生产依赖即可运行。已设置 `MemoryMax=200M`。生产构建使用 `BASE_PATH=/duo/`；本地运行根路径时重新执行不带该变量的 `npm run build`。
+
+现有 443 SNI 代理隐藏访客 IP，因此公网建房额度合并计算：初始 10 次，此后每 6 分钟补充 1 次，上限 10 次。nginx 的 30 请求/秒和 100 连接限制也在这个入口合并计算；此限制及后续独立入口建议详见部署说明。
+
+日志不输出房间凭证、聊天内容和回答。浏览器里的凭证等同房间钥匙；没有账号找回服务。已经清空浏览器数据且没有原设备换设备链接时，无法恢复原座位。

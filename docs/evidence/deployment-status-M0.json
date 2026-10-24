@@ -1,0 +1,61 @@
+{
+  "checkedAt": "2026-10-23T10:37:00.032486+00:00",
+  "checks": [
+    {
+      "command": [
+        "nginx",
+        "-t"
+      ],
+      "exitCode": 0,
+      "output": "nginx: the configuration file /etc/nginx/nginx.conf syntax is ok\nnginx: configuration file /etc/nginx/nginx.conf test is successful\n"
+    },
+    {
+      "command": [
+        "systemctl",
+        "is-enabled",
+        "duo-games.service"
+      ],
+      "exitCode": 0,
+      "output": "enabled\n"
+    },
+    {
+      "command": [
+        "systemctl",
+        "show",
+        "duo-games.service",
+        "-p",
+        "ActiveState",
+        "-p",
+        "SubState",
+        "-p",
+        "NRestarts",
+        "-p",
+        "MemoryCurrent",
+        "-p",
+        "MemoryPeak"
+      ],
+      "exitCode": 0,
+      "output": "NRestarts=0\nMemoryCurrent=5373952\nMemoryPeak=28213248\nActiveState=active\nSubState=running\n"
+    },
+    {
+      "command": [
+        "curl",
+        "--fail",
+        "-sS",
+        "https://lancoai.site/duo/api/health"
+      ],
+      "exitCode": 0,
+      "output": "{\"ok\":true,\"version\":1}"
+    },
+    {
+      "command": [
+        "diff",
+        "-u",
+        "/var/backups/duo-games/20261023T103240Z/hysteria-panel-https.conf",
+        "/etc/nginx/sites-available/hysteria-panel-https.conf"
+      ],
+      "exitCode": 1,
+      "output": "--- /var/backups/duo-games/20261023T103240Z/hysteria-panel-https.conf\t2026-10-15 02:53:37.311028466 -0700\n+++ /etc/nginx/sites-available/hysteria-panel-https.conf\t2026-10-23 03:32:40.749212489 -0700\n@@ -6,6 +6,7 @@\n     listen 8445 ssl;\n     listen [::]:8445 ssl;\n     server_name lancoai.site;\n+    include /etc/nginx/snippets/duo-games.conf;\n     if ($host != \"lancoai.site\") { return 421; }\n     # TLS may arrive through the public 443 stream proxy. The listener port\n     # then differs from the browser's origin; recover its port from Host.\n"
+    }
+  ]
+}

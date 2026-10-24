@@ -1,0 +1,62 @@
+
+> duo-games@0.1.0 test:e2e
+> playwright test
+
+[WebServer] (node:539167) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 5 tests using 1 worker
+
+(node:539181) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/e2e/duo.spec.ts:44:1 › two-person flow, synced cards, answers, favorites, conflict, results and replay (30.1s)
+  ✓  2 tests/e2e/duo.spec.ts:136:1 › 300ms bidirectional delay with jitter: chat, full game, replay, refresh and takeover (56.7s)
+  ✓  3 tests/e2e/duo.spec.ts:193:1 › actual 30-second offline interruption restores the same card on both phones (56.0s)
+  ✓  4 tests/e2e/duo.spec.ts:213:1 › desktop and smallest mobile layouts, categories and coming-soon game descriptions (4.6s)
+  ✘  5 tests/e2e/duo.spec.ts:245:1 › 200ms delay at 360×640, clipboard fallback and high-delay terminal takeover (25.9s)
+
+
+  1) tests/e2e/duo.spec.ts:245:1 › 200ms delay at 360×640, clipboard fallback and high-delay terminal takeover 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('button', { name: '了解深夜聊天卡' })
+    Expected: visible
+    Timeout: 12000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('button', { name: '了解深夜聊天卡' }) with timeout 12000ms
+      - waiting for getByRole('button', { name: '了解深夜聊天卡' })
+
+
+      286 |   await expect(
+      287 |     one.getByRole("button", { name: "了解深夜聊天卡" }),
+    > 288 |   ).toBeVisible();
+          |     ^
+      289 |   const replacement = await a.newPage();
+      290 |   await replacement.goto(url.replace("lag=200", "lag=600"));
+      291 |   await expect(
+        at /root/duo-games/tests/e2e/duo.spec.ts:288:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/duo-200ms-delay-at-360×640-d034c-igh-delay-terminal-takeover/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/duo-200ms-delay-at-360×640-d034c-igh-delay-terminal-takeover/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/duo-200ms-delay-at-360×640-d034c-igh-delay-terminal-takeover/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/duo-200ms-delay-at-360×640-d034c-igh-delay-terminal-takeover/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/duo-200ms-delay-at-360×640-d034c-igh-delay-terminal-takeover/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    tests/e2e/duo.spec.ts:245:1 › 200ms delay at 360×640, clipboard fallback and high-delay terminal takeover 
+  4 passed (3.0m)

@@ -1,0 +1,60 @@
+
+> duo-games@1.0.0 build
+> node scripts/build.mjs
+
+vite v6.4.5 building for production...
+transforming...
+✓ 51 modules transformed.
+rendering chunks...
+computing gzip size...
+../dist/web/index.html                          0.77 kB │ gzip:  0.55 kB
+../dist/web/.vite/manifest.json                 4.90 kB │ gzip:  0.89 kB
+../dist/web/assets/duo-latin-DbkqiAMW.woff2    10.87 kB
+../dist/web/assets/duo-display-U6_xhmX_.woff2  71.30 kB
+../dist/web/assets/index-CncpICNV.css          57.44 kB │ gzip: 12.96 kB
+../dist/web/assets/fixed-D1HkMovf.js            0.37 kB │ gzip:  0.29 kB
+../dist/web/assets/canvas-point-B4qk3snw.js     0.49 kB │ gzip:  0.30 kB
+../dist/web/assets/drawing-DpENBSop.js          0.66 kB │ gzip:  0.39 kB
+../dist/web/assets/common-DGeZs7rB.js           0.75 kB │ gzip:  0.46 kB
+../dist/web/assets/image-Q8PH7OPI.js            0.77 kB │ gzip:  0.54 kB
+../dist/web/assets/ExtraStage-CEqD9NBO.js       1.59 kB │ gzip:  0.72 kB
+../dist/web/assets/Talk-Cn_HgVmp.js             2.47 kB │ gzip:  1.23 kB
+../dist/web/assets/Mind-CKj5GsN8.js             2.99 kB │ gzip:  1.51 kB
+../dist/web/assets/audio-OreH7s5s.js            3.01 kB │ gzip:  1.64 kB
+../dist/web/assets/Gomoku-Bg2Ganj_.js           3.15 kB │ gzip:  1.48 kB
+../dist/web/assets/Know-CLmRxhJW.js             3.73 kB │ gzip:  1.90 kB
+../dist/web/assets/Setup-B6oozpBo.js            4.80 kB │ gzip:  2.63 kB
+../dist/web/assets/Eyes-CkGZlmII.js             4.88 kB │ gzip:  2.43 kB
+../dist/web/assets/Draw-BKTSEA-p.js             5.74 kB │ gzip:  2.68 kB
+../dist/web/assets/Bounce-Dj1s49Yo.js           6.61 kB │ gzip:  3.22 kB
+../dist/web/assets/Heartbeat-Dd84DFvB.js        7.07 kB │ gzip:  3.40 kB
+../dist/web/assets/Keepsakes-CI79ehn4.js        7.36 kB │ gzip:  3.51 kB
+../dist/web/assets/Puzzle-DIbDzTnQ.js           9.05 kB │ gzip:  4.02 kB
+../dist/web/assets/RedThread-4xfGazeD.js       24.33 kB │ gzip: 10.37 kB
+../dist/web/assets/index-DjyxsvfA.js           96.17 kB │ gzip: 37.76 kB
+✓ built in 3.53s
+
+> duo-games@1.0.0 check:size
+> node scripts/check-size.mjs
+
+assets/audio-OreH7s5s.js: 1.60 KiB gzip
+assets/canvas-point-B4qk3snw.js: 0.30 KiB gzip
+assets/common-DGeZs7rB.js: 0.44 KiB gzip
+assets/drawing-DpENBSop.js: 0.38 KiB gzip
+assets/fixed-D1HkMovf.js: 0.28 KiB gzip
+assets/image-Q8PH7OPI.js: 0.53 KiB gzip
+assets/index-DjyxsvfA.js: 36.88 KiB gzip
+assets/Bounce-Dj1s49Yo.js: 3.15 KiB gzip
+assets/Draw-BKTSEA-p.js: 2.62 KiB gzip
+assets/ExtraStage-CEqD9NBO.js: 0.71 KiB gzip
+assets/Eyes-CkGZlmII.js: 2.37 KiB gzip
+assets/Gomoku-Bg2Ganj_.js: 1.45 KiB gzip
+assets/Heartbeat-Dd84DFvB.js: 3.32 KiB gzip
+assets/Know-CLmRxhJW.js: 1.85 KiB gzip
+assets/Mind-CKj5GsN8.js: 1.48 KiB gzip
+assets/Puzzle-DIbDzTnQ.js: 3.93 KiB gzip
+assets/RedThread-4xfGazeD.js: 10.13 KiB gzip
+assets/Setup-B6oozpBo.js: 2.57 KiB gzip
+assets/Talk-Cn_HgVmp.js: 1.20 KiB gzip
+assets/Keepsakes-CI79ehn4.js: 3.43 KiB gzip
+PASS initial JS 36.88 KiB; CSS 12.66 KiB gzip

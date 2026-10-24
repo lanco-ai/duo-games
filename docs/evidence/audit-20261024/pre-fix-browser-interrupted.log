@@ -1,0 +1,18 @@
+
+> duo-games@1.0.0 test:e2e
+> playwright test
+
+[WebServer] (node:597211) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 14 tests using 1 worker
+
+(node:597219) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/e2e/duo.spec.ts:44:1 › two-person flow, synced cards, answers, favorites, conflict, results and replay (1.0m)
+  ✘   2 tests/e2e/duo.spec.ts:136:1 › 300ms bidirectional delay with jitter: chat, full game, replay, refresh and takeover (1.2m)
+
+  1 interrupted
+    tests/e2e/duo.spec.ts:136:1 › 300ms bidirectional delay with jitter: chat, full game, replay, refresh and takeover 
+  12 did not run
+  1 passed (2.5m)

@@ -1,0 +1,118 @@
+{
+  "checkedAt": "2026-10-23T12:01:18.562Z",
+  "checks": [
+    {
+      "command": [
+        "nginx",
+        "-t"
+      ],
+      "exitCode": 0,
+      "output": "nginx: the configuration file /etc/nginx/nginx.conf syntax is ok\nnginx: configuration file /etc/nginx/nginx.conf test is successful"
+    },
+    {
+      "command": [
+        "systemctl",
+        "is-enabled",
+        "duo-games.service"
+      ],
+      "exitCode": 0,
+      "output": "enabled"
+    },
+    {
+      "command": [
+        "systemctl",
+        "show",
+        "duo-games.service",
+        "-p",
+        "ActiveState",
+        "-p",
+        "SubState",
+        "-p",
+        "NRestarts",
+        "-p",
+        "MemoryCurrent",
+        "-p",
+        "MemoryPeak",
+        "-p",
+        "User"
+      ],
+      "exitCode": 0,
+      "output": "NRestarts=0\nMemoryCurrent=2768896\nMemoryPeak=27635712\nUser=duo-games\nActiveState=active\nSubState=running"
+    },
+    {
+      "command": [
+        "curl",
+        "--fail",
+        "-sS",
+        "--max-time",
+        "15",
+        "https://lancoai.site/duo/api/health"
+      ],
+      "exitCode": 0,
+      "output": "{\"ok\":true,\"version\":2}"
+    },
+    {
+      "command": [
+        "curl",
+        "-sS",
+        "--max-time",
+        "15",
+        "-o",
+        "/dev/null",
+        "-w",
+        "%{http_code}",
+        "https://lancoai.site/"
+      ],
+      "exitCode": 0,
+      "output": "200"
+    },
+    {
+      "command": [
+        "curl",
+        "-sS",
+        "--max-time",
+        "15",
+        "-o",
+        "/dev/null",
+        "-w",
+        "%{http_code}",
+        "https://lancoai.site:8444/"
+      ],
+      "exitCode": 0,
+      "output": "302"
+    },
+    {
+      "command": [
+        "curl",
+        "-sS",
+        "--max-time",
+        "15",
+        "-o",
+        "/dev/null",
+        "-w",
+        "%{http_code}",
+        "https://lancoai.site:8445/"
+      ],
+      "exitCode": 0,
+      "output": "302"
+    }
+  ],
+  "current": "/opt/duo-games/releases/20261023T115820Z",
+  "counts": {
+    "rooms": 1,
+    "journal": 0,
+    "matches": 1,
+    "gallery": 0,
+    "custom_content": 0,
+    "images": 0
+  },
+  "originalRecordsRetained": {
+    "rooms": true,
+    "journal": true,
+    "matches": true
+  },
+  "gzip": true,
+  "relativeRedirect": true,
+  "dbMode": "600",
+  "dataMode": "700"
+}

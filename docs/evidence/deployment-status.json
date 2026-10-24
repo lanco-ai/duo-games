@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-10-24T02:15:51.246388+00:00",
+  "current": "/opt/duo-games/releases/20261023T140722Z",
+  "counts": {
+    "rooms": 6,
+    "journal": 0,
+    "matches": 7,
+    "gallery": 4,
+    "custom_content": 0,
+    "images": 0
+  },
+  "health": {
+    "ok": true,
+    "version": 2
+  },
+  "service": "NRestarts=0\nUser=duo-games\nActiveState=active\nActiveEnterTimestamp=Fri 2026-10-23 07:08:06 PDT\n",
+  "phase": "before audit release"
+}

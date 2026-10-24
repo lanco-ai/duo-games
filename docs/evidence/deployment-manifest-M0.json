@@ -1,0 +1,51 @@
+{
+  "deployedAt": "2026-10-23T10:36:14.531Z",
+  "url": "https://lancoai.site/duo/",
+  "release": "/opt/duo-games/releases/20261023T103156Z",
+  "node": "v22.23.2",
+  "basePath": "/duo/",
+  "files": [
+    {
+      "path": "server.js",
+      "bytes": 63235,
+      "gzipBytes": 15716,
+      "sha256": "7bf69a4e231242dbfd7993395975db1a2c15b8e1a6c7591b95bfd6d4990af003"
+    },
+    {
+      "path": "web/index.html",
+      "bytes": 778,
+      "gzipBytes": 557,
+      "sha256": "e0e9a7cbff066c8e4936e89c4237a394f1ec195e1ed098f01779013a7bfed168"
+    },
+    {
+      "path": "package.json",
+      "bytes": 812,
+      "gzipBytes": 401,
+      "sha256": "1c129d72d4250590b9506c5582697dea7392626aa730b3ea72980187f62989bb"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 72610,
+      "gzipBytes": 15415,
+      "sha256": "4848fcff0f627d5fb2e02536fa5bde95af2fbef8b615308c723c4b1dc173f30a"
+    },
+    {
+      "path": "web/assets/Talk-D2AbOs21.js",
+      "bytes": 2216,
+      "gzipBytes": 1128,
+      "sha256": "f59bf944c752a58e3279d19d37fa6729ffc39480af7da60a80b4a83a7f2defe0"
+    },
+    {
+      "path": "web/assets/index-De0Z3PNF.css",
+      "bytes": 26245,
+      "gzipBytes": 6898,
+      "sha256": "16819c40a4b9299cc15a7f091a3936a7f16a1ef9d33d8cae3f7485bb429a302b"
+    },
+    {
+      "path": "web/assets/index-ksEr-0zN.js",
+      "bytes": 62785,
+      "gzipBytes": 24922,
+      "sha256": "be9c456baa3971f44b6b803f460f983ac2c536c41432e9e38200668117433f90"
+    }
+  ]
+}

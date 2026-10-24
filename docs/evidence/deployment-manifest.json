@@ -1,0 +1,169 @@
+{
+  "observedAt": "2026-10-24T02:03:18.246922+00:00",
+  "release": "/opt/duo-games/releases/20261023T140722Z",
+  "backup": "/var/backups/duo-games/20261023T140722Z",
+  "sourceCommit": null,
+  "note": "Existing cartoon release observed before this audit; no prior Git commit existed.",
+  "files": [
+    {
+      "path": "package-lock.json",
+      "bytes": 72610,
+      "sha256": "4028101a0e6d701f57c281d149b9f13a0dc485b0324cc3efbef15c10263cd0ea"
+    },
+    {
+      "path": "package.json",
+      "bytes": 867,
+      "sha256": "21daae612aa04b3c0ece4c8efa013b8168230712a6cc61812071f477eefbe42a"
+    },
+    {
+      "path": "server.js",
+      "bytes": 180904,
+      "sha256": "5ccdd57ff16551dbe87c201f78a3f115e5abbf980ce39daeff066fd825030baf"
+    },
+    {
+      "path": "web/assets/Bounce-B6bpN-Ao.js",
+      "bytes": 6612,
+      "sha256": "7da9d69f86c976aa997e230697140a20de862d5c23aafb5f51b1592131e7574f"
+    },
+    {
+      "path": "web/assets/Draw-BLJoufDt.js",
+      "bytes": 5762,
+      "sha256": "640848b0cd725ed71e3ebf0ff0a672fcc75816cd9cacb235e15719520f8bc981"
+    },
+    {
+      "path": "web/assets/ExtraStage-BywV6gCW.js",
+      "bytes": 1549,
+      "sha256": "2c9ac14ac8dc8a160795f1ff845d10706f4b6adac1c9e87323a33fa54aa14215"
+    },
+    {
+      "path": "web/assets/Eyes-C8tXx3hW.js",
+      "bytes": 4882,
+      "sha256": "a5d05c51a8cb83077c377538fa584d711e0c534480ec28647cbeca99296efd04"
+    },
+    {
+      "path": "web/assets/Gomoku-BGN-6k9V.js",
+      "bytes": 3149,
+      "sha256": "08dbcb13d2760c2023afbc1d5e26b5ea409070652fdb0b837bc131996779cb40"
+    },
+    {
+      "path": "web/assets/Heartbeat-BbMnnPeJ.js",
+      "bytes": 7066,
+      "sha256": "9f186280d048ef90237aef08362d6a4fe5dc8e53c3423d7332bfe73ab5e2fbc3"
+    },
+    {
+      "path": "web/assets/Keepsakes-BTwE4yIA.js",
+      "bytes": 7357,
+      "sha256": "63b424e3e9ceedc6d503d2f7ffbd75204726c524240346bc55a3622c35a22165"
+    },
+    {
+      "path": "web/assets/Know-B1wyyIZF.js",
+      "bytes": 3734,
+      "sha256": "18b96088c11c77fb321ed0ddb1c7fd02eac42cbcd3bb2c0475d728a779ee9738"
+    },
+    {
+      "path": "web/assets/Mind-Csodg1Kq.js",
+      "bytes": 2987,
+      "sha256": "a0eb2677a117087576503d10000a175c4bad9c926e644b90824a1e700a6654c0"
+    },
+    {
+      "path": "web/assets/Puzzle-Cbez_bYL.js",
+      "bytes": 9123,
+      "sha256": "a8c1e46bd400508cc3389c92771fd34c470b1743885ac521586ba487157f38cc"
+    },
+    {
+      "path": "web/assets/RedThread-CJHYDieE.js",
+      "bytes": 24330,
+      "sha256": "66933e68fc374900b93cedc35630da57e3935668a54562472c17e573fd0615c8"
+    },
+    {
+      "path": "web/assets/Setup-4uE44oag.js",
+      "bytes": 4803,
+      "sha256": "c18d145297d9c1e6931ab8f515835632731ab1c3dcb1e17439f87930ed165972"
+    },
+    {
+      "path": "web/assets/Talk-BddnBX24.js",
+      "bytes": 2468,
+      "sha256": "c822e944debbfffb4d8878bc6025f1e9f61ae273599a0fd08e4f988c3125a28d"
+    },
+    {
+      "path": "web/assets/audio-DEoOrRWS.js",
+      "bytes": 3014,
+      "sha256": "4051f2c3764521c127f0b9446e646306dfe25faeacf0e3a4c50270d725ce562b"
+    },
+    {
+      "path": "web/assets/common-DsNS5JPE.js",
+      "bytes": 746,
+      "sha256": "ebc3703b557514249a4112473dae496eb19c22d484eadca87bf0146d964e1905"
+    },
+    {
+      "path": "web/assets/drawing-DpENBSop.js",
+      "bytes": 662,
+      "sha256": "93c6b4cd6ef94e1f9b3ee079b52179e9532a44ec6eee8fbf3e2d8399b69ced48"
+    },
+    {
+      "path": "web/assets/duo-display-U6_xhmX_.woff2",
+      "bytes": 71304,
+      "sha256": "802ccb5b9b61386f5fabb69daa6eda25b63a8244320f4ccd87a4ba29399cad7f"
+    },
+    {
+      "path": "web/assets/duo-latin-DbkqiAMW.woff2",
+      "bytes": 10868,
+      "sha256": "68fe97220867dc0816ab4c84b3a33f4dbe45a297f22a50ad0a32efa8a04da8fe"
+    },
+    {
+      "path": "web/assets/fixed-D1HkMovf.js",
+      "bytes": 372,
+      "sha256": "049f5dc48293b12fec7470a821ea988483096842d84a19d3b9cd2523e04b9102"
+    },
+    {
+      "path": "web/assets/image-bbJl6Igd.js",
+      "bytes": 769,
+      "sha256": "39a105de5448dad391bdbf91a9d388f11deef9a2f595e17e384d9d5a242bec49"
+    },
+    {
+      "path": "web/assets/index-BlzDrRoO.js",
+      "bytes": 96181,
+      "sha256": "ebe2df6803b7b3c6d1f4f026b5e65040074e4050c6b1b5067638e58d4fa9ea1b"
+    },
+    {
+      "path": "web/assets/index-jQ-jbXYi.css",
+      "bytes": 57353,
+      "sha256": "9856dce3a217df266b01d567285e119edefc61393cec12cdeb3dd46d09bbaae5"
+    },
+    {
+      "path": "web/index.html",
+      "bytes": 778,
+      "sha256": "d203fa64e14c61ba9284860e55be0756cfccbc111c7e7fd28672e00980646ef6"
+    },
+    {
+      "path": "web/scenes/balloons.svg",
+      "bytes": 1722,
+      "sha256": "6deddba914021aabd303f2ff73fd5d96a0091ca9eb5a789110ea2227f3ec8584"
+    },
+    {
+      "path": "web/scenes/cats.svg",
+      "bytes": 1438,
+      "sha256": "4eeb14f44300da897456616fc4e1080d345bafa81c031c65b5ad13ff8c485ce8"
+    },
+    {
+      "path": "web/scenes/city.svg",
+      "bytes": 14374,
+      "sha256": "dc4d83bc0a585b4424a4471b5446fad05550467d791fe0bf1127a406d230434e"
+    },
+    {
+      "path": "web/scenes/sakura.svg",
+      "bytes": 24539,
+      "sha256": "ecd58796f83233610e62271171435b6470f0bb4152b0a2e5bf123c845ce3dcdf"
+    },
+    {
+      "path": "web/scenes/stars.svg",
+      "bytes": 8192,
+      "sha256": "a0bcf26d77e81858fe53eb6eb70905eef08c78083be9fb15b295491968b6137c"
+    },
+    {
+      "path": "web/scenes/sunset.svg",
+      "bytes": 1451,
+      "sha256": "74055f41d87ebcd99ddd77ab8b4d243ffeb49371024fba2e119db0018edb0967"
+    }
+  ]
+}
