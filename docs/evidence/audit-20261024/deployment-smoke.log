@@ -1,0 +1,15 @@
+PASS: both bundled fonts loaded successfully
+PASS: trusted HTTPS, assets, room creation/join and WSS on two clients
+PASS: synchronized card, reload/reconnect, favorite and saved answer
+PASS deployed two-seat lazy game, controls, and result: draw-guess
+PASS deployed two-seat lazy game, controls, and result: mind-meld
+PASS deployed two-seat lazy game, controls, and result: know-me
+PASS deployed two-seat lazy game, controls, and result: gomoku
+PASS deployed two-seat lazy game, controls, and result: red-thread
+PASS deployed two-seat lazy game, controls, and result: my-eyes
+PASS deployed two-seat lazy game, controls, and result: heart-bounce
+PASS deployed two-seat lazy game, controls, and result: puzzle-us
+PASS deployed two-seat lazy game, controls, and result: heartbeat
+PASS authenticated image upload through HTTPS reverse proxy (>16KiB)
+PASS: complete 10-card game, both results and share image; no JS/CSP errors
+PASS: temporary deployment test room removed

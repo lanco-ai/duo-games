@@ -1,3 +1,4 @@
+PASS: both bundled fonts loaded successfully
 PASS: trusted HTTPS, assets, room creation/join and WSS on two clients
 PASS: synchronized card, reload/reconnect, favorite and saved answer
 PASS deployed two-seat lazy game, controls, and result: draw-guess

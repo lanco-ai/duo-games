@@ -1,0 +1,31 @@
+PASS HTTPS bytes + gzip: assets/Bounce-p5ogAUGs.js
+PASS HTTPS bytes + gzip: assets/Draw-3kxTUajO.js
+PASS HTTPS bytes + gzip: assets/ExtraStage-BFrHM4e2.js
+PASS HTTPS bytes + gzip: assets/Eyes-CBZISQfO.js
+PASS HTTPS bytes + gzip: assets/Gomoku-kxjSk4rl.js
+PASS HTTPS bytes + gzip: assets/Heartbeat-D0j33CYc.js
+PASS HTTPS bytes + gzip: assets/Keepsakes-CURBUIav.js
+PASS HTTPS bytes + gzip: assets/Know-C8xr72YQ.js
+PASS HTTPS bytes + gzip: assets/Mind-BQmWWiUm.js
+PASS HTTPS bytes + gzip: assets/Puzzle-Bm4MPk-j.js
+PASS HTTPS bytes + gzip: assets/RedThread-DPlQDjeM.js
+PASS HTTPS bytes + gzip: assets/Setup-BqkP5R7s.js
+PASS HTTPS bytes + gzip: assets/Talk-D1786fTb.js
+PASS HTTPS bytes + gzip: assets/audio-Pko8L7qE.js
+PASS HTTPS bytes + gzip: assets/canvas-point-B4qk3snw.js
+PASS HTTPS bytes + gzip: assets/common-DMeWghum.js
+PASS HTTPS bytes + gzip: assets/drawing-DpENBSop.js
+PASS HTTPS bytes: assets/duo-display-U6_xhmX_.woff2
+PASS HTTPS bytes: assets/duo-latin-DbkqiAMW.woff2
+PASS HTTPS bytes + gzip: assets/fixed-D1HkMovf.js
+PASS HTTPS bytes + gzip: assets/image-D2toyEDK.js
+PASS HTTPS bytes + gzip: assets/index-8fG1rIJs.js
+PASS HTTPS bytes + gzip: assets/index-BmqnOBcT.css
+PASS HTTPS bytes: index.html
+PASS HTTPS bytes: scenes/balloons.svg
+PASS HTTPS bytes: scenes/cats.svg
+PASS HTTPS bytes: scenes/city.svg
+PASS HTTPS bytes: scenes/sakura.svg
+PASS HTTPS bytes: scenes/stars.svg
+PASS HTTPS bytes: scenes/sunset.svg
+PASS all 30 deployed assets match committed build
