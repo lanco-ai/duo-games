@@ -1,0 +1,5 @@
+duo-games:duo-games 700 /var/lib/duo-games
+duo-games:duo-games 600 /var/lib/duo-games/duo.db
+duo-games:duo-games 600 /var/lib/duo-games/duo.db-wal
+duo-games:duo-games 600 /var/lib/duo-games/duo.db-shm
+duo-games:duo-games 700 /var/lib/duo-games/rooms

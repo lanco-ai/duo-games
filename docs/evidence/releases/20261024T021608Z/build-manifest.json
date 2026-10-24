@@ -1,0 +1,201 @@
+{
+  "at": "2026-10-24T02:15:51.246388+00:00",
+  "basePath": "/duo/",
+  "files": [
+    {
+      "path": "server.js",
+      "bytes": 180904,
+      "gzipBytes": 46853,
+      "sha256": "5ccdd57ff16551dbe87c201f78a3f115e5abbf980ce39daeff066fd825030baf"
+    },
+    {
+      "path": "web/.vite/manifest.json",
+      "bytes": 4901,
+      "gzipBytes": 890,
+      "sha256": "79ef274bcb17c33626a9a8cd5747fdc2863541f3739a1a67c0ba7af3a803a0bc"
+    },
+    {
+      "path": "web/assets/Bounce-p5ogAUGs.js",
+      "bytes": 6612,
+      "gzipBytes": 3175,
+      "sha256": "19a49be79e43951beaaaa02172e588e8f0aa4762353628cc8f2968b49d274bf6"
+    },
+    {
+      "path": "web/assets/Draw-3kxTUajO.js",
+      "bytes": 5744,
+      "gzipBytes": 2658,
+      "sha256": "00a23d4c430ce0e38ce0e643e08ef242eb911e234c8822a119b6cfc830382df9"
+    },
+    {
+      "path": "web/assets/ExtraStage-BFrHM4e2.js",
+      "bytes": 1589,
+      "gzipBytes": 727,
+      "sha256": "10320af35fe2df6784382affa3feb69850cf03c63cbb3fa268b32fdd11d2ab27"
+    },
+    {
+      "path": "web/assets/Eyes-CBZISQfO.js",
+      "bytes": 4882,
+      "gzipBytes": 2377,
+      "sha256": "0bef9872e6d642151a9f4698354e32d0c9c39f4276d22cb9f8987e27152f5086"
+    },
+    {
+      "path": "web/assets/Gomoku-kxjSk4rl.js",
+      "bytes": 3149,
+      "gzipBytes": 1459,
+      "sha256": "d4ba12d3b6a80fdfa97407dcb96f8eb42c8c6bf91cf264586cad91dd2f641fe1"
+    },
+    {
+      "path": "web/assets/Heartbeat-D0j33CYc.js",
+      "bytes": 7066,
+      "gzipBytes": 3363,
+      "sha256": "819f5a055beb957bfddfd0859a0bae43ddbc6ffe5da2a3676757aa18900393fc"
+    },
+    {
+      "path": "web/assets/Keepsakes-CURBUIav.js",
+      "bytes": 7357,
+      "gzipBytes": 3460,
+      "sha256": "e83709a09d7ef7413cc28e2409e6e532ff0ab98bc19aa99423a369833c4f0ad9"
+    },
+    {
+      "path": "web/assets/Know-C8xr72YQ.js",
+      "bytes": 3734,
+      "gzipBytes": 1864,
+      "sha256": "24654581faea88e8356d53fdad559bdc40079a8e50eaa7273b7df55341050635"
+    },
+    {
+      "path": "web/assets/Mind-BQmWWiUm.js",
+      "bytes": 2987,
+      "gzipBytes": 1490,
+      "sha256": "bea222afa2ab407431db93db7055e89c625a6bc0cef63031831142d286aac64e"
+    },
+    {
+      "path": "web/assets/Puzzle-Bm4MPk-j.js",
+      "bytes": 9053,
+      "gzipBytes": 3957,
+      "sha256": "ef03235a80b638ba8bca964f3fe1780060b627d31d7dcd5bb37105c56d7d538e"
+    },
+    {
+      "path": "web/assets/RedThread-DPlQDjeM.js",
+      "bytes": 24330,
+      "gzipBytes": 10214,
+      "sha256": "e62a163561dcdaa7dfe98eda963cecc897df3e9899636b41a7704ec8c9754d34"
+    },
+    {
+      "path": "web/assets/Setup-BqkP5R7s.js",
+      "bytes": 4803,
+      "gzipBytes": 2586,
+      "sha256": "58a7d7ecd6bcd79783196c4bc10a2b162475ecbcd1a4e88dfbf63a6a88ee9f36"
+    },
+    {
+      "path": "web/assets/Talk-D1786fTb.js",
+      "bytes": 2468,
+      "gzipBytes": 1212,
+      "sha256": "fbeebe30d0ca39f9103712a766672e8df80ea3aa5755b11a3f6e0e5ac3c97056"
+    },
+    {
+      "path": "web/assets/audio-Pko8L7qE.js",
+      "bytes": 3014,
+      "gzipBytes": 1621,
+      "sha256": "15abe8d9b9bb67c2bd7a29e007ecf2ea579ad39b3dd9d2be17e5be86262a57cb"
+    },
+    {
+      "path": "web/assets/canvas-point-B4qk3snw.js",
+      "bytes": 485,
+      "gzipBytes": 302,
+      "sha256": "f8548be8646c71f9b4538fc6f7a79305c75b700c0fcdfd1694e58b8d2b0652ad"
+    },
+    {
+      "path": "web/assets/common-DMeWghum.js",
+      "bytes": 746,
+      "gzipBytes": 459,
+      "sha256": "38d89784d14c4b84ad0f5753cda693e8af42bcc521bdfed1ebf1df51df7c1633"
+    },
+    {
+      "path": "web/assets/drawing-DpENBSop.js",
+      "bytes": 662,
+      "gzipBytes": 378,
+      "sha256": "93c6b4cd6ef94e1f9b3ee079b52179e9532a44ec6eee8fbf3e2d8399b69ced48"
+    },
+    {
+      "path": "web/assets/duo-display-U6_xhmX_.woff2",
+      "bytes": 71304,
+      "gzipBytes": 71347,
+      "sha256": "802ccb5b9b61386f5fabb69daa6eda25b63a8244320f4ccd87a4ba29399cad7f"
+    },
+    {
+      "path": "web/assets/duo-latin-DbkqiAMW.woff2",
+      "bytes": 10868,
+      "gzipBytes": 10891,
+      "sha256": "68fe97220867dc0816ab4c84b3a33f4dbe45a297f22a50ad0a32efa8a04da8fe"
+    },
+    {
+      "path": "web/assets/fixed-D1HkMovf.js",
+      "bytes": 372,
+      "gzipBytes": 287,
+      "sha256": "049f5dc48293b12fec7470a821ea988483096842d84a19d3b9cd2523e04b9102"
+    },
+    {
+      "path": "web/assets/image-D2toyEDK.js",
+      "bytes": 769,
+      "gzipBytes": 538,
+      "sha256": "329cec6ce8f2a1f9a2c02d4d728a27b7ef43a72fc0a34e5eebb72c42b360d803"
+    },
+    {
+      "path": "web/assets/index-8fG1rIJs.js",
+      "bytes": 96181,
+      "gzipBytes": 36974,
+      "sha256": "33c88f4045854f8274553d77d6e0bb9ebe4e037d5e84f27b30b2df0b945413b2"
+    },
+    {
+      "path": "web/assets/index-BmqnOBcT.css",
+      "bytes": 57443,
+      "gzipBytes": 12884,
+      "sha256": "34be36a4b82186fba4d3e346dcad5f3c375d5f0e81ea3fe8379daeed321f6da1"
+    },
+    {
+      "path": "web/index.html",
+      "bytes": 778,
+      "gzipBytes": 548,
+      "sha256": "0d7226e68d73cb5280312918555e501c955794c4ca7e0e54f2e476e5ab16cefd"
+    },
+    {
+      "path": "web/scenes/balloons.svg",
+      "bytes": 1722,
+      "gzipBytes": 487,
+      "sha256": "6deddba914021aabd303f2ff73fd5d96a0091ca9eb5a789110ea2227f3ec8584"
+    },
+    {
+      "path": "web/scenes/cats.svg",
+      "bytes": 1438,
+      "gzipBytes": 535,
+      "sha256": "4eeb14f44300da897456616fc4e1080d345bafa81c031c65b5ad13ff8c485ce8"
+    },
+    {
+      "path": "web/scenes/city.svg",
+      "bytes": 14374,
+      "gzipBytes": 1561,
+      "sha256": "dc4d83bc0a585b4424a4471b5446fad05550467d791fe0bf1127a406d230434e"
+    },
+    {
+      "path": "web/scenes/sakura.svg",
+      "bytes": 24539,
+      "gzipBytes": 1074,
+      "sha256": "ecd58796f83233610e62271171435b6470f0bb4152b0a2e5bf123c845ce3dcdf"
+    },
+    {
+      "path": "web/scenes/stars.svg",
+      "bytes": 8192,
+      "gzipBytes": 1437,
+      "sha256": "a0bcf26d77e81858fe53eb6eb70905eef08c78083be9fb15b295491968b6137c"
+    },
+    {
+      "path": "web/scenes/sunset.svg",
+      "bytes": 1451,
+      "gzipBytes": 477,
+      "sha256": "74055f41d87ebcd99ddd77ab8b4d243ffeb49371024fba2e119db0018edb0967"
+    }
+  ],
+  "productionDependencies": {
+    "ws": "8.22.0"
+  }
+}

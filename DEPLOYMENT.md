@@ -1,62 +1,57 @@
 # 双人游戏部署记录
 
-更新时间：2026-10-24 10:16:54（北京时间）。用户授权核查、测试、审核、提交和部署，按原有发布方式逐项核验；未使用工作流。
+更新时间：2026-10-24 17:19:54（北京时间）。用户授权修复四项问题、上线，并要求测试期间可亲自试玩。未使用工作流。
 
-入口：[二人世界](https://lancoai.site/duo/)。十款游戏均开放。旧页面刷新一次，载入本次画板/拼图坐标和迷宫兼容修复。应用通信协议保持 v2。
+- 正式站：[二人世界](https://lancoai.site/duo/)
+- 独立测试站：[修复版试玩](https://lancoai.site/duo-preview/)，使用独立房间和战绩；邀请另一人时请使用测试站生成的链接。
 
 ## 当前版本
 
 | 项目 | 当前设置 |
 |---|---|
-| 当前发布 | `/opt/duo-games/releases/20261024T021608Z` |
-| 前一版 | `/opt/duo-games/releases/20261023T140722Z`，卡通界面原版 |
-| Git 源码提交 | `46d39935baca13a2872ea67b895a8246564b7848` |
-| 发布指针 | `/opt/duo-games/current` |
-| 私有备份 | `/var/backups/duo-games/20261024T021608Z` |
-| 源码目录 | `/root/duo-games` |
-| 服务 | `duo-games.service`，`duo-games` 用户，开机自启 |
-| 监听 | `127.0.0.1:8790`；公网通过 nginx `/duo/` 接入 |
-| 持久数据 | `/var/lib/duo-games/duo.db`；照片在同目录 `rooms/<room-code>/` |
-| 权限与资源 | 数据目录 0700、DB/WAL/SHM 0600；`MemoryMax=200M` |
-| 环境 | Node 22.23.2，`BASE_PATH=/duo/`，`TRUST_PROXY=1` |
+| 正式发布 | `/opt/duo-games/releases/20261024T091913Z` |
+| 回退目标 | `/opt/duo-games/releases/20261024T021608Z` |
+| Git 源码提交 | `1c8e738f8cdb68a1d02e1edbbbad73516a48b340` |
+| 正式指针 | `/opt/duo-games/current` |
+| 在线备份 | `/var/backups/duo-games/20261024T091913Z` |
+| 正式服务/监听 | `duo-games.service`，`127.0.0.1:8790` |
+| 正式数据 | `/var/lib/duo-games/duo.db` 及同目录 `rooms/` |
+| 测试指针 | `/opt/duo-games/preview-current` → `/opt/duo-games/previews/rope-fix-20261024` |
+| 测试服务/监听 | `duo-games-preview.service`，`127.0.0.1:8795` |
+| 测试数据 | `/var/lib/duo-games-preview/duo.db` 及同目录 `rooms/` |
+| 运行环境 | Node 22.23.2，服务账号 `duo-games`，协议 v3 |
 
-本次仅改变网页资源及审核/发布记录。`server.js` 与前一版 SHA-256 相同，依赖锁文件相同；nginx、systemd unit、证书和其他站点配置没有改动。发布目录记录 `SOURCE_COMMIT`，私有数据和备份不进入 Git。
+本次更新前端和双方共享的物理模拟；依赖锁文件、数据库结构及正式 systemd unit 不变。协议升级至 v3，防止旧页面继续使用旧物理；旧页面需刷新。单独增加了测试服务及 nginx `/duo-preview/` 入口、独立请求配额、禁止搜索索引标记。测试服务仅能写自己的 StateDirectory；浏览器的测试房间凭证和最近房间也单独保存。
 
-## 已执行的发布步骤
+## 发布与验收
 
-1. 独立审核修复画板/拼图内容坐标和旧浏览器迷宫宽度；93 项单测、14 项完整双人浏览器回归通过。
-2. `BASE_PATH=/duo/ npm run build`，体积检查及双人 `/duo/` 子路径自检通过。初始 JS 36.88 KiB、CSS 12.66 KiB gzip，两款字体随项目提供。
-3. 创建本地 Git 提交 `46d3993`。仓库没有配置远端，因此没有推送远端或创建 PR。
-4. 以服务账号执行 SQLite `backup()` 在线快照，`PRAGMA quick_check` 为 ok；备份包含 6 个房间、7 条战绩、4 件作品。复制照片后按快照图片表校验文件存在、类型及大小（本次图片记录为 0），再将备份标为有效。服务配置、nginx 片段、上一版路径和校验记录一并保存，数据属主保持不变。
-5. 新发布目录复用锁文件相同的生产依赖。使用备份副本，以服务账号在 8794 端口隔离试启动，健康检查、页面、房间路由、30 个资源（含两款字体）逐字节校验通过；临时进程和数据已清理。
-6. 校验原指针及配置未发生其他改动后，原子切换 `current` 并重启游戏服务。确认进程工作目录为新版本，本地及公网健康检查均正常。
-7. 公网按间隔逐个读取 30 个资源，全部与发布目录一致；JS/CSS gzip 正常。公网双人冒烟全部通过：完整十张聊天卡、其余九款游戏、照片上传、纪念图及两款字体正常，无浏览器报错，脚本自建房间已清理。
-8. 发布后独立复核 33 个运行文件与构建/包文件一致。数据库完整性为 ok，备份中的全部原始记录仍在，保留 6 个房间、7 条战绩、4 件作品；服务运行正常，意外重启计数为 0。主站 200、8444/8445 入口 302、`/duo` 跳转 308 均符合预期。本地及公网健康接口均为 200/v2，结果见 `docs/evidence/audit-20261024/`。
-
-## 验收证据
-
-审核结论、修复和测试范围见 [AUDIT-20261024.md](docs/AUDIT-20261024.md)。当前发布指针及备份见 `docs/evidence/release-metadata.json`，产物摘要见 `deployment-manifest.json`，复查结果见 `deployment-status.json`。历史证据在 `docs/evidence/releases/`，不再把历史版本当作当前发布。
-
-复验命令：
-
-```bash
-DUO_SMOKE_URL=https://lancoai.site/duo/ DUO_SMOKE_DIR=docs/evidence/audit-20261024 node scripts/check-deployment.mjs
-```
-
-冒烟检查两款字体真正加载、HTTPS/WSS、建房入座、完整十张聊天卡、刷新重连、收藏和回答、纪念图、九款游戏双人进入与退出结算及大于 16 KiB 的照片上传。捕获浏览器 `pageerror` 和控制台 error；只删除脚本新建的测试房间。
+1. 修复红绳端点、攀绳横向累加、输入粘住/同义键干扰、自抓墙救援误计，见 [修复说明](docs/ROPE-FIX-20261024.md)。
+2. 类型检查、整数物理检查、98/98 单元/集成测试通过；2/2 专项浏览器回归通过，包含动画端点、双人弱网重连及聊天焦点和同义键输入。
+3. 独立测试入口公网十款游戏冒烟通过，测试房间已清理。测试入口继续开放，不合并测试数据到正式站。
+4. `/duo/` 构建、体积和双人子路径检查通过；首屏 JS 36.97 KiB、CSS 12.67 KiB gzip。
+5. 服务账号 SQLite `backup()` 在线快照完整性为 ok；备份 7 个房间、8 条战绩、4 件作品。照片目录与引用校验通过，配置一并备份，数据属主未变。
+6. 备份副本在 8794 隔离试启动，健康、路由及 30 个资源/两款字体校验通过；临时进程和数据已清理。
+7. 原子切换并重启正式游戏服务，工作目录正确、内外网健康 v3 正常；已验证旧 v2 客户端收到刷新提示。30 个公网资源逐字节一致，JS/CSS gzip 正常。
+8. 正式公网完整冒烟最终通过：十张聊天卡和其余九款游戏、照片、纪念图、字体及重连正常，无浏览器报错。所有自建测试房间已清理；中断遗留房间在缓存释放后按精确条件删除，无需再次重启服务。数据库完整性为 ok，原有 7 个房间、8 条战绩、4 件作品全部保留，属主/权限未变。服务意外重启计数为 0，主站及其他入口响应正常。证据见 `docs/evidence/rope-fix-20261024/`。
 
 ## 回退
 
-回退到本次发布前的卡通版，数据保持原位：
+确认临时指针不存在，再执行：
 
 ```bash
-ln -s /opt/duo-games/releases/20261023T140722Z /opt/duo-games/current.rollback-20261024
-mv -Tf /opt/duo-games/current.rollback-20261024 /opt/duo-games/current
+ln -s /opt/duo-games/releases/20261024T021608Z /opt/duo-games/current.rollback-rope
+mv -Tf /opt/duo-games/current.rollback-rope /opt/duo-games/current
 systemctl restart duo-games.service
 curl --fail https://lancoai.site/duo/api/health
 ```
 
-先确认临时回退指针不存在，避免覆盖其他维护任务的文件。回退后应复验公开页面及双人流程。不要用旧数据库备份直接覆盖运行中的数据库，否则会丢失备份之后的内容。本次无 schema、nginx 或 unit 修改，代码回退不需要恢复配置或数据库。
+回退目标协议为 v2，回退后页面也需刷新；测试站继续独立运行。本次没有数据迁移，回退只切服务代码，不恢复旧数据库覆盖新数据。
+
+## 测试入口维护
+
+测试服务已设置开机自启。nginx 增加 `/etc/nginx/snippets/duo-games-preview.conf`、`/etc/nginx/conf.d/duo-games-preview.conf`，由游戏原 snippet 引入。配置变更前的副本在 `/var/backups/duo-games-preview/20261024T091525Z`。测试房间供用户试玩保留；冒烟脚本仅删除自己的临时房间。
+
+冒烟可通过 `DUO_SMOKE_URL` 指定正式或测试入口，`DUO_SMOKE_DIR` 指定证据目录。可选 `DUO_SMOKE_STATE` 必须指向 Git 之外的私有文件，用于中断恢复；含临时房间凭证，权限 0600，正常清理房间后删除，不能提交到仓库。
 
 ## 后续维护与限制
 

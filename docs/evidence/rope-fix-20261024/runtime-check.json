@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-24T09:28:00.798931+00:00",
+  "runtimeFilesCompared": 33,
+  "sourceCommit": "1c8e738f8cdb68a1d02e1edbbbad73516a48b340",
+  "configurationMatchesBackupAndSource": true,
+  "oldV2ClientRejected": true,
+  "smokeExitStatus": 0,
+  "recoveryCredentialFileRemoved": true
+}

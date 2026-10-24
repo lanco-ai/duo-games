@@ -1,19 +1,20 @@
 {
-  "preparedAt": "2026-10-24T02:16:08.926Z",
+  "preparedAt": "2026-10-24T09:19:13.759012+00:00",
   "phase": "verified",
-  "release": "/opt/duo-games/releases/20261024T021608Z",
-  "previous": "/opt/duo-games/releases/20261023T140722Z",
-  "backup": "/var/backups/duo-games/20261024T021608Z",
-  "sourceCommit": "46d39935baca13a2872ea67b895a8246564b7848",
+  "release": "/opt/duo-games/releases/20261024T091913Z",
+  "previous": "/opt/duo-games/releases/20261024T021608Z",
+  "backup": "/var/backups/duo-games/20261024T091913Z",
+  "sourceCommit": "1c8e738f8cdb68a1d02e1edbbbad73516a48b340",
+  "protocol": 3,
   "preReleaseCounts": {
-    "rooms": 6,
+    "rooms": 7,
     "journal": 0,
-    "matches": 7,
+    "matches": 8,
     "gallery": 4,
     "custom_content": 0,
     "images": 0
   },
   "imageReferencesComplete": true,
-  "deployedAt": "2026-10-24T02:16:54.768Z",
-  "verifiedAt": "2026-10-24T02:20:44.489832+00:00"
+  "deployedAt": "2026-10-24T09:19:54.738877+00:00",
+  "verifiedAt": "2026-10-24T09:32:23.140368+00:00"
 }

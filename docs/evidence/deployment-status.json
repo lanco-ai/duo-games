@@ -1,33 +1,72 @@
 {
-  "checkedAt": "2026-10-24T02:20:44.489832+00:00",
+  "checkedAt": "2026-10-24T09:32:23.140368+00:00",
   "phase": "verified",
-  "current": "/opt/duo-games/releases/20261024T021608Z",
-  "sourceCommit": "46d39935baca13a2872ea67b895a8246564b7848",
+  "current": "/opt/duo-games/releases/20261024T091913Z",
+  "sourceCommit": "1c8e738f8cdb68a1d02e1edbbbad73516a48b340",
   "health": {
     "ok": true,
-    "version": 2
+    "version": 3
   },
   "service": {
-    "MainPID": "600292",
+    "MainPID": "620422",
     "NRestarts": "0",
-    "MemoryCurrent": "13451264",
-    "MemoryPeak": "27136000",
-    "User": "duo-games",
     "ActiveState": "active",
     "SubState": "running"
   },
-  "serviceEnabled": "enabled",
+  "counts": {
+    "rooms": 7,
+    "journal": 0,
+    "matches": 8,
+    "gallery": 4,
+    "custom_content": 0,
+    "images": 0
+  },
+  "dataRetention": {
+    "at": "2026-10-24T09:32:23.038Z",
+    "integrity": "ok",
+    "counts": {
+      "rooms": 7,
+      "journal": 0,
+      "matches": 8,
+      "gallery": 4,
+      "custom_content": 0,
+      "images": 0
+    },
+    "originalRecordsRetained": {
+      "rooms": {
+        "before": 7,
+        "present": 7
+      },
+      "journal": {
+        "before": 0,
+        "present": 0
+      },
+      "matches": {
+        "before": 8,
+        "present": 8
+      },
+      "gallery": {
+        "before": 4,
+        "present": 4
+      },
+      "custom_content": {
+        "before": 0,
+        "present": 0
+      },
+      "images": {
+        "before": 0,
+        "present": 0
+      }
+    }
+  },
+  "dataOwnership": [
+    "duo-games:duo-games 700 /var/lib/duo-games",
+    "duo-games:duo-games 600 /var/lib/duo-games/duo.db",
+    "duo-games:duo-games 600 /var/lib/duo-games/duo.db-wal",
+    "duo-games:duo-games 600 /var/lib/duo-games/duo.db-shm",
+    "duo-games:duo-games 700 /var/lib/duo-games/rooms"
+  ],
   "routes": [
-    {
-      "url": "http://127.0.0.1:8790/duo/api/health",
-      "status": 200,
-      "redirect": null
-    },
-    {
-      "url": "https://lancoai.site/duo/api/health",
-      "status": 200,
-      "redirect": null
-    },
     {
       "url": "https://lancoai.site/",
       "status": 200,
@@ -47,56 +86,34 @@
       "url": "https://lancoai.site/duo",
       "status": 308,
       "redirect": "https://lancoai.site/duo/"
-    }
-  ],
-  "dataOwnership": [
-    "duo-games:duo-games 700 /var/lib/duo-games",
-    "duo-games:duo-games 600 /var/lib/duo-games/duo.db",
-    "duo-games:duo-games 600 /var/lib/duo-games/duo.db-wal",
-    "duo-games:duo-games 600 /var/lib/duo-games/duo.db-shm",
-    "duo-games:duo-games 700 /var/lib/duo-games/rooms"
-  ],
-  "dataRetention": {
-    "at": "2026-10-24T02:19:20.613Z",
-    "integrity": "ok",
-    "counts": {
-      "rooms": 6,
-      "journal": 0,
-      "matches": 7,
-      "gallery": 4,
-      "custom_content": 0,
-      "images": 0
     },
-    "originalRecordsRetained": {
-      "rooms": {
-        "before": 6,
-        "present": 6
-      },
-      "journal": {
-        "before": 0,
-        "present": 0
-      },
-      "matches": {
-        "before": 7,
-        "present": 7
-      },
-      "gallery": {
-        "before": 4,
-        "present": 4
-      },
-      "custom_content": {
-        "before": 0,
-        "present": 0
-      },
-      "images": {
-        "before": 0,
-        "present": 0
-      }
+    {
+      "url": "https://lancoai.site/duo-preview",
+      "status": 308,
+      "redirect": "https://lancoai.site/duo-preview/"
+    },
+    {
+      "url": "https://lancoai.site/duo/api/health",
+      "status": 200,
+      "redirect": null
+    },
+    {
+      "url": "https://lancoai.site/duo-preview/api/health",
+      "status": 200,
+      "redirect": null
     }
-  },
+  ],
+  "previewUrl": "https://lancoai.site/duo-preview/",
+  "previewIsolation": "passed",
   "publicSmoke": "passed",
   "runtimeFilesCompared": 33,
   "publicWebAssetsCompared": 30,
-  "testRoomRemoved": true,
-  "filesystem": "Filesystem      Size  Used Avail Use% Mounted on\n/dev/sda3       9.3G  7.7G  1.6G  84% /"
+  "testRoomsRemoved": true,
+  "interruptedRoomCleanup": {
+    "at": "2026-10-24T09:31:42.891Z",
+    "removedOwnInterruptedTestRoom": "D2U53P",
+    "verifiedProfiles": true,
+    "cacheIdleGracePassed": true,
+    "changes": 1
+  }
 }

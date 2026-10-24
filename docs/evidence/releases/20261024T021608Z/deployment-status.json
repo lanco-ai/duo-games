@@ -1,0 +1,102 @@
+{
+  "checkedAt": "2026-10-24T02:20:44.489832+00:00",
+  "phase": "verified",
+  "current": "/opt/duo-games/releases/20261024T021608Z",
+  "sourceCommit": "46d39935baca13a2872ea67b895a8246564b7848",
+  "health": {
+    "ok": true,
+    "version": 2
+  },
+  "service": {
+    "MainPID": "600292",
+    "NRestarts": "0",
+    "MemoryCurrent": "13451264",
+    "MemoryPeak": "27136000",
+    "User": "duo-games",
+    "ActiveState": "active",
+    "SubState": "running"
+  },
+  "serviceEnabled": "enabled",
+  "routes": [
+    {
+      "url": "http://127.0.0.1:8790/duo/api/health",
+      "status": 200,
+      "redirect": null
+    },
+    {
+      "url": "https://lancoai.site/duo/api/health",
+      "status": 200,
+      "redirect": null
+    },
+    {
+      "url": "https://lancoai.site/",
+      "status": 200,
+      "redirect": null
+    },
+    {
+      "url": "https://lancoai.site:8444/",
+      "status": 302,
+      "redirect": "https://lancoai.site:8444/admin"
+    },
+    {
+      "url": "https://lancoai.site:8445/",
+      "status": 302,
+      "redirect": "https://lancoai.site:8445/admin/plans"
+    },
+    {
+      "url": "https://lancoai.site/duo",
+      "status": 308,
+      "redirect": "https://lancoai.site/duo/"
+    }
+  ],
+  "dataOwnership": [
+    "duo-games:duo-games 700 /var/lib/duo-games",
+    "duo-games:duo-games 600 /var/lib/duo-games/duo.db",
+    "duo-games:duo-games 600 /var/lib/duo-games/duo.db-wal",
+    "duo-games:duo-games 600 /var/lib/duo-games/duo.db-shm",
+    "duo-games:duo-games 700 /var/lib/duo-games/rooms"
+  ],
+  "dataRetention": {
+    "at": "2026-10-24T02:19:20.613Z",
+    "integrity": "ok",
+    "counts": {
+      "rooms": 6,
+      "journal": 0,
+      "matches": 7,
+      "gallery": 4,
+      "custom_content": 0,
+      "images": 0
+    },
+    "originalRecordsRetained": {
+      "rooms": {
+        "before": 6,
+        "present": 6
+      },
+      "journal": {
+        "before": 0,
+        "present": 0
+      },
+      "matches": {
+        "before": 7,
+        "present": 7
+      },
+      "gallery": {
+        "before": 4,
+        "present": 4
+      },
+      "custom_content": {
+        "before": 0,
+        "present": 0
+      },
+      "images": {
+        "before": 0,
+        "present": 0
+      }
+    }
+  },
+  "publicSmoke": "passed",
+  "runtimeFilesCompared": 33,
+  "publicWebAssetsCompared": 30,
+  "testRoomRemoved": true,
+  "filesystem": "Filesystem      Size  Used Avail Use% Mounted on\n/dev/sda3       9.3G  7.7G  1.6G  84% /"
+}

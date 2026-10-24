@@ -1,7 +1,7 @@
 // Creates one temporary room on the explicitly selected deployment, runs two
 // browsers through a complete game, and deletes only that test room in finally.
 import { chromium, expect } from "@playwright/test";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, writeFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 const url = process.env.DUO_SMOKE_URL;
 if (!url || !/^https:\/\//.test(url) || !url.endsWith("/")) {
@@ -12,6 +12,15 @@ const evidence = process.env.DUO_SMOKE_DIR || "docs/evidence";
 mkdirSync(evidence, { recursive: true });
 const browser = await chromium.launch({
   args: ["--disable-dev-shm-usage", "--no-sandbox"],
+});
+// Optional private recovery record: never place this credential file in evidence/Git.
+const stateFile = process.env.DUO_SMOKE_STATE;
+let interrupted = false;
+let stateWritten = false;
+for (const signal of ["SIGTERM", "SIGINT"]) process.once(signal, () => {
+  interrupted = true;
+  process.exitCode = 1;
+  void browser.close().catch(() => {});
 });
 let credentials;
 let hostPage;
@@ -69,6 +78,10 @@ try {
   );
   expect(credentials.code).toMatch(/^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$/);
   expect(credentials.token).toBeTruthy();
+  if (stateFile) {
+    writeFileSync(stateFile, JSON.stringify({ url, ...credentials }), { mode: 0o600, flag: "wx" });
+    stateWritten = true;
+  }
   await two.goto(one.url());
   await two.getByLabel("你的昵称").fill("部署验收乙");
   await two.getByRole("button", { name: "进入房间 ❤" }).click();
@@ -217,6 +230,7 @@ try {
   console.log(
     "PASS authenticated image upload through HTTPS reverse proxy (>16KiB)",
   );
+  if (interrupted) throw new Error("Deployment smoke was interrupted");
   expect(sockets).toBeGreaterThanOrEqual(3);
   expect(errors).toEqual([]);
   console.log(
@@ -240,6 +254,7 @@ try {
     });
     if (!response.ok)
       throw new Error("Could not remove deployment smoke-test room");
+    if (stateFile && stateWritten) unlinkSync(stateFile);
     console.log("PASS: temporary deployment test room removed");
   }
 }

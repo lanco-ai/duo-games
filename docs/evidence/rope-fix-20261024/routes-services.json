@@ -1,0 +1,59 @@
+{
+  "checkedAt": "2026-10-24T09:28:49.945868+00:00",
+  "routes": [
+    {
+      "url": "https://lancoai.site/",
+      "status": 200,
+      "redirect": null
+    },
+    {
+      "url": "https://lancoai.site:8444/",
+      "status": 302,
+      "redirect": "https://lancoai.site:8444/admin"
+    },
+    {
+      "url": "https://lancoai.site:8445/",
+      "status": 302,
+      "redirect": "https://lancoai.site:8445/admin/plans"
+    },
+    {
+      "url": "https://lancoai.site/duo",
+      "status": 308,
+      "redirect": "https://lancoai.site/duo/"
+    },
+    {
+      "url": "https://lancoai.site/duo-preview",
+      "status": 308,
+      "redirect": "https://lancoai.site/duo-preview/"
+    },
+    {
+      "url": "https://lancoai.site/duo/api/health",
+      "status": 200,
+      "redirect": null
+    },
+    {
+      "url": "https://lancoai.site/duo-preview/api/health",
+      "status": 200,
+      "redirect": null
+    }
+  ],
+  "services": {
+    "duo-games.service": {
+      "MainPID": "620422",
+      "NRestarts": "0",
+      "MemoryCurrent": "10874880",
+      "MemoryPeak": "28389376",
+      "ActiveState": "active",
+      "SubState": "running"
+    },
+    "duo-games-preview.service": {
+      "MainPID": "619739",
+      "NRestarts": "0",
+      "MemoryCurrent": "13086720",
+      "MemoryPeak": "26263552",
+      "ActiveState": "active",
+      "SubState": "running"
+    }
+  },
+  "filesystem": "Filesystem      Size  Used Avail Use% Mounted on\n/dev/sda3       9.3G  7.8G  1.6G  84% /"
+}

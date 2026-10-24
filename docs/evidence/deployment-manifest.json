@@ -1,29 +1,29 @@
 {
-  "preparedAt": "2026-10-24T02:16:08.926Z",
+  "preparedAt": "2026-10-24T09:19:13.759012+00:00",
   "phase": "verified",
-  "release": "/opt/duo-games/releases/20261024T021608Z",
-  "previous": "/opt/duo-games/releases/20261023T140722Z",
-  "backup": "/var/backups/duo-games/20261024T021608Z",
-  "sourceCommit": "46d39935baca13a2872ea67b895a8246564b7848",
+  "release": "/opt/duo-games/releases/20261024T091913Z",
+  "previous": "/opt/duo-games/releases/20261024T021608Z",
+  "backup": "/var/backups/duo-games/20261024T091913Z",
+  "sourceCommit": "1c8e738f8cdb68a1d02e1edbbbad73516a48b340",
+  "protocol": 3,
   "preReleaseCounts": {
-    "rooms": 6,
+    "rooms": 7,
     "journal": 0,
-    "matches": 7,
+    "matches": 8,
     "gallery": 4,
     "custom_content": 0,
     "images": 0
   },
   "imageReferencesComplete": true,
-  "deployedAt": "2026-10-24T02:16:54.768Z",
+  "deployedAt": "2026-10-24T09:19:54.738877+00:00",
   "url": "https://lancoai.site/duo/",
-  "node": "v22.23.2",
   "basePath": "/duo/",
-  "protocol": 2,
+  "node": "v22.23.2",
   "files": [
     {
       "path": "SOURCE_COMMIT",
       "bytes": 41,
-      "sha256": "d0853c149e500b40b13163d7bea78edecb1eedb289eaea51e29ad7a1f173f2f4"
+      "sha256": "c7fd74fa9c8a2e0f936893a92d4baa205646e1bb7178dacf4432e7eaa9fdcaef"
     },
     {
       "path": "package-lock.json",
@@ -37,78 +37,78 @@
     },
     {
       "path": "server.js",
-      "bytes": 180904,
-      "sha256": "5ccdd57ff16551dbe87c201f78a3f115e5abbf980ce39daeff066fd825030baf"
+      "bytes": 180929,
+      "sha256": "d7679b96a5988abea891d4bd8c580d2cabeb8f12473dc0062a5428bbf28f91d9"
     },
     {
-      "path": "web/assets/Bounce-p5ogAUGs.js",
+      "path": "web/assets/Bounce-BPt0cR4L.js",
       "bytes": 6612,
-      "sha256": "19a49be79e43951beaaaa02172e588e8f0aa4762353628cc8f2968b49d274bf6"
+      "sha256": "bd62c0c814c8d522ae12e2853f7708ead2dab1c4418f4e6805a353af49213372"
     },
     {
-      "path": "web/assets/Draw-3kxTUajO.js",
+      "path": "web/assets/Draw-D6PjlfZz.js",
       "bytes": 5744,
-      "sha256": "00a23d4c430ce0e38ce0e643e08ef242eb911e234c8822a119b6cfc830382df9"
+      "sha256": "e50668d5cd2c8b972b6368e7338ba18080ac38d8cfca8b1ce15f4a4d2ebe4bef"
     },
     {
-      "path": "web/assets/ExtraStage-BFrHM4e2.js",
+      "path": "web/assets/ExtraStage-BOmLB6AQ.js",
       "bytes": 1589,
-      "sha256": "10320af35fe2df6784382affa3feb69850cf03c63cbb3fa268b32fdd11d2ab27"
+      "sha256": "16d31017cd5927411f8e4f9137205594cb7fed9279a3ec0d3dbb09cc79ea2a27"
     },
     {
-      "path": "web/assets/Eyes-CBZISQfO.js",
+      "path": "web/assets/Eyes-0sj6DbXY.js",
       "bytes": 4882,
-      "sha256": "0bef9872e6d642151a9f4698354e32d0c9c39f4276d22cb9f8987e27152f5086"
+      "sha256": "ac5f3fa46c40e7e76b197eafd00aaf8b2262a8892554a56b092850e1b9a06e1a"
     },
     {
-      "path": "web/assets/Gomoku-kxjSk4rl.js",
+      "path": "web/assets/Gomoku-B1sN8EoR.js",
       "bytes": 3149,
-      "sha256": "d4ba12d3b6a80fdfa97407dcb96f8eb42c8c6bf91cf264586cad91dd2f641fe1"
+      "sha256": "c1881f6ae1c24f389e88fc423cf45fffeb5cf7650f90c0d03ccbe0ac8ea31686"
     },
     {
-      "path": "web/assets/Heartbeat-D0j33CYc.js",
+      "path": "web/assets/Heartbeat-DuSrsq7E.js",
       "bytes": 7066,
-      "sha256": "819f5a055beb957bfddfd0859a0bae43ddbc6ffe5da2a3676757aa18900393fc"
+      "sha256": "80fc6baff4b3577c8cf8aaa876d733e7501aaeadf18cc56d48a6827770ca47c9"
     },
     {
-      "path": "web/assets/Keepsakes-CURBUIav.js",
+      "path": "web/assets/Keepsakes-IKMvf8pp.js",
       "bytes": 7357,
-      "sha256": "e83709a09d7ef7413cc28e2409e6e532ff0ab98bc19aa99423a369833c4f0ad9"
+      "sha256": "f059f510cc729cb4221e09d1156621edf5762e7b1285749791f4f7c7ac4e1036"
     },
     {
-      "path": "web/assets/Know-C8xr72YQ.js",
+      "path": "web/assets/Know-pxfv_ytH.js",
       "bytes": 3734,
-      "sha256": "24654581faea88e8356d53fdad559bdc40079a8e50eaa7273b7df55341050635"
+      "sha256": "f2a8514fd93c41313a8daaaac247f524244cfd339c4eb67e8599b9621c15f3ee"
     },
     {
-      "path": "web/assets/Mind-BQmWWiUm.js",
+      "path": "web/assets/Mind-SrGRWhkF.js",
       "bytes": 2987,
-      "sha256": "bea222afa2ab407431db93db7055e89c625a6bc0cef63031831142d286aac64e"
+      "sha256": "db4d0be04e376b5b3a174cd5a4ea0afc8eb04efa762c38b72067948cd035d8a3"
     },
     {
-      "path": "web/assets/Puzzle-Bm4MPk-j.js",
+      "path": "web/assets/Puzzle-DgFJvDzL.js",
       "bytes": 9053,
-      "sha256": "ef03235a80b638ba8bca964f3fe1780060b627d31d7dcd5bb37105c56d7d538e"
+      "sha256": "f2c409b1941621dae0c865a4341dfc6866f23adc91d43f7bddb8a3424cc0952a"
     },
     {
-      "path": "web/assets/RedThread-DPlQDjeM.js",
-      "bytes": 24330,
-      "sha256": "e62a163561dcdaa7dfe98eda963cecc897df3e9899636b41a7704ec8c9754d34"
+      "path": "web/assets/RedThread-DB5_gTbf.js",
+      "bytes": 24959,
+      "sha256": "524c3c16e28ac168072ce3f97811e9875c9cbd170cc97deb15ceabf90a48fa66"
     },
     {
-      "path": "web/assets/Setup-BqkP5R7s.js",
+      "path": "web/assets/Setup-BXnfvshX.js",
       "bytes": 4803,
-      "sha256": "58a7d7ecd6bcd79783196c4bc10a2b162475ecbcd1a4e88dfbf63a6a88ee9f36"
+      "sha256": "3b24dfbd5de0afe3fc44099f7e94b4211a4915c787df4af8072edfc13c073406"
     },
     {
-      "path": "web/assets/Talk-D1786fTb.js",
+      "path": "web/assets/Talk-C0lcFb7Z.js",
       "bytes": 2468,
-      "sha256": "fbeebe30d0ca39f9103712a766672e8df80ea3aa5755b11a3f6e0e5ac3c97056"
+      "sha256": "04e7edc713257c5b130849bb24ea969b211ee48a33284ce86ae4bbd99705b859"
     },
     {
-      "path": "web/assets/audio-Pko8L7qE.js",
+      "path": "web/assets/audio-BNeZRHTf.js",
       "bytes": 3014,
-      "sha256": "15abe8d9b9bb67c2bd7a29e007ecf2ea579ad39b3dd9d2be17e5be86262a57cb"
+      "sha256": "5fd066a7073cffca09f8fc58ebeb8a0162b60aa33afc1c9fdc7fa41d54bc8536"
     },
     {
       "path": "web/assets/canvas-point-B4qk3snw.js",
@@ -116,9 +116,9 @@
       "sha256": "f8548be8646c71f9b4538fc6f7a79305c75b700c0fcdfd1694e58b8d2b0652ad"
     },
     {
-      "path": "web/assets/common-DMeWghum.js",
+      "path": "web/assets/common-iFutu1JO.js",
       "bytes": 746,
-      "sha256": "38d89784d14c4b84ad0f5753cda693e8af42bcc521bdfed1ebf1df51df7c1633"
+      "sha256": "45b3fef01115d71f58bfdca09c4d329bff119334189d2f55d1140d7a7b52c1d9"
     },
     {
       "path": "web/assets/drawing-DpENBSop.js",
@@ -141,24 +141,24 @@
       "sha256": "049f5dc48293b12fec7470a821ea988483096842d84a19d3b9cd2523e04b9102"
     },
     {
-      "path": "web/assets/image-D2toyEDK.js",
+      "path": "web/assets/image-BvnxCkhM.js",
       "bytes": 769,
-      "sha256": "329cec6ce8f2a1f9a2c02d4d728a27b7ef43a72fc0a34e5eebb72c42b360d803"
+      "sha256": "ed9dcc694799e1ceaca8571bc76380118676f5f8a665d1483d7e70c77306584f"
     },
     {
-      "path": "web/assets/index-8fG1rIJs.js",
-      "bytes": 96181,
-      "sha256": "33c88f4045854f8274553d77d6e0bb9ebe4e037d5e84f27b30b2df0b945413b2"
+      "path": "web/assets/index-CSZa5lEg.js",
+      "bytes": 95666,
+      "sha256": "7adaf17a783e5f152e1d9e5bc5b51336bc46d6bc0fce7b8a66c60b0491c989de"
     },
     {
-      "path": "web/assets/index-BmqnOBcT.css",
-      "bytes": 57443,
-      "sha256": "34be36a4b82186fba4d3e346dcad5f3c375d5f0e81ea3fe8379daeed321f6da1"
+      "path": "web/assets/index-Oe_CLCNJ.css",
+      "bytes": 57520,
+      "sha256": "8f51f9f4234eb143aa69f889132a8c121a48fc06b984347e4db180f21eb60908"
     },
     {
       "path": "web/index.html",
       "bytes": 778,
-      "sha256": "0d7226e68d73cb5280312918555e501c955794c4ca7e0e54f2e476e5ab16cefd"
+      "sha256": "73c27b1e871dea2e9efbf576373ebfda9b035d8be192cb68f54278db33994540"
     },
     {
       "path": "web/scenes/balloons.svg",
@@ -191,5 +191,5 @@
       "sha256": "74055f41d87ebcd99ddd77ab8b4d243ffeb49371024fba2e119db0018edb0967"
     }
   ],
-  "verifiedAt": "2026-10-24T02:20:44.489832+00:00"
+  "verifiedAt": "2026-10-24T09:32:23.140368+00:00"
 }

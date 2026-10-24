@@ -1,0 +1,2 @@
+PASS preview room absent from production; production browser room/credential unchanged
+PASS own isolation test room removed

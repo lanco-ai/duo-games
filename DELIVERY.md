@@ -30,13 +30,15 @@
 
 ## 验收证据
 
+2026-10-24 红绳修复另通过 2/2 专项浏览器回归，详情见 `docs/ROPE-FIX-20261024.md`；独立测试入口为 https://lancoai.site/duo-preview/。
+
 - `npm run typecheck`、`npm run check:physics`：通过。
-- `npm test`：10 个文件、93/93 测试通过，见 `audit-20261024/unit-tests.log`。
-- 卡通版完整浏览器回归：14/14 通过，包含照片上传/拖拽、八拍校准、节拍断网 15 秒、画笔边缘坐标及旧 CSS 单位模拟，见 `audit-20261024/browser-tests.log`。
-- `BASE_PATH=/duo/ npm run build`、`npm run check:size`：通过；初始 JS gzip 36.88 KiB、CSS 12.66 KiB，见 `audit-20261024/production-build.log`；双人子路径自检通过。
-- 已部署到 [二人世界](https://lancoai.site/duo/)，应用版本 1.0.0、通信协议 v2；发布路径、备份和回退见 `DEPLOYMENT.md`。
-- 公网双浏览器验收通过：聊天卡完整十张，九款新增游戏分别双人开局与退出结算，HTTPS/WSS、重连、保存图片、大于 16 KiB 的照片上传及两款本地字体正常，无 JavaScript/CSP 或控制台错误。见 `audit-20261024/deployment-smoke.log` 及同目录 `deployed-*.png`。
-- 发布后只读复核通过：33 个运行文件与本地构建及包文件一致，6 个房间、7 条战绩、4 件作品完整保留，服务无意外重启；原有其他入口状态不变。产物 SHA-256 与运行状态见 `deployment-manifest.json`、`deployment-status.json`。
+- `npm test`：11 个文件、98/98 测试通过，见 `rope-fix-20261024/unit.log`。
+- 上一版卡通界面完整浏览器回归：14/14 通过，包含照片上传/拖拽、八拍校准、节拍断网 15 秒、画笔边缘坐标及旧 CSS 单位模拟，见 `audit-20261024/browser-tests.log`。
+- `BASE_PATH=/duo/ npm run build`、`npm run check:size`：通过；初始 JS gzip 36.97 KiB、CSS 12.67 KiB，见 `rope-fix-20261024/production-build.log`；双人子路径自检通过。
+- 已部署到 [二人世界](https://lancoai.site/duo/)，应用版本 1.0.0、通信协议 v3；发布路径、备份和回退见 `DEPLOYMENT.md`。
+- 公网双浏览器验收通过：聊天卡完整十张，九款新增游戏分别双人开局与退出结算，HTTPS/WSS、重连、保存图片、大于 16 KiB 的照片上传及两款本地字体正常，无 JavaScript/CSP 或控制台错误。见 `rope-fix-20261024/production-smoke.log` 及`rope-fix-20261024/production/deployed-*.png`。
+- 发布后只读复核通过：33 个运行文件与本地构建及包文件一致，7 个房间、8 条战绩、4 件作品完整保留，服务无意外重启；原有其他入口状态不变。产物 SHA-256 与运行状态见 `deployment-manifest.json`、`deployment-status.json`。
 
 证据目录：`docs/evidence/`。
 
@@ -49,7 +51,7 @@
 - 一线牵服务端也运行已确认输入的整数模拟，校验结果并提供可信恢复快照；不是只转发输入。首两关及普通落脚点使用可穿越平台，终点有侧面起跳区，避免狭窄实心台阶挡住角色。
 - 关卡采用手工定义的台阶路径、机关位置和种子内容组合；六张内置拼图为本地 SVG 插画。无外部图片 CDN、音频下载或第三方生成服务。
 - 主通信为服务器 WebSocket，没有启用可选 WebRTC P2P。音频由浏览器合成；设备需完成一次校准并通过手势开启声音。
-- 正在进行的对局仍在内存中，进程重启会回大厅；保存的作品、回答、照片、题目和战绩保留。生产发布会短暂重连，本次通信协议保持 v2，旧页面刷新后加载最新界面及修复。
+- 正在进行的对局仍在内存中，进程重启会回大厅；保存的作品、回答、照片、题目和战绩保留。生产发布会短暂重连，本次通信协议升级为 v3，旧页面刷新后加载最新界面及修复。
 - 没有真实 iPhone、Android、微信内置浏览器和国内 Wi-Fi/4G 实测；不能把 Chromium/虚拟延迟测试称为真机 60fps、真实跨国网络或微信兼容性验收。
 - 当前服务器沿用既有 SNI 入口，建房配额仍按代理所见的同一地址共享。具体限制、配置、备份和回退见 `DEPLOYMENT.md`。
-- 邀请二维码图片暂未实现，邀请仍用房间码和链接；没有建立自动备份计划。本次已按用户授权完成本地源码提交 `46d3993` 并部署，仓库未配置远端，因此未推送。最新审核和发布记录见 `docs/AUDIT-20261024.md`。
+- 邀请二维码图片暂未实现，邀请仍用房间码和链接；没有建立自动备份计划。本次已按用户授权完成本地源码提交 `1c8e738` 并部署，仓库未配置远端，因此未推送。最新审核和发布记录见 `docs/AUDIT-20261024.md`。

@@ -1,0 +1,16 @@
+PASS: both bundled fonts loaded successfully
+node:fs:1948
+  binding.unlink(getValidatedPath(path));
+          ^
+
+Error: ENOENT: no such file or directory, unlink '/var/tmp/duo-rope-smoke-credentials.json'
+    at unlinkSync (node:fs:1948:11)
+    at file:///root/duo-games/scripts/check-deployment.mjs:254:20
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'unlink',
+  path: '/var/tmp/duo-rope-smoke-credentials.json'
+}
+
+Node.js v22.23.2
