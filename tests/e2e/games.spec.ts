@@ -303,6 +303,17 @@ test("draw-guess — two seats complete and rematch with 200ms delay", async ({
       seconds: 60,
       libraries: ["日常"],
     });
+    // Public IP over HTTP is not a secure context and has no randomUUID.
+    await Promise.all(
+      [one, two].map((page) =>
+        page.evaluate(() => {
+          Object.defineProperty(crypto, "randomUUID", {
+            value: undefined,
+            configurable: true,
+          });
+        }),
+      ),
+    );
     for (let round = 0; round < 4; round++) {
       const drawer = round % 2 ? two : one,
         guesser = round % 2 ? one : two;

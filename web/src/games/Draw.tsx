@@ -11,6 +11,7 @@ import { api } from "../api";
 import { paint, type Stroke } from "./drawing";
 import { Critter } from "../art/ui";
 import { canvasPoint } from "./canvas-point";
+import { randomId } from "../random";
 const palette = [
   "#292B3D",
   "#F05267",
@@ -218,7 +219,7 @@ export default function Draw(p: GameProps) {
               if (!mine || p.disabled || d.phase !== "drawing" || loading)
                 return;
               e.currentTarget.setPointerCapture(e.pointerId);
-              const id = crypto.randomUUID();
+              const id = randomId();
               const stroke: Stroke = {
                 id,
                 color,

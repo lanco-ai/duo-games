@@ -1,5 +1,6 @@
 import { Assembler } from "../../../shared/wire";
 import { Clock } from "../../../shared/clock";
+import { randomId } from "../random";
 import {
   VERSION,
   errors,
@@ -252,12 +253,7 @@ export class Transport {
   action(a: Action, seq: number) {
     if (!this.connected || this.stopped)
       return Promise.reject(new Error("正在重新连接，请稍等"));
-    const aid =
-      typeof crypto.randomUUID === "function"
-        ? crypto.randomUUID()
-        : Array.from(crypto.getRandomValues(new Uint8Array(16)), (x) =>
-            x.toString(16).padStart(2, "0"),
-          ).join("");
+    const aid = randomId();
     const m: ClientMessage = { t: "act", aid, a, seq };
     return new Promise<void>((resolve, reject) => {
       this.pending.set(aid, { m, resolve, reject, sent: performance.now() });
