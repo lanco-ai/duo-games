@@ -3578,3 +3578,21 @@ dialog[open] .sheet {
   font-size: 13px;
 }
 .preview-notice a { margin-left: 8px; text-decoration: underline; }
+.match-wait {
+  padding: 16px 4px;
+  text-align: center;
+}
+.match-wait p {
+  line-height: 1.6;
+}
+.match-spinner {
+  display: inline-block;
+  font-size: 52px;
+  animation: match-bounce 1s ease-in-out infinite alternate;
+}
+@keyframes match-bounce {
+  to { transform: translateY(-10px) rotate(12deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .match-spinner { animation: none; }
+}

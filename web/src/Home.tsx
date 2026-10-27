@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { ALPHABET, type Profile } from "../../shared/protocol";
 import { games, type GameMeta } from "../../shared/catalog";
 import { api, BASE, profile, remember, roomLink, roomStorageKey } from "./api";
@@ -8,6 +8,10 @@ import { Critter, Logo, Scene, TetheredPair } from "./art/ui";
 import { Icon } from "./ui/icons";
 export function Home() {
   const [creating, setCreating] = useState(false),
+    [randomMode, setRandomMode] = useState(false),
+    [ticket, setTicket] = useState<{ token: string; profile: Profile } | null>(
+      null,
+    ),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [selected, setSelected] = useState<GameMeta | null>(null),
@@ -16,6 +20,7 @@ export function Home() {
     [joining, setJoining] = useState(false),
     [privacy, setPrivacy] = useState(false),
     [toast, setToast] = useState("");
+  const cancelling = useRef(false);
   const last = localStorage.getItem(roomStorageKey("lastRoom")),
     back = last && localStorage.getItem(roomStorageKey("token." + last)),
     me = profile();
@@ -33,6 +38,83 @@ export function Home() {
       location.assign(roomLink(data.code));
     } catch (e) {
       setError((e as Error).message);
+      setBusy(false);
+    }
+  }
+  function enterMatched(data: { code: string; token: string }, p: Profile) {
+    remember(data, p);
+    location.assign(roomLink(data.code));
+  }
+  async function startMatching(p: Profile) {
+    setBusy(true);
+    setError("");
+    cancelling.current = false;
+    try {
+      let clientId = localStorage.getItem(roomStorageKey("matchClient"));
+      if (!clientId || !/^[a-f0-9]{32}$/.test(clientId)) {
+        clientId = Array.from(
+          crypto.getRandomValues(new Uint8Array(16)),
+          (byte) => byte.toString(16).padStart(2, "0"),
+        ).join("");
+        localStorage.setItem(roomStorageKey("matchClient"), clientId);
+      }
+      const data = await api("matchmaking", "POST", { profile: p, clientId });
+      setTicket({ token: data.ticket, profile: p });
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  useEffect(() => {
+    if (!ticket) return;
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      try {
+        const data = await api("matchmaking", "GET", undefined, ticket.token);
+        if (!active || cancelling.current) return;
+        if (data.status === "matched") {
+          enterMatched(data, ticket.profile);
+          return;
+        }
+        setError("");
+      } catch (e) {
+        const message = (e as Error).message;
+        if (active)
+          setError(
+            message === "房间凭证已失效，请重新加入"
+              ? "匹配已过期，请取消后重新开始。"
+              : message,
+          );
+        if (message === "房间凭证已失效，请重新加入") return;
+      }
+      if (active && !cancelling.current) timer = setTimeout(poll, 2000);
+    };
+    void poll();
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [ticket]);
+  async function cancelMatching() {
+    if (!ticket) return;
+    cancelling.current = true;
+    setBusy(true);
+    try {
+      const data = await api("matchmaking", "DELETE", undefined, ticket.token);
+      if (data.status === "matched") {
+        enterMatched(data, ticket.profile);
+        return;
+      }
+      setTicket(null);
+      setCreating(false);
+      setError("");
+    } catch (e) {
+      setError((e as Error).message);
+      cancelling.current = false;
+      setTicket({ ...ticket });
+    } finally {
       setBusy(false);
     }
   }
@@ -87,10 +169,23 @@ export function Home() {
             class="go big wide hero-button"
             onClick={() => {
               setWantGame("");
+              setRandomMode(false);
+              setError("");
               setCreating(true);
             }}
           >
             <Icon name="heart" /> 创建房间，邀请 TA
+          </button>
+          <button
+            class="primary big wide"
+            onClick={() => {
+              setWantGame("");
+              setRandomMode(true);
+              setError("");
+              setCreating(true);
+            }}
+          >
+            🎲 随机匹配在线玩家
           </button>
           <button
             class="primary big wide join-trigger"
@@ -214,19 +309,48 @@ export function Home() {
           start={() => {
             setSelected(null);
             setWantGame(selected.id);
+            setRandomMode(false);
             setCreating(true);
           }}
         />
       )}
       {creating && (
-        <Modal title="先认识一下你" close={() => !busy && setCreating(false)}>
-          <p class="muted center">选一个小伙伴，再给 TA 留一个熟悉的名字。</p>
-          <ProfileForm
-            initial={profile()}
-            submit={create}
-            busy={busy}
-            label="创建我们的房间"
-          />
+        <Modal
+          title={randomMode ? "随机匹配" : "先认识一下你"}
+          close={() => {
+            if (!busy) ticket ? void cancelMatching() : setCreating(false);
+          }}
+        >
+          {ticket ? (
+            <div class="match-wait" role="status">
+              <div class="match-spinner" aria-hidden="true">
+                🎲
+              </div>
+              <h3>正在寻找一起玩的伙伴…</h3>
+              <p>匹配成功后会自动进入双人房间，请保持页面打开。</p>
+              <button
+                class="secondary wide"
+                disabled={busy}
+                onClick={() => void cancelMatching()}
+              >
+                取消匹配
+              </button>
+            </div>
+          ) : (
+            <>
+              <p class="muted center">
+                {randomMode
+                  ? "将随机配对一位在线玩家。对方可看到你的昵称、形象和在房间中分享的内容。"
+                  : "选一个小伙伴，再给 TA 留一个熟悉的名字。"}
+              </p>
+              <ProfileForm
+                initial={profile()}
+                submit={randomMode ? startMatching : create}
+                busy={busy}
+                label={randomMode ? "开始随机匹配" : "创建我们的房间"}
+              />
+            </>
+          )}
           {error && (
             <p class="error" role="alert">
               {error}

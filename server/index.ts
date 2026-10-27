@@ -14,6 +14,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { Store } from "./store";
 import { cards } from "../shared/content/cards";
 import { RoomManager, type LiveRoom, type Peer } from "./rooms";
+import { Matchmaking } from "./matchmaking";
 import { Bucket } from "./ratelimit";
 import {
   VERSION,
@@ -47,6 +48,8 @@ export function createApp(options: Options = {}) {
     options.web ?? resolve(dirname(fileURLToPath(import.meta.url)), "web");
   const store = new Store(data),
     manager = new RoomManager(store),
+    matchmaking = new Matchmaking(manager),
+    matchLimits = new Map<string, { bucket: Bucket; at: number }>(),
     limits = new Map<string, { bucket: Bucket; at: number }>();
   const lag = Math.max(
     0,
@@ -89,6 +92,51 @@ export function createApp(options: Options = {}) {
       if (path.startsWith(prefix + "/api/")) {
         const route = path.slice((prefix + "/api/").length).split("/"),
           code = route[1];
+        if (route[0] === "matchmaking" && route.length === 1) {
+          if (req.method === "POST") {
+            const input = await body(req);
+            if (
+              !validProfile(input.profile) ||
+              typeof input.clientId !== "string"
+            )
+              throw new Error("INVALID");
+            const forwarded =
+              process.env.TRUST_PROXY === "1"
+                ? req.headers["x-real-ip"]
+                : undefined;
+            const ip =
+              (typeof forwarded === "string"
+                ? forwarded
+                : req.socket.remoteAddress) || "unknown";
+            let entry = matchLimits.get(ip);
+            if (!entry) {
+              entry = { bucket: new Bucket(1 / 3, 20), at: Date.now() };
+              matchLimits.set(ip, entry);
+            }
+            entry.at = Date.now();
+            if (!entry.bucket.take()) throw new Error("RATE_LIMITED");
+            json(
+              res,
+              201,
+              matchmaking.start(input.clientId, {
+                ...input.profile,
+                nickname: input.profile.nickname.trim(),
+              }),
+            );
+            return;
+          }
+          const ticket =
+            req.headers.authorization?.replace(/^Bearer /, "") || "";
+          if (req.method === "GET") {
+            json(res, 200, matchmaking.status(ticket));
+            return;
+          }
+          if (req.method === "DELETE") {
+            json(res, 200, matchmaking.cancel(ticket));
+            return;
+          }
+          throw new Error("INVALID");
+        }
         if (route[0] !== "rooms") throw new Error("ROOM_NOT_FOUND");
         if (route.length === 1 && req.method === "POST") {
           const input = await body(req);
@@ -596,7 +644,10 @@ export function createApp(options: Options = {}) {
       if (room && seat !== undefined) manager.disconnect(room, seat, peer);
     });
   });
-  const heartbeat = setInterval(() => manager.maintenance(), 2000);
+  const heartbeat = setInterval(() => {
+    manager.maintenance();
+    matchmaking.expire();
+  }, 2000);
   heartbeat.unref();
   const network = setInterval(() => {
     for (const r of manager.rooms.values()) {
@@ -616,6 +667,8 @@ export function createApp(options: Options = {}) {
     }
     for (const [ip, v] of limits)
       if (Date.now() - v.at > 3600000) limits.delete(ip);
+    for (const [ip, v] of matchLimits)
+      if (Date.now() - v.at > 3600000) matchLimits.delete(ip);
   };
   const expiration = setInterval(cleanup, 3600000);
   expiration.unref();
