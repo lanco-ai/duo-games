@@ -15,6 +15,7 @@ import { Store } from "./store";
 import { cards } from "../shared/content/cards";
 import { RoomManager, type LiveRoom, type Peer } from "./rooms";
 import { Matchmaking } from "./matchmaking";
+import { Presence } from "./presence";
 import { Bucket } from "./ratelimit";
 import {
   VERSION,
@@ -49,6 +50,7 @@ export function createApp(options: Options = {}) {
   const store = new Store(data),
     manager = new RoomManager(store),
     matchmaking = new Matchmaking(manager),
+    presence = new Presence(),
     matchLimits = new Map<string, { bucket: Bucket; at: number }>(),
     limits = new Map<string, { bucket: Bucket; at: number }>();
   const lag = Math.max(
@@ -92,6 +94,15 @@ export function createApp(options: Options = {}) {
       if (path.startsWith(prefix + "/api/")) {
         const route = path.slice((prefix + "/api/").length).split("/"),
           code = route[1];
+        if (
+          route[0] === "presence" &&
+          route.length === 1 &&
+          req.method === "POST"
+        ) {
+          const input = await body(req);
+          json(res, 200, { online: presence.heartbeat(input.clientId) });
+          return;
+        }
         if (route[0] === "matchmaking" && route.length === 1) {
           if (req.method === "POST") {
             const input = await body(req);
@@ -647,6 +658,7 @@ export function createApp(options: Options = {}) {
   const heartbeat = setInterval(() => {
     manager.maintenance();
     matchmaking.expire();
+    presence.expire();
   }, 2000);
   heartbeat.unref();
   const network = setInterval(() => {

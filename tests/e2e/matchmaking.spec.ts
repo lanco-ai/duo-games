@@ -1,5 +1,34 @@
 import { test, expect } from "@playwright/test";
 
+test("online count includes both browsers and deduplicates tabs", async ({
+  browser,
+}) => {
+  const a = await browser.newContext(),
+    b = await browser.newContext();
+  const first = await a.newPage(),
+    second = await b.newPage();
+  try {
+    await first.goto("/");
+    await expect(first.locator(".online-count")).toContainText("当前在线 1 人");
+    await second.goto("/");
+    await expect(second.locator(".online-count")).toContainText(
+      "当前在线 2 人",
+    );
+    const anotherTab = await a.newPage();
+    await anotherTab.goto("/");
+    await expect(anotherTab.locator(".online-count")).toContainText(
+      "当前在线 2 人",
+    );
+    await expect(first.locator(".online-count")).toContainText(
+      "当前在线 2 人",
+      { timeout: 20000 },
+    );
+  } finally {
+    await a.close();
+    await b.close();
+  }
+});
+
 test("random matching pairs two devices and opens the same room", async ({
   browser,
 }) => {

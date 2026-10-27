@@ -3582,6 +3582,14 @@ dialog[open] .sheet {
   padding: 16px 4px;
   text-align: center;
 }
+.online-count {
+  margin: 0 0 6px;
+  color: #5f6e4c;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+.online-count span { color: #40a66b; }
 .match-wait p {
   line-height: 1.6;
 }

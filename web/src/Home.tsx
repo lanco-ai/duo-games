@@ -6,7 +6,7 @@ import { Catalog, GameInfo } from "./ui/catalog";
 import { Modal, ProfileForm, copyText } from "./ui/common";
 import { Critter, Logo, Scene, TetheredPair } from "./art/ui";
 import { Icon } from "./ui/icons";
-export function Home() {
+export function Home({ online }: { online: number | null }) {
   const [creating, setCreating] = useState(false),
     [randomMode, setRandomMode] = useState(false),
     [ticket, setTicket] = useState<{ token: string; profile: Profile } | null>(
@@ -187,6 +187,14 @@ export function Home() {
           >
             🎲 随机匹配在线玩家
           </button>
+          <p
+            class="online-count"
+            role="status"
+            title="按最近活跃的浏览器估算，同一浏览器的多个窗口计为一人"
+          >
+            <span aria-hidden="true">●</span>{" "}
+            {online === null ? "在线人数暂不可用" : `当前在线 ${online} 人`}
+          </p>
           <button
             class="primary big wide join-trigger"
             aria-expanded={joining}
