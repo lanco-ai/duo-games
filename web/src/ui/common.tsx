@@ -1,3 +1,4 @@
+import { localStore } from "../storage";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { AVATARS, COLORS, type Profile } from "../../../shared/protocol";
@@ -171,7 +172,7 @@ export function unlockSound() {
   } catch {}
 }
 export function chime() {
-  if (localStorage.getItem("duo.sound") === "off" || !audio) return;
+  if (localStore.getItem("duo.sound") === "off" || !audio) return;
   try {
     const o = audio.createOscillator(),
       g = audio.createGain();

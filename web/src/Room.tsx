@@ -1,3 +1,4 @@
+import { localStore, sessionStore } from "./storage";
 import { isExtra, type ExtraView } from "../../shared/games/types";
 import { lazy, Suspense } from "preact/compat";
 import { useEffect, useRef, useState } from "preact/hooks";
@@ -15,7 +16,15 @@ import {
   type TalkView,
   type Settings,
 } from "../../shared/protocol";
-import { api, BASE, profile, remember, roomLink, roomStorageKey } from "./api";
+import {
+  api,
+  BASE,
+  bindDevice,
+  profile,
+  remember,
+  roomLink,
+  roomStorageKey,
+} from "./api";
 import { Transport } from "./net/transport";
 import { Catalog, GameInfo } from "./ui/catalog";
 import { Couple, Modal, ProfileForm, copyText, unlockSound } from "./ui/common";
@@ -36,10 +45,10 @@ type PublicRoom = {
 };
 export function Room({ code }: { code: string }) {
   const [token, setToken] = useState(
-      localStorage.getItem(roomStorageKey("token." + code)) || "",
+      localStore.getItem(roomStorageKey("token." + code)) || "",
     ),
     [localToken, setLocalToken] = useState(
-      localStorage.getItem(roomStorageKey("localPeer." + code)) || "",
+      localStore.getItem(roomStorageKey("localPeer." + code)) || "",
     ),
     [localGame, setLocalGame] = useState<ExtraView | null>(null),
     [localConnected, setLocalConnected] = useState(false),
@@ -55,11 +64,14 @@ export function Room({ code }: { code: string }) {
     [selected, setSelected] = useState<GameMeta | null>(null),
     [panel, setPanel] = useState(""),
     [clockTick, setClockTick] = useState(0),
-    [copyFallback, setCopyFallback] = useState(""),
+    [copyFallback, setCopyFallback] = useState<{
+      value: string;
+      kind: "code" | "link";
+    } | null>(null),
     [toast, setToast] = useState(""),
     [chat, setChat] = useState(""),
     [reaction, setReaction] = useState(""),
-    [sound, setSound] = useState(localStorage.getItem("duo.sound") !== "off"),
+    [sound, setSound] = useState(localStore.getItem("duo.sound") !== "off"),
     [deleteConfirm, setDeleteConfirm] = useState(false),
     [transfer, setTransfer] = useState(""),
     [resultImage, setResultImage] = useState(""),
@@ -70,7 +82,9 @@ export function Room({ code }: { code: string }) {
     localRoom = useRef<RoomView | null>(null),
     current = useRef<RoomView | null>(null),
     busyCount = useRef(0),
-    reactionTimer = useRef<ReturnType<typeof setTimeout>>();
+    reactionTimer = useRef<ReturnType<typeof setTimeout>>(),
+    attemptedLocalRecovery = useRef(false),
+    attemptedPrimaryRecovery = useRef(false);
   const transferSecret = useRef(
     new URLSearchParams(location.hash.slice(1)).get("rebind"),
   );
@@ -90,6 +104,15 @@ export function Room({ code }: { code: string }) {
           return;
         }
         if (!token) {
+          const recovered = await api("device/recover", "POST", {
+            code,
+            slot: "primary",
+          }).catch(() => null);
+          if (recovered) {
+            remember(recovered);
+            if (!cancelled) setToken(recovered.token);
+            return;
+          }
           const data = await api("rooms/" + code);
           if (!cancelled) setPublicRoom(data);
         }
@@ -116,7 +139,8 @@ export function Room({ code }: { code: string }) {
           setRoom(m.room);
           current.current = m.room;
           setGame(m.game);
-          localStorage.setItem(roomStorageKey("lastRoom"), code);
+          localStore.setItem(roomStorageKey("lastRoom"), code);
+          void bindDevice(code, token).catch(() => {});
         }
         if (m.t === "room") {
           setRoom(m.room);
@@ -124,6 +148,17 @@ export function Room({ code }: { code: string }) {
         }
         if (m.t === "game") setGame(m.view);
         if (m.t === "err") {
+          if (m.code === "BAD_TOKEN" && !attemptedPrimaryRecovery.current) {
+            attemptedPrimaryRecovery.current = true;
+            void api("device/recover", "POST", { code, slot: "primary" })
+              .then((recovered) => {
+                remember(recovered);
+                setFatal("");
+                setToken(recovered.token);
+              })
+              .catch(() => setFatal(m.msg));
+            return;
+          }
           if (
             ["REPLACED", "BAD_TOKEN", "ROOM_NOT_FOUND", "VERSION"].includes(
               m.code,
@@ -134,8 +169,8 @@ export function Room({ code }: { code: string }) {
         }
         if (m.t === "evt") {
           if (m.e.type === "deleted") {
-            localStorage.removeItem(roomStorageKey("token." + code));
-            localStorage.removeItem(roomStorageKey("localPeer." + code));
+            localStore.removeItem(roomStorageKey("token." + code));
+            localStore.removeItem(roomStorageKey("localPeer." + code));
             setLocalToken("");
             setFatal("房间已解散，愿下次相见还有新的故事。");
           } else if (m.e.type === "react") {
@@ -157,6 +192,25 @@ export function Room({ code }: { code: string }) {
     };
   }, [token, code]);
   useEffect(() => {
+    if (!token || localToken || attemptedLocalRecovery.current) return;
+    attemptedLocalRecovery.current = true;
+    let cancelled = false;
+    void api("device/recover", "POST", { code, slot: "local" })
+      .then((recovered) => {
+        if (!cancelled) {
+          localStore.setItem(
+            roomStorageKey("localPeer." + code),
+            recovered.token,
+          );
+          setLocalToken(recovered.token);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [token, code]);
+  useEffect(() => {
     if (!localToken || !token) return;
     const url = new URL(BASE + "ws", location.origin);
     url.protocol = location.protocol === "https:" ? "wss:" : "ws:";
@@ -169,6 +223,7 @@ export function Room({ code }: { code: string }) {
           localRoom.current = m.room;
           setLocalSequence(m.room.seq);
           setLocalGame(m.game && "kind" in m.game ? m.game : null);
+          void bindDevice(code, localToken, "local").catch(() => {});
         }
         if (m.t === "room") {
           localRoom.current = m.room;
@@ -178,9 +233,29 @@ export function Room({ code }: { code: string }) {
           setLocalGame(m.view && "kind" in m.view ? m.view : null);
         if (
           m.t === "err" &&
+          m.code === "BAD_TOKEN" &&
+          !attemptedLocalRecovery.current
+        ) {
+          attemptedLocalRecovery.current = true;
+          void api("device/recover", "POST", { code, slot: "local" })
+            .then((recovered) => {
+              localStore.setItem(
+                roomStorageKey("localPeer." + code),
+                recovered.token,
+              );
+              setLocalToken(recovered.token);
+            })
+            .catch(() => {
+              localStore.removeItem(roomStorageKey("localPeer." + code));
+              setLocalToken("");
+            });
+          return;
+        }
+        if (
+          m.t === "err" &&
           ["BAD_TOKEN", "ROOM_NOT_FOUND", "REPLACED"].includes(m.code)
         ) {
-          localStorage.removeItem(roomStorageKey("localPeer." + code));
+          localStore.removeItem(roomStorageKey("localPeer." + code));
           setLocalToken("");
         }
       },
@@ -235,10 +310,10 @@ export function Room({ code }: { code: string }) {
     if (
       room &&
       ["lobby", "waiting"].includes(room.phase) &&
-      sessionStorage.getItem(roomStorageKey("propose." + code))
+      sessionStore.getItem(roomStorageKey("propose." + code))
     ) {
-      const wanted = sessionStorage.getItem(roomStorageKey("propose." + code))!;
-      sessionStorage.removeItem(roomStorageKey("propose." + code));
+      const wanted = sessionStore.getItem(roomStorageKey("propose." + code))!;
+      sessionStore.removeItem(roomStorageKey("propose." + code));
       void send({ type: "propose", gameId: wanted });
     }
   }, [room?.phase]);
@@ -308,7 +383,8 @@ export function Room({ code }: { code: string }) {
       const data = await api("rooms/" + code + "/join", "POST", {
         profile: { nickname: "同屏玩家", avatar: "🐻", color },
       });
-      localStorage.setItem(roomStorageKey("localPeer." + code), data.token);
+      localStore.setItem(roomStorageKey("localPeer." + code), data.token);
+      await bindDevice(code, data.token, "local").catch(() => {});
       setLocalToken(data.token);
     } catch (e) {
       setError((e as Error).message);
@@ -321,6 +397,7 @@ export function Room({ code }: { code: string }) {
     try {
       const data = await api("rooms/" + code + "/join", "POST", { profile: p });
       remember(data, p);
+      await bindDevice(code, data.token).catch(() => {});
       setToken(data.token);
     } catch (e) {
       setError((e as Error).message);
@@ -333,7 +410,11 @@ export function Room({ code }: { code: string }) {
   async function copyInvite() {
     const link = location.origin + BASE + "r/" + code;
     if (await copyText(link)) setToast("邀请链接已复制，发给 TA 吧");
-    else setCopyFallback(link);
+    else setCopyFallback({ value: link, kind: "link" });
+  }
+  async function copyRoomCode() {
+    if (await copyText(code)) setToast("房间号已复制，发给 TA 吧");
+    else setCopyFallback({ value: code, kind: "code" });
   }
   const activeGame =
     games.find((g) => g.id === room?.proposal?.gameId) || games[0];
@@ -517,7 +598,11 @@ export function Room({ code }: { code: string }) {
           <a href={BASE} class="round-small room-back" aria-label="回首页">
             <Icon name="home" />
           </a>
-          <button class="room-code-button" onClick={copyInvite}>
+          <button
+            class="room-code-button"
+            aria-label="复制房间号"
+            onClick={copyRoomCode}
+          >
             房间 <b>{displayCode}</b> <Icon name="copy" size={18} />
           </button>
           <button
@@ -1085,7 +1170,7 @@ export function Room({ code }: { code: string }) {
             onClick={() => {
               unlockSound();
               if (activeGame.id === "heartbeat") {
-                if (localStorage.getItem("duo.inputOffset") === null) {
+                if (localStore.getItem("duo.inputOffset") === null) {
                   setError("先跟着节拍完成 8 次校准，再开始吧。");
                   return;
                 }
@@ -1221,7 +1306,7 @@ export function Room({ code }: { code: string }) {
             blocked={room.profiles[other] ? [room.profiles[other]!.color] : []}
             submit={async (p) => {
               if (await send({ type: "profile", profile: p })) {
-                localStorage.setItem("duo.profile", JSON.stringify(p));
+                localStore.setItem("duo.profile", JSON.stringify(p));
                 setToast("资料已更新");
               }
             }}
@@ -1234,7 +1319,7 @@ export function Room({ code }: { code: string }) {
               class="secondary"
               onClick={() => {
                 setSound(!sound);
-                localStorage.setItem("duo.sound", sound ? "off" : "on");
+                localStore.setItem("duo.sound", sound ? "off" : "on");
                 if (!sound) unlockSound();
               }}
             >
@@ -1313,8 +1398,8 @@ export function Room({ code }: { code: string }) {
                   onClick={async () => {
                     try {
                       await api("rooms/" + code, "DELETE", undefined, token);
-                      localStorage.removeItem(roomStorageKey("token." + code));
-                      localStorage.removeItem(
+                      localStore.removeItem(roomStorageKey("token." + code));
+                      localStore.removeItem(
                         roomStorageKey("localPeer." + code),
                       );
                       setLocalToken("");
@@ -1368,12 +1453,21 @@ export function Room({ code }: { code: string }) {
         </Modal>
       )}
       {copyFallback && (
-        <Modal title="把这个链接发给 TA" close={() => setCopyFallback("")}>
-          <p>长按选中并复制下面的邀请链接。</p>
+        <Modal
+          title={
+            copyFallback.kind === "code" ? "复制房间号" : "把这个链接发给 TA"
+          }
+          close={() => setCopyFallback(null)}
+        >
+          <p>
+            {copyFallback.kind === "code"
+              ? "长按选中并复制下面的房间号。"
+              : "长按选中并复制下面的邀请链接。"}
+          </p>
           <input
-            aria-label="邀请链接"
+            aria-label={copyFallback.kind === "code" ? "房间号" : "邀请链接"}
             readOnly
-            value={copyFallback}
+            value={copyFallback.value}
             onFocus={(e) => e.currentTarget.select()}
           />
         </Modal>

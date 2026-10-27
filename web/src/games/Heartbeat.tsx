@@ -1,3 +1,4 @@
+import { localStore } from "../storage";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import {
   chart,
@@ -36,7 +37,7 @@ export default function Heartbeat(p: GameProps) {
     [score, setScore] = useState(
       (d.own as [number, number][]).reduce((n, x) => n + x[1], 0),
     ),
-    [muted, setMuted] = useState(localStorage.getItem("duo.sound") === "off");
+    [muted, setMuted] = useState(localStore.getItem("duo.sound") === "off");
   const elapsed = () => {
     const ctx = audioContext();
     return ctx?.state === "running" && anchor.current !== null
@@ -114,7 +115,7 @@ export default function Heartbeat(p: GameProps) {
           ctx.currentTime + (d.startAt - p.transport.now()) / 1000;
       return;
     }
-    const offset = Number(localStorage.getItem("duo.inputOffset")) || 0,
+    const offset = Number(localStore.getItem("duo.inputOffset")) || 0,
       ts =
         Math.abs(eventTime - performance.now()) < 10000
           ? eventTime
@@ -157,8 +158,7 @@ export default function Heartbeat(p: GameProps) {
       if (
         n.seats.includes(p.seat) &&
         !judged.current.has(n.id) &&
-        time - (Number(localStorage.getItem("duo.inputOffset")) || 0) >
-          n.ms + 135
+        time - (Number(localStore.getItem("duo.inputOffset")) || 0) > n.ms + 135
       )
         judge(n.id, 0);
     const w = 360,
@@ -209,7 +209,14 @@ export default function Heartbeat(p: GameProps) {
       g.ellipse(cx, line, 36 + flash * 6, 10 + flash * 3, 0, 0, Math.PI * 2);
       g.fill();
     }
-    const rainbow = ["#FF6B6B", "#FFA94D", "#FFE066", "#8CE99A", "#74C0FC", "#B197FC"];
+    const rainbow = [
+      "#FF6B6B",
+      "#FFA94D",
+      "#FFE066",
+      "#8CE99A",
+      "#74C0FC",
+      "#B197FC",
+    ];
     rainbow.forEach((c, i) => {
       g.fillStyle = c;
       g.fillRect(0, line - 7.5 + i * 2.5, w, 2.5);
@@ -276,7 +283,11 @@ export default function Heartbeat(p: GameProps) {
         e.lane * 180 + 90,
         line - 46 - k * 30,
         e.text === "Perfect" ? 22 : 18,
-        e.text === "Miss" ? "#C9C3D6" : e.text === "Perfect" ? "#FFE066" : "#FFFFFF",
+        e.text === "Miss"
+          ? "#C9C3D6"
+          : e.text === "Perfect"
+            ? "#FFE066"
+            : "#FFFFFF",
         "#3A2618",
       );
       g.globalAlpha = 1;
@@ -324,7 +335,7 @@ export default function Heartbeat(p: GameProps) {
         class="text-button light"
         onClick={() => {
           setMuted(!muted);
-          localStorage.setItem("duo.sound", muted ? "on" : "off");
+          localStore.setItem("duo.sound", muted ? "on" : "off");
           unlockMusic();
         }}
       >

@@ -267,7 +267,9 @@ test("200ms delay at 360×640, clipboard fallback and high-delay terminal takeov
     document.execCommand = () => false;
   });
   await one.locator(".room-code-button").click();
-  await expect(one.getByRole("textbox", { name: "邀请链接" })).toBeVisible();
+  await expect(one.getByRole("textbox", { name: "房间号" })).toHaveValue(
+    url.match(/\/r\/([A-Z2-9]{6})/)![1],
+  );
   await one.getByRole("button", { name: "关闭", exact: true }).click();
   await start(one, two);
   await draw(one);

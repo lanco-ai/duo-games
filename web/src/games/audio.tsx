@@ -1,3 +1,4 @@
+import { localStore } from "../storage";
 import { useEffect, useRef, useState } from "preact/hooks";
 let context: AudioContext | undefined;
 export function audioContext() {
@@ -67,7 +68,7 @@ export function scheduleBeat(
   halfBeat: number,
   bpm: number,
 ) {
-  if (localStorage.getItem("duo.sound") === "off") return;
+  if (localStore.getItem("duo.sound") === "off") return;
   const beat = halfBeat / 2,
     unit = 60 / bpm,
     chord = [130.81, 174.61, 146.83, 196][Math.floor(beat / 16) % 4];
@@ -95,7 +96,7 @@ export function Calibration() {
   const [running, setRunning] = useState(false),
     [count, setCount] = useState(0),
     [pulse, setPulse] = useState(0),
-    [offset, setOffset] = useState(localStorage.getItem("duo.inputOffset")),
+    [offset, setOffset] = useState(localStore.getItem("duo.inputOffset")),
     start = useRef(0),
     deltas = useRef(new Map<number, number>()),
     timer = useRef<ReturnType<typeof setInterval>>();
@@ -142,7 +143,7 @@ export function Calibration() {
             Math.max(-200, Math.min(200, (values[3] + values[4]) / 2)),
           ),
         );
-      localStorage.setItem("duo.inputOffset", result);
+      localStore.setItem("duo.inputOffset", result);
       setOffset(result);
       setRunning(false);
       clearInterval(timer.current);

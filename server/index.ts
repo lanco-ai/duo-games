@@ -1,5 +1,5 @@
 import { frames } from "../shared/wire";
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { imageInfo } from "./images";
 import { text as checkedText } from "../shared/text";
 import {
@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 import { WebSocketServer, WebSocket } from "ws";
 import { Store } from "./store";
 import { cards } from "../shared/content/cards";
-import { RoomManager, type LiveRoom, type Peer } from "./rooms";
+import { RoomManager, hash, type LiveRoom, type Peer } from "./rooms";
 import { Matchmaking } from "./matchmaking";
 import { Presence } from "./presence";
 import { Bucket } from "./ratelimit";
@@ -94,6 +94,66 @@ export function createApp(options: Options = {}) {
       if (path.startsWith(prefix + "/api/")) {
         const route = path.slice((prefix + "/api/").length).split("/"),
           code = route[1];
+        if (route[0] === "device" && route.length === 2) {
+          const raw = req.headers.cookie
+            ?.split(";")
+            .map((part) => part.trim())
+            .find((part) => part.startsWith("duo_device="))
+            ?.slice("duo_device=".length);
+          const device = raw && /^[a-f0-9]{64}$/.test(raw) ? hash(raw) : null;
+          const now = Date.now();
+          if (route[1] === "last" && req.method === "GET") {
+            json(res, 200, {
+              code: device ? store.deviceLast(device, now) : null,
+            });
+            return;
+          }
+          if (req.method !== "POST") throw new Error("INVALID");
+          const input = await body(req);
+          if (
+            typeof input.code !== "string" ||
+            !/^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$/.test(input.code) ||
+            !["primary", "local"].includes(input.slot)
+          )
+            throw new Error("INVALID");
+          const room = manager.require(input.code);
+          const slot = input.slot as "primary" | "local";
+          if (route[1] === "bind") {
+            const seat = manager.auth(
+              room,
+              req.headers.authorization?.replace(/^Bearer /, ""),
+            );
+            const secret =
+              raw && device ? raw : randomBytes(32).toString("hex");
+            const deviceHash = device || hash(secret);
+            const otherSlot = slot === "primary" ? "local" : "primary";
+            if (
+              store.deviceSeat(deviceHash, input.code, otherSlot, now) === seat
+            )
+              throw new Error("INVALID");
+            store.bindDevice(deviceHash, input.code, slot, seat, now);
+            const secure =
+              (req.socket as { encrypted?: boolean }).encrypted ||
+              (process.env.TRUST_PROXY === "1" &&
+                req.headers["x-forwarded-proto"] === "https");
+            res.setHeader(
+              "Set-Cookie",
+              `duo_device=${secret}; Path=${prefix}/api/device; HttpOnly; SameSite=Lax; Max-Age=7776000${secure ? "; Secure" : ""}`,
+            );
+            json(res, 200, { ok: true });
+            return;
+          }
+          if (route[1] === "recover") {
+            if (!device) throw new Error("BAD_TOKEN");
+            const seat = store.deviceSeat(device, input.code, slot, now);
+            if (seat === null) throw new Error("BAD_TOKEN");
+            const result = manager.rotateSeat(room, seat, device);
+            store.bindDevice(device, input.code, slot, seat, now);
+            json(res, 200, result);
+            return;
+          }
+          throw new Error("INVALID");
+        }
         if (
           route[0] === "presence" &&
           route.length === 1 &&

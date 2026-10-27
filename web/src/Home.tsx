@@ -1,7 +1,17 @@
+import { localStore, sessionStore } from "./storage";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { ALPHABET, type Profile } from "../../shared/protocol";
+import type { Profile } from "../../shared/protocol";
 import { games, type GameMeta } from "../../shared/catalog";
-import { api, BASE, profile, remember, roomLink, roomStorageKey } from "./api";
+import {
+  api,
+  BASE,
+  bindDevice,
+  normalizeRoomCode,
+  profile,
+  remember,
+  roomLink,
+  roomStorageKey,
+} from "./api";
 import { Catalog, GameInfo } from "./ui/catalog";
 import { Modal, ProfileForm, copyText } from "./ui/common";
 import { Critter, Logo, Scene, TetheredPair } from "./art/ui";
@@ -18,31 +28,50 @@ export function Home({ online }: { online: number | null }) {
     [wantGame, setWantGame] = useState(""),
     [code, setCode] = useState(""),
     [joining, setJoining] = useState(false),
+    [deviceLast, setDeviceLast] = useState<string | null>(null),
     [privacy, setPrivacy] = useState(false),
     [toast, setToast] = useState("");
-  const cancelling = useRef(false);
-  const last = localStorage.getItem(roomStorageKey("lastRoom")),
-    back = last && localStorage.getItem(roomStorageKey("token." + last)),
+  const cancelling = useRef(false),
+    codeInput = useRef<HTMLInputElement>(null);
+  const cachedLast = localStore.getItem(roomStorageKey("lastRoom")),
+    cachedToken =
+      cachedLast && localStore.getItem(roomStorageKey("token." + cachedLast)),
+    last = (cachedToken ? cachedLast : null) || deviceLast,
+    back = !!last,
     me = profile();
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      if (cachedLast && cachedToken)
+        await bindDevice(cachedLast, cachedToken).catch(() => {});
+      const lastDevice = await api("device/last").catch(() => null);
+      if (active && lastDevice?.code) setDeviceLast(lastDevice.code);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
   async function create(p: Profile) {
     setBusy(true);
     setError("");
     try {
       const data = await api("rooms", "POST", { profile: p });
       remember(data, p);
+      await bindDevice(data.code, data.token).catch(() => {});
       if (wantGame)
-        sessionStorage.setItem(
-          roomStorageKey("propose." + data.code),
-          wantGame,
-        );
+        sessionStore.setItem(roomStorageKey("propose." + data.code), wantGame);
       location.assign(roomLink(data.code));
     } catch (e) {
       setError((e as Error).message);
       setBusy(false);
     }
   }
-  function enterMatched(data: { code: string; token: string }, p: Profile) {
+  async function enterMatched(
+    data: { code: string; token: string },
+    p: Profile,
+  ) {
     remember(data, p);
+    await bindDevice(data.code, data.token).catch(() => {});
     location.assign(roomLink(data.code));
   }
   async function startMatching(p: Profile) {
@@ -50,13 +79,13 @@ export function Home({ online }: { online: number | null }) {
     setError("");
     cancelling.current = false;
     try {
-      let clientId = localStorage.getItem(roomStorageKey("matchClient"));
+      let clientId = localStore.getItem(roomStorageKey("matchClient"));
       if (!clientId || !/^[a-f0-9]{32}$/.test(clientId)) {
         clientId = Array.from(
           crypto.getRandomValues(new Uint8Array(16)),
           (byte) => byte.toString(16).padStart(2, "0"),
         ).join("");
-        localStorage.setItem(roomStorageKey("matchClient"), clientId);
+        localStore.setItem(roomStorageKey("matchClient"), clientId);
       }
       const data = await api("matchmaking", "POST", { profile: p, clientId });
       setTicket({ token: data.ticket, profile: p });
@@ -75,7 +104,7 @@ export function Home({ online }: { online: number | null }) {
         const data = await api("matchmaking", "GET", undefined, ticket.token);
         if (!active || cancelling.current) return;
         if (data.status === "matched") {
-          enterMatched(data, ticket.profile);
+          void enterMatched(data, ticket.profile);
           return;
         }
         setError("");
@@ -104,7 +133,7 @@ export function Home({ online }: { online: number | null }) {
     try {
       const data = await api("matchmaking", "DELETE", undefined, ticket.token);
       if (data.status === "matched") {
-        enterMatched(data, ticket.profile);
+        await enterMatched(data, ticket.profile);
         return;
       }
       setTicket(null);
@@ -217,21 +246,39 @@ export function Home({ online }: { online: number | null }) {
                 id="room-code"
                 aria-label="六位房间码"
                 value={code}
-                onInput={(e) =>
-                  setCode(
-                    e.currentTarget.value
-                      .toUpperCase()
-                      .split("")
-                      .filter((c) => ALPHABET.includes(c))
-                      .join("")
-                      .slice(0, 6),
-                  )
-                }
-                maxLength={20}
+                ref={codeInput}
+                onInput={(e) => {
+                  const normalized = normalizeRoomCode(e.currentTarget.value);
+                  e.currentTarget.value = normalized;
+                  setCode(normalized);
+                }}
+                onPaste={(e) => {
+                  if (!e.clipboardData) return;
+                  e.preventDefault();
+                  setCode(normalizeRoomCode(e.clipboardData.getData("text")));
+                }}
+                maxLength={2048}
                 placeholder="6 位房间码"
                 autoCapitalize="characters"
                 autoComplete="off"
               />
+              <button
+                type="button"
+                aria-label="粘贴房间号"
+                onClick={async () => {
+                  try {
+                    setCode(
+                      normalizeRoomCode(await navigator.clipboard.readText()),
+                    );
+                  } catch {
+                    codeInput.current?.focus();
+                    setToast("请长按输入框粘贴房间号");
+                    setTimeout(() => setToast(""), 2600);
+                  }
+                }}
+              >
+                粘贴
+              </button>
               <button class="go" disabled={code.length !== 6}>
                 加入
               </button>
@@ -375,6 +422,10 @@ export function Home({ online }: { online: number | null }) {
           <p>
             无需手机号或邮箱。房间凭证只保存在你的浏览器，请妥善保管设备。拥有邀请链接的人可以占用空座位，请只分享给
             TA。
+          </p>
+          <p>
+            为了在同一浏览器重新进入房间，设备会话会保存最多 90
+            天。清除浏览器数据后，需要原设备的换设备链接恢复。
           </p>
           <p>
             资料、收藏、聊过的卡片和写下的回答保存在服务器。聊天消息仅暂存在运行中的房间；服务器日志不记录聊天和回答内容。

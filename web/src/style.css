@@ -749,11 +749,16 @@ dialog[open] .sheet {
   margin-top: 2px;
 }
 .code-form input {
+  min-width: 0;
+  flex: 1;
   text-align: center;
   letter-spacing: 0.3em;
   font-family: var(--display);
   font-size: 20px;
   text-transform: uppercase;
+}
+.code-form button {
+  flex: none;
 }
 .side-buttons {
   position: relative;

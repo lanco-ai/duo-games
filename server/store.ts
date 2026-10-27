@@ -41,6 +41,62 @@ export class Store {
       CREATE INDEX IF NOT EXISTS gallery_room ON gallery(room_code, at);
       CREATE INDEX IF NOT EXISTS journal_room ON journal(room_code);
       CREATE INDEX IF NOT EXISTS matches_room ON matches(room_code);`);
+    this.db.exec(`CREATE TABLE IF NOT EXISTS device_rooms(
+      device_hash TEXT NOT NULL,
+      room_code TEXT NOT NULL REFERENCES rooms(code) ON DELETE CASCADE,
+      slot TEXT NOT NULL CHECK(slot IN ('primary','local')),
+      seat INTEGER NOT NULL CHECK(seat IN (0,1)),
+      expires_at INTEGER NOT NULL,
+      used_at INTEGER NOT NULL,
+      PRIMARY KEY(device_hash, room_code, slot)
+    );`);
+  }
+  bindDevice(
+    device: string,
+    code: string,
+    slot: "primary" | "local",
+    seat: Seat,
+    now: number,
+  ) {
+    this.db
+      .prepare(
+        `INSERT INTO device_rooms VALUES(?,?,?,?,?,?)
+      ON CONFLICT(device_hash,room_code,slot) DO UPDATE SET seat=excluded.seat,expires_at=excluded.expires_at,used_at=excluded.used_at`,
+      )
+      .run(device, code, slot, seat, now + 90 * 86400000, now);
+  }
+  deviceSeat(
+    device: string,
+    code: string,
+    slot: "primary" | "local",
+    now: number,
+  ): Seat | null {
+    const row = this.db
+      .prepare(
+        "SELECT seat FROM device_rooms WHERE device_hash=? AND room_code=? AND slot=? AND expires_at>?",
+      )
+      .get(device, code, slot, now) as { seat: Seat } | undefined;
+    return row?.seat ?? null;
+  }
+  deviceLast(device: string, now: number): string | null {
+    const row = this.db
+      .prepare(
+        "SELECT room_code FROM device_rooms WHERE device_hash=? AND slot='primary' AND expires_at>? ORDER BY used_at DESC LIMIT 1",
+      )
+      .get(device, now) as { room_code: string } | undefined;
+    return row?.room_code ?? null;
+  }
+  revokeDevices(code: string, seat: Seat, except?: string) {
+    if (except)
+      this.db
+        .prepare(
+          "DELETE FROM device_rooms WHERE room_code=? AND seat=? AND device_hash<>?",
+        )
+        .run(code, seat, except);
+    else
+      this.db
+        .prepare("DELETE FROM device_rooms WHERE room_code=? AND seat=?")
+        .run(code, seat);
   }
   get(code: string): StoredRoom | null {
     const r = this.db

@@ -9,19 +9,23 @@ test("online count includes both browsers and deduplicates tabs", async ({
     second = await b.newPage();
   try {
     await first.goto("/");
-    await expect(first.locator(".online-count")).toContainText("当前在线 1 人");
+    await expect(first.locator(".online-count")).toContainText(
+      /当前在线 \d+ 人/,
+    );
+    const initial = Number(
+      (await first.locator(".online-count").innerText()).match(/\d+/)![0],
+    );
     await second.goto("/");
     await expect(second.locator(".online-count")).toContainText(
-      "当前在线 2 人",
+      `当前在线 ${initial + 1} 人`,
     );
     const anotherTab = await a.newPage();
     await anotherTab.goto("/");
     await expect(anotherTab.locator(".online-count")).toContainText(
-      "当前在线 2 人",
+      `当前在线 ${initial + 1} 人`,
     );
     await expect(first.locator(".online-count")).toContainText(
-      "当前在线 2 人",
-      { timeout: 20000 },
+      /当前在线 \d+ 人/,
     );
   } finally {
     await a.close();

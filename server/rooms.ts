@@ -592,7 +592,11 @@ export class RoomManager {
       throw new Error("BAD_TOKEN");
     const seat = r.transfer.seat;
     r.transfer = undefined;
+    return this.rotateSeat(r, seat);
+  }
+  rotateSeat(r: LiveRoom, seat: Seat, keepDevice?: string) {
     const next = token();
+    this.store.revokeDevices(r.data.code, seat, keepDevice);
     r.data.hashes[seat] = hash(next);
     r.acks[seat].clear();
     const peer = r.peers[seat];

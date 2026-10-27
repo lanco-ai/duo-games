@@ -1,4 +1,6 @@
+import { localStore } from "./storage";
 import type { Profile } from "../../shared/protocol";
+import { ALPHABET } from "../../shared/protocol";
 export const BASE = import.meta.env.BASE_URL;
 export const IS_PREVIEW = BASE === "/duo-preview/";
 export const roomStorageKey = (suffix: string) =>
@@ -28,18 +30,50 @@ export async function api(
 }
 export function profile(): Profile | undefined {
   try {
-    return (
-      JSON.parse(localStorage.getItem("duo.profile") || "null") || undefined
-    );
+    return JSON.parse(localStore.getItem("duo.profile") || "null") || undefined;
   } catch {
     return undefined;
   }
 }
 export function remember(data: { code: string; token: string }, p?: Profile) {
-  localStorage.setItem(roomStorageKey("token." + data.code), data.token);
-  localStorage.setItem(roomStorageKey("lastRoom"), data.code);
-  if (p) localStorage.setItem("duo.profile", JSON.stringify(p));
+  localStore.setItem(roomStorageKey("token." + data.code), data.token);
+  localStore.setItem(roomStorageKey("lastRoom"), data.code);
+  if (p) localStore.setItem("duo.profile", JSON.stringify(p));
 }
 export function roomLink(code: string) {
   return BASE + "r/" + code + location.search;
+}
+let deviceQueue: Promise<unknown> = Promise.resolve();
+export function bindDevice(
+  code: string,
+  token: string,
+  slot: "primary" | "local" = "primary",
+) {
+  const task = deviceQueue
+    .catch(() => {})
+    .then(() => api("device/bind", "POST", { code, slot }, token));
+  deviceQueue = task.catch(() => {});
+  return task;
+}
+export function normalizeRoomCode(value: string): string {
+  const trimmed = value.trim();
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const url = new URL(trimmed);
+      if (url.origin !== location.origin) return "";
+      const match = url.pathname.match(
+        /\/r\/([23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6})\/?$/i,
+      );
+      return match ? match[1].toUpperCase() : "";
+    } catch {
+      return "";
+    }
+  }
+  return trimmed
+    .toUpperCase()
+    .replace(/[\s.·•\-]/g, "")
+    .split("")
+    .filter((c) => ALPHABET.includes(c))
+    .join("")
+    .slice(0, 6);
 }
