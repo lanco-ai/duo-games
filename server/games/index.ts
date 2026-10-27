@@ -11,6 +11,13 @@ import { MyEyes } from "./maze";
 import { Puzzle } from "./puzzle";
 import { Heartbeat } from "./heartbeat";
 import { RedThread, HeartBounce } from "./action";
+import {
+  Survival,
+  SpotDifference,
+  CoupleLudo,
+  CoupleJump,
+} from "./couple-puzzles";
+import { CoopKitchen, HideSeek } from "./couple-action";
 export function createGame(
   id: ExtraId,
   run: string,
@@ -29,6 +36,12 @@ export function createGame(
     heartbeat: Heartbeat,
     "red-thread": RedThread,
     "heart-bounce": HeartBounce,
+    survival: Survival,
+    "spot-difference": SpotDifference,
+    "coop-kitchen": CoopKitchen,
+    "couple-ludo": CoupleLudo,
+    "hide-seek": HideSeek,
+    "couple-jump": CoupleJump,
   }[id];
   return new constructor(run, options, seed, at, ctx);
 }

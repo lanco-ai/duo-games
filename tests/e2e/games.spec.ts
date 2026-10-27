@@ -135,13 +135,16 @@ async function start(
   }
   await one.getByRole("button", { name: "我准备好了", exact: true }).click();
   await two.getByRole("button", { name: "我准备好了", exact: true }).click();
-  await expect(one.locator(".game-overlay")).toBeHidden({ timeout: 20000 });
   await one.waitForFunction(
     () => (window as any).observed.room.phase === "playing",
   );
   await two.waitForFunction(
     () => (window as any).observed.room.phase === "playing",
   );
+  // The instrumented socket observes messages before the client's artificial
+  // delay. Wait for the rendered countdown to disappear after both start.
+  await expect(one.locator(".game-overlay")).toBeHidden({ timeout: 20000 });
+  await expect(two.locator(".game-overlay")).toBeHidden({ timeout: 20000 });
 }
 async function result(one: Page, two: Page) {
   await expect(one.locator(".result-page")).toBeVisible({ timeout: 100000 });
@@ -353,7 +356,7 @@ test("draw-guess — two seats complete and rematch with 200ms delay", async ({
           timeout: 20000,
         });
         await drawer.screenshot({
-          path: "docs/evidence/all-drawing.png",
+          path: "test-results/all-drawing.png",
           fullPage: true,
         });
       }
@@ -499,6 +502,9 @@ test("my-eyes — two seats complete and rematch with 200ms delay", async ({
       for (const [n, cell] of path.slice(1).entries()) {
         const delta = cell - last,
           dir = delta === 1 ? 1 : delta === -1 ? 3 : delta === m.w ? 2 : 0;
+        // Raw socket test actions bypass the UI's input pacing. Stay below the
+        // production per-seat 20/s limit instead of relaxing that protection.
+        await walker.waitForTimeout(60);
         await game(walker, "move", { round, n, dir });
         last = cell;
       }
@@ -596,6 +602,7 @@ test("puzzle-us — two seats complete and rematch with 200ms delay", async ({
         (window as any).observed.game.data.groups.find((g: any) => g.id === id)
           ?.lockedBy === 0,
       piece.id,
+      { timeout: 15000 },
     );
     await one.mouse.move(screen.x + 30, screen.y + 20, { steps: 5 });
     await one.mouse.up();
@@ -604,6 +611,7 @@ test("puzzle-us — two seats complete and rematch with 200ms delay", async ({
         (window as any).observed.game.data.groups.find((g: any) => g.id === id)
           ?.lockedBy === null,
       piece.id,
+      { timeout: 15000 },
     );
     await one.getByRole("button", { name: "看原图", exact: true }).click();
     await expect(one.locator(".puzzle-preview")).toBeVisible();
@@ -612,11 +620,13 @@ test("puzzle-us — two seats complete and rematch with 200ms delay", async ({
       const d = await data(one),
         g = d.groups.find((x: any) => !x.placed);
       if (!g) break;
+      // Allow the server's action bucket to refill between the two-action moves.
+      await one.waitForTimeout(120);
       await game(one, "grab", { gid: g.id });
       await game(one, "drop", { gid: g.id, x: 0, y: 0 });
       if (rounds === 1)
         await one.screenshot({
-          path: "docs/evidence/all-puzzle.png",
+          path: "test-results/all-puzzle.png",
           fullPage: true,
         });
       if (await one.locator(".result-page").isVisible()) break;
@@ -658,13 +668,25 @@ test("red-thread — two seats complete and rematch with 200ms delay", async ({
     await expect(one.locator(".couple-names")).toContainText("游戏验收乙");
     await start(one, two, "red-thread", "一线牵", { level: "endless" });
     await expect(one.getByLabel("一线牵攀登画面")).toBeVisible();
-    const lastInput = () => one.evaluate(async () => {
-      const w = window as any, code = w.observed.room.code;
-      const r = await fetch("/api/rooms/" + code + "/game-data?run=" + w.observed.game.run + "&kind=replay", {
-        headers: { Authorization: "Bearer " + localStorage.getItem("duo.token." + code) },
+    const lastInput = () =>
+      one.evaluate(async () => {
+        const w = window as any,
+          code = w.observed.room.code;
+        const r = await fetch(
+          "/api/rooms/" +
+            code +
+            "/game-data?run=" +
+            w.observed.game.run +
+            "&kind=replay",
+          {
+            headers: {
+              Authorization:
+                "Bearer " + localStorage.getItem("duo.token." + code),
+            },
+          },
+        );
+        return (await r.json()).frames[0].at(-1)?.[1];
       });
-      return (await r.json()).frames[0].at(-1)?.[1];
-    });
     await one.keyboard.down("ArrowRight");
     await one.keyboard.down("d");
     await one.keyboard.up("d");
@@ -687,7 +709,7 @@ test("red-thread — two seats complete and rematch with 200ms delay", async ({
     await one.keyboard.press("Space");
     await one.waitForTimeout(1000);
     await one.screenshot({
-      path: "docs/evidence/all-climbing.png",
+      path: "test-results/all-climbing.png",
       fullPage: true,
     });
     expect(
@@ -798,7 +820,7 @@ test("heartbeat — two seats complete and rematch with 200ms delay", async ({
     await one.keyboard.press("f");
     await two.keyboard.press("j");
     await one.screenshot({
-      path: "docs/evidence/all-heartbeat.png",
+      path: "test-results/all-heartbeat.png",
       fullPage: true,
     });
     await b.setOffline(true);

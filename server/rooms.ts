@@ -160,10 +160,7 @@ export class RoomManager {
       r.view.phase = "countdown";
       r.view.startAt = Date.now() + 3500;
       r.view.pauseDeadline = null;
-      if (r.extra && r.pausedAt !== undefined) {
-        r.extra.shift(r.view.startAt - r.pausedAt);
-        r.pausedAt = undefined;
-      }
+      this.shiftAfterPause(r);
       this.schedule(r);
     }
     r.view.seq++;
@@ -264,6 +261,16 @@ export class RoomManager {
     }, 60000);
     r.timer.unref();
   }
+  shiftAfterPause(r: LiveRoom) {
+    if (r.pausedAt === undefined || r.view.startAt === null) return;
+    const elapsed = r.view.startAt - r.pausedAt;
+    if (r.extra) r.extra.shift(elapsed);
+    else if (r.game?.mode === "pro" && r.game.pro && !r.game.pro.outcome) {
+      if (r.game.pro.deadline) r.game.pro.deadline += elapsed;
+      if (r.game.flipAt > r.pausedAt) r.game.flipAt += elapsed;
+    }
+    r.pausedAt = undefined;
+  }
   resume(r: LiveRoom) {
     if (
       r.view.phase !== "paused" ||
@@ -275,10 +282,7 @@ export class RoomManager {
     r.view.phase = "countdown";
     r.view.startAt = Date.now() + 3500;
     r.view.pauseDeadline = null;
-    if (r.extra && r.pausedAt !== undefined) {
-      r.extra.shift(r.view.startAt - r.pausedAt);
-      r.pausedAt = undefined;
-    }
+    this.shiftAfterPause(r);
     this.schedule(r);
   }
   startExtra(r: LiveRoom) {
@@ -456,7 +460,17 @@ export class RoomManager {
         this.finish(r, true);
         changed = true;
       } else error = "INVALID";
-    } else if (["draw", "next", "skip", "fav", "answer"].includes(a.type)) {
+    } else if (
+      [
+        "draw",
+        "next",
+        "skip",
+        "fav",
+        "answer",
+        "pro-draw",
+        "pro-resolve",
+      ].includes(a.type)
+    ) {
       if (
         (r.view.phase !== "playing" &&
           !(r.view.phase === "result" && a.type === "answer")) ||

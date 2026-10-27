@@ -36,6 +36,39 @@ describe("clock", () => {
   });
 });
 describe("room state and reconnect", () => {
+  it("pauses the Pro dare timer during a disconnect and the resume countdown", () => {
+    vi.useFakeTimers();
+    const { m, r } = setup();
+    m.act(r, 0, "propose-pro", { type: "propose", gameId: "talk-cards" });
+    m.act(r, 1, "accept-pro", { type: "accept" });
+    m.act(r, 0, "settings-pro", {
+      type: "settings",
+      settings: { ...r.view.settings, talkMode: "pro" },
+    });
+    m.act(r, 0, "ready-pro0", { type: "ready" });
+    m.act(r, 1, "ready-pro1", { type: "ready" });
+    vi.advanceTimersByTime(3500);
+    m.act(
+      r,
+      0,
+      "draw-pro",
+      { type: "pro-draw", trigger: "dice", pool: "dare" },
+      r.view.seq,
+    );
+    const deadline = r.game!.pro!.deadline;
+    m.disconnect(r, 1, r.peers[1]!);
+    vi.advanceTimersByTime(30000);
+    m.connect(r, 1, {
+      send: () => {},
+      close: () => {},
+      lastSeen: Date.now(),
+      rtt: 0,
+    });
+    expect(r.game!.pro!.deadline).toBe(deadline + 33500);
+    vi.advanceTimersByTime(3500);
+    expect(r.view.phase).toBe("playing");
+    m.close();
+  });
   it("same-game proposals enter intro and crossed accept/decline is harmless", () => {
     const { m, r } = setup();
     let v = transition(

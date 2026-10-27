@@ -8,7 +8,7 @@ import type {
   ErrCode,
 } from "../../protocol";
 import { cards } from "../../content/cards";
-import { shuffled } from "../../rng";
+import { shuffled, mulberry32 } from "../../rng";
 export interface TalkState {
   order: string[];
   idx: number;
@@ -20,6 +20,15 @@ export interface TalkState {
   skipped: number;
   discussed: string[];
   limit: number;
+  seed?: number;
+  mode?: "classic" | "pro";
+  pro?: {
+    trigger: string;
+    pool: "truth" | "dare";
+    deadline: number;
+    outcome: string;
+    penalties: [number, number];
+  } | null;
 }
 export function init(
   settings: Settings,
@@ -28,7 +37,9 @@ export function init(
   favorites: [string[], string[]] = [[], []],
 ): TalkState {
   const available = cards.filter(
-    (c) => settings.decks.includes(c.deck) && !seen.includes(c.id),
+    (c) =>
+      (settings.talkMode === "pro" || settings.decks.includes(c.deck)) &&
+      !seen.includes(c.id),
   );
   return {
     order: shuffled(
@@ -44,6 +55,9 @@ export function init(
     skipped: 0,
     discussed: [],
     limit: settings.limit,
+    seed,
+    mode: settings.talkMode || "classic",
+    pro: null,
   };
 }
 export function view(s: TalkState): TalkView {
@@ -58,6 +72,8 @@ export function view(s: TalkState): TalkView {
     played: s.played,
     skipped: s.skipped,
     remaining: Math.max(0, s.order.length - s.idx),
+    pro: s.pro,
+    mode: s.mode,
   };
 }
 export function apply(
@@ -72,9 +88,75 @@ export function apply(
   changed?: boolean;
 } {
   const fail = (error: ErrCode) => ({ s, error });
+  if (a.type === "pro-draw") {
+    if (
+      s.mode !== "pro" ||
+      seat !== s.turn ||
+      s.phase !== "draw" ||
+      !["wheel", "dice", "joker"].includes(a.trigger) ||
+      !["truth", "dare"].includes(a.pool)
+    )
+      return fail("INVALID");
+    const order = [...s.order],
+      candidates = order
+        .map((id, i) => ({ id, i }))
+        .filter(
+          (x) =>
+            x.i >= s.idx &&
+            (cards.find((c) => c.id === x.id)?.deck === "小挑战") ===
+              (a.pool === "dare"),
+        );
+    if (!candidates.length) return fail("UNAVAILABLE");
+    const rng = mulberry32((s.seed || 0) + s.idx * 97),
+      next = candidates[Math.floor(rng() * candidates.length)].i;
+    [order[s.idx], order[next]] = [order[next], order[s.idx]];
+    const previous = s.pro?.penalties || [0, 0];
+    const result =
+      Math.floor(
+        rng() * (a.trigger === "dice" ? 6 : a.trigger === "joker" ? 3 : 8),
+      ) + 1;
+    return {
+      s: {
+        ...s,
+        order,
+        phase: "shown",
+        flipAt: now + 600,
+        pro: {
+          trigger: a.trigger + ":" + result,
+          pool: a.pool,
+          deadline: a.pool === "dare" ? now + 60600 : 0,
+          outcome: "",
+          penalties: [...previous] as [number, number],
+        },
+      },
+      changed: true,
+    };
+  }
+  if (a.type === "pro-resolve") {
+    if (
+      s.mode !== "pro" ||
+      s.phase !== "shown" ||
+      !s.pro ||
+      s.pro.pool !== "dare" ||
+      seat !== s.turn ||
+      s.pro.outcome ||
+      !["complete", "drink", "coupon"].includes(a.outcome)
+    )
+      return fail("INVALID");
+    if (a.outcome === "complete" && now >= s.pro.deadline)
+      return fail("INVALID");
+    const penalties = [...s.pro.penalties] as [number, number];
+    if (a.outcome !== "complete") penalties[seat]++;
+    return {
+      s: { ...s, pro: { ...s.pro, outcome: a.outcome, penalties } },
+      changed: true,
+    };
+  }
   if (a.type === "next" || a.type === "skip") {
     if (a.idx !== s.idx) return { s };
     if (s.phase !== "shown" || now < s.flipAt) return fail("INVALID");
+    if (s.mode === "pro" && s.pro?.pool === "dare" && !s.pro.outcome)
+      return fail("INVALID");
     if (a.type === "skip" && seat !== s.turn) return fail("NOT_YOUR_TURN");
     return {
       s: {
@@ -92,6 +174,7 @@ export function apply(
   }
   if (a.type === "draw") {
     if (seat !== s.turn) return fail("NOT_YOUR_TURN");
+    if (s.mode === "pro") return fail("INVALID");
     if (s.phase !== "draw" || s.idx >= s.order.length) return fail("INVALID");
     return { s: { ...s, phase: "shown", flipAt: now + 600 }, changed: true };
   }

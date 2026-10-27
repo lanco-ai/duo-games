@@ -38,6 +38,12 @@ export function Room({ code }: { code: string }) {
   const [token, setToken] = useState(
       localStorage.getItem(roomStorageKey("token." + code)) || "",
     ),
+    [localToken, setLocalToken] = useState(
+      localStorage.getItem(roomStorageKey("localPeer." + code)) || "",
+    ),
+    [localGame, setLocalGame] = useState<ExtraView | null>(null),
+    [localConnected, setLocalConnected] = useState(false),
+    [localSequence, setLocalSequence] = useState(0),
     [publicRoom, setPublicRoom] = useState<PublicRoom | null>(null),
     [room, setRoom] = useState<RoomView | null>(null),
     [game, setGame] = useState<TalkView | ExtraView | null>(null),
@@ -60,6 +66,8 @@ export function Room({ code }: { code: string }) {
     [writing, setWriting] = useState<Card | null>(null),
     [answer, setAnswer] = useState("");
   const transport = useRef<Transport>(),
+    localTransport = useRef<Transport>(),
+    localRoom = useRef<RoomView | null>(null),
     current = useRef<RoomView | null>(null),
     busyCount = useRef(0),
     reactionTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -127,6 +135,8 @@ export function Room({ code }: { code: string }) {
         if (m.t === "evt") {
           if (m.e.type === "deleted") {
             localStorage.removeItem(roomStorageKey("token." + code));
+            localStorage.removeItem(roomStorageKey("localPeer." + code));
+            setLocalToken("");
             setFatal("房间已解散，愿下次相见还有新的故事。");
           } else if (m.e.type === "react") {
             setReaction(m.e.emoji);
@@ -146,6 +156,67 @@ export function Room({ code }: { code: string }) {
       clearTimeout(reactionTimer.current);
     };
   }, [token, code]);
+  useEffect(() => {
+    if (!localToken || !token) return;
+    const url = new URL(BASE + "ws", location.origin);
+    url.protocol = location.protocol === "https:" ? "wss:" : "ws:";
+    const t = new Transport(
+      url.href,
+      code,
+      localToken,
+      (m) => {
+        if (m.t === "welcome") {
+          localRoom.current = m.room;
+          setLocalSequence(m.room.seq);
+          setLocalGame(m.game && "kind" in m.game ? m.game : null);
+        }
+        if (m.t === "room") {
+          localRoom.current = m.room;
+          setLocalSequence(m.room.seq);
+        }
+        if (m.t === "game")
+          setLocalGame(m.view && "kind" in m.view ? m.view : null);
+        if (
+          m.t === "err" &&
+          ["BAD_TOKEN", "ROOM_NOT_FOUND", "REPLACED"].includes(m.code)
+        ) {
+          localStorage.removeItem(roomStorageKey("localPeer." + code));
+          setLocalToken("");
+        }
+      },
+      (s) => setLocalConnected(s === "已连接"),
+    );
+    localTransport.current = t;
+    return () => {
+      t.stop();
+      localTransport.current = undefined;
+      localRoom.current = null;
+      setLocalConnected(false);
+    };
+  }, [localToken, token, code]);
+  useEffect(() => {
+    const t = localTransport.current,
+      r = localRoom.current;
+    if (!localToken || !localConnected || !t || !r || !room) return;
+    let action: Action | null = null;
+    if (room.phase === "proposed" && room.proposal?.by === 0)
+      action = { type: "accept" };
+    else if (room.phase === "intro" && room.ready[0] && !room.ready[1])
+      action = { type: "ready" };
+    else if (room.phase === "result" && room.rematch[0] && !room.rematch[1])
+      action = { type: "rematch" };
+    if (action) void t.action(action, r.seq).catch(() => {});
+  }, [
+    localToken,
+    localConnected,
+    localSequence,
+    room?.phase,
+    room?.proposal?.by,
+    room?.ready[0],
+    room?.ready[1],
+    room?.rematch[0],
+    room?.rematch[1],
+  ]);
   useEffect(() => {
     const timer = setInterval(() => setClockTick((v) => v + 1), 100);
     return () => clearInterval(timer);
@@ -215,6 +286,34 @@ export function Room({ code }: { code: string }) {
     } finally {
       busyCount.current--;
       setBusy(busyCount.current > 0);
+    }
+  }
+  async function sendLocal(a: Action) {
+    const t = localTransport.current,
+      r = localRoom.current;
+    if (!t || !r) return false;
+    try {
+      await t.action(a, r.seq);
+      return true;
+    } catch (e) {
+      setError((e as Error).message);
+      return false;
+    }
+  }
+  async function joinLocal() {
+    if (!room || room.profiles[1] || seat !== 0) return;
+    try {
+      setBusy(true);
+      const color = COLORS.find((c) => c !== room.profiles[0]?.color)!;
+      const data = await api("rooms/" + code + "/join", "POST", {
+        profile: { nickname: "同屏玩家", avatar: "🐻", color },
+      });
+      localStorage.setItem(roomStorageKey("localPeer." + code), data.token);
+      setLocalToken(data.token);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
     }
   }
   async function join(p: Profile) {
@@ -494,6 +593,15 @@ export function Room({ code }: { code: string }) {
                 <button class="go wide" onClick={copyInvite}>
                   复制邀请链接 ↗
                 </button>
+                {seat === 0 && (
+                  <button
+                    class="secondary wide"
+                    disabled={busy}
+                    onClick={() => void joinLocal()}
+                  >
+                    在这台设备上双人玩
+                  </button>
+                )}
               </div>
             )}
             {room.phase === "proposed" && room.proposal && (
@@ -632,6 +740,7 @@ export function Room({ code }: { code: string }) {
                 now={now}
                 send={send}
                 busy={busy || status !== "已连接" || room.phase !== "playing"}
+                sendLocal={localToken && localConnected ? sendLocal : undefined}
               />
             </Suspense>
           )}
@@ -647,6 +756,17 @@ export function Room({ code }: { code: string }) {
                 disabled={status !== "已连接" || room.phase !== "playing"}
                 code={code}
                 token={token}
+                local={
+                  localToken && localConnected && localTransport.current
+                    ? {
+                        seat: 1,
+                        view: localGame,
+                        send: sendLocal,
+                        transport: localTransport.current,
+                        token: localToken,
+                      }
+                    : undefined
+                }
               />
             </Suspense>
           )}
@@ -862,6 +982,25 @@ export function Room({ code }: { code: string }) {
                 轻点卡堆抽卡 · 点按钮收藏或写下回答 · 延迟友好
               </p>
               <fieldset disabled={room.proposal?.by !== seat || busy}>
+                <label>
+                  玩法{" "}
+                  <select
+                    aria-label="聊天玩法"
+                    value={room.settings.talkMode || "classic"}
+                    onChange={(e) =>
+                      void send({
+                        type: "settings",
+                        settings: {
+                          ...room.settings,
+                          talkMode: e.currentTarget.value as "classic" | "pro",
+                        },
+                      })
+                    }
+                  >
+                    <option value="classic">深夜聊天卡</option>
+                    <option value="pro">真心话大冒险 Pro</option>
+                  </select>
+                </label>
                 <legend>今晚想聊点什么？</legend>
                 <div class="deck-options">
                   {DECKS.map((deck) => (
@@ -1175,6 +1314,10 @@ export function Room({ code }: { code: string }) {
                     try {
                       await api("rooms/" + code, "DELETE", undefined, token);
                       localStorage.removeItem(roomStorageKey("token." + code));
+                      localStorage.removeItem(
+                        roomStorageKey("localPeer." + code),
+                      );
+                      setLocalToken("");
                       setFatal("房间已解散");
                       setPanel("");
                     } catch (e) {

@@ -49,7 +49,7 @@ test("two-person flow, synced cards, answers, favorites, conflict, results and r
   one.on("pageerror", (e) => jsErrors.push(e.message));
   two.on("pageerror", (e) => jsErrors.push(e.message));
   await one.screenshot({
-    path: "docs/evidence/lobby-mobile.png",
+    path: "test-results/lobby-mobile.png",
     fullPage: true,
   });
   await start(one, two);
@@ -57,11 +57,11 @@ test("two-person flow, synced cards, answers, favorites, conflict, results and r
   const first = await one.getByTestId("card-question").textContent();
   await expect(two.getByTestId("card-question")).toHaveText(first!);
   await one.screenshot({
-    path: "docs/evidence/talk-player-one.png",
+    path: "test-results/talk-player-one.png",
     fullPage: true,
   });
   await two.screenshot({
-    path: "docs/evidence/talk-player-two.png",
+    path: "test-results/talk-player-two.png",
     fullPage: true,
   });
   await one.getByRole("button", { name: "☆ 收藏", exact: true }).click();
@@ -103,7 +103,7 @@ test("two-person flow, synced cards, answers, favorites, conflict, results and r
   await expect(one.locator(".result-page h1")).toHaveText("10 张");
   await expect(two.locator(".result-page h1")).toHaveText("10 张");
   await one.screenshot({
-    path: "docs/evidence/result-mobile.png",
+    path: "test-results/result-mobile.png",
     fullPage: true,
   });
   await one.getByRole("button", { name: "📖 看看写下的回答" }).click();
@@ -219,13 +219,13 @@ test("desktop and smallest mobile layouts, categories and playable game descript
     page.getByRole("heading", { name: /^和 TA 一起玩的\s*小游戏$/ }),
   ).toBeVisible();
   await page.screenshot({
-    path: "docs/evidence/home-desktop.png",
+    path: "test-results/home-desktop.png",
     fullPage: true,
   });
   await noOverflow(page);
-  expect(await page.locator(".game-card").count()).toBe(10);
+  expect(await page.locator(".game-card").count()).toBe(16);
   await page.getByRole("button", { name: "较量", exact: true }).click();
-  expect(await page.locator(".game-card").count()).toBe(1);
+  expect(await page.locator(".game-card").count()).toBe(3);
   await page.getByRole("button", { name: "了解爱心五子棋" }).click();
   await expect(
     page.getByRole("button", { name: "一起玩这个 ❤" }),
@@ -236,7 +236,7 @@ test("desktop and smallest mobile layouts, categories and playable game descript
   await page.setViewportSize({ width: 360, height: 640 });
   await noOverflow(page);
   await page.screenshot({
-    path: "docs/evidence/home-mobile.png",
+    path: "test-results/home-mobile.png",
     fullPage: true,
   });
   await page.getByRole("button", { name: "我有房间码" }).click();
@@ -280,7 +280,7 @@ test("200ms delay at 360×640, clipboard fallback and high-delay terminal takeov
       .boundingBox(),
     bar = await one.locator(".social-bar").boundingBox();
   expect(next!.y + next!.height).toBeLessThan(bar!.y);
-  await one.screenshot({ path: "docs/evidence/talk-360.png", fullPage: true });
+  await one.screenshot({ path: "test-results/talk-360.png", fullPage: true });
   await one.getByRole("button", { name: "退出本局" }).click();
   await one.getByRole("button", { name: "结束本局", exact: true }).click();
   await one.getByRole("button", { name: "换个游戏", exact: true }).click();

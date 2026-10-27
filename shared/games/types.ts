@@ -9,6 +9,12 @@ export const extraIds = [
   "heart-bounce",
   "puzzle-us",
   "heartbeat",
+  "survival",
+  "spot-difference",
+  "coop-kitchen",
+  "couple-ludo",
+  "hide-seek",
+  "couple-jump",
 ] as const;
 export type ExtraId = (typeof extraIds)[number];
 export type GameOptions = Record<string, string | number | boolean | string[]>;
@@ -44,6 +50,7 @@ export const defaults: Record<ExtraId, GameOptions> = {
     count: 10,
     categories: ["吃喝", "习惯", "回忆", "恋爱观", "假如", "未来"],
     unused: true,
+    mode: "classic",
   },
   gomoku: { first: "随机", seconds: 0, wager: "请喝奶茶" },
   "red-thread": { level: "1" },
@@ -51,6 +58,12 @@ export const defaults: Record<ExtraId, GameOptions> = {
   "heart-bounce": {},
   "puzzle-us": { pieces: 24, image: "scene:sunset" },
   heartbeat: { track: "meet" },
+  survival: { mode: "mixed" },
+  "spot-difference": { scene: 0 },
+  "coop-kitchen": {},
+  "couple-ludo": { mode: "pure" },
+  "hide-seek": { mode: "turn" },
+  "couple-jump": { mode: "relay" },
 };
 export function isExtra(id: string): id is ExtraId {
   return (extraIds as readonly string[]).includes(id);
@@ -88,6 +101,7 @@ export function validOptions(id: string, value: unknown): value is GameOptions {
     case "know-me":
       return (
         [10, 15, 20].includes(Number(o.count)) &&
+        ["classic", "blind"].includes(String(o.mode)) &&
         typeof o.unused === "boolean" &&
         array("categories", ["吃喝", "习惯", "回忆", "恋爱观", "假如", "未来"])
       );
@@ -110,6 +124,18 @@ export function validOptions(id: string, value: unknown): value is GameOptions {
       );
     case "heartbeat":
       return ["meet", "date", "heart"].includes(String(o.track));
+    case "survival":
+      return ["mixed", "quiz", "search"].includes(String(o.mode));
+    case "spot-difference":
+      return [0, 1, 2, 3, 4].includes(Number(o.scene));
+    case "coop-kitchen":
+      return true;
+    case "couple-ludo":
+      return ["pure", "warm", "fun"].includes(String(o.mode));
+    case "hide-seek":
+      return ["turn", "realtime"].includes(String(o.mode));
+    case "couple-jump":
+      return ["relay", "sync"].includes(String(o.mode));
     default:
       return true;
   }

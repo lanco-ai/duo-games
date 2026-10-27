@@ -12,6 +12,70 @@ export interface GameMeta {
   milestone: string;
 }
 export const games: GameMeta[] = [
+  ...(
+    [
+      [
+        "survival",
+        "情侣求生欲",
+        "💌",
+        "和 TA 一起破解甜蜜小危机",
+        ["读懂场景里的线索", "选一个贴心的回答", "守住三颗心，完成挑战"],
+        "默契",
+      ],
+      [
+        "spot-difference",
+        "情侣找茬",
+        "🔍",
+        "一起找出画中的五处不同",
+        ["仔细观察上下两幅图", "发现不同就点一下", "点错会扣三秒"],
+        "合作",
+      ],
+      [
+        "coop-kitchen",
+        "双人厨房",
+        "🍳",
+        "两个人一起完成今天的订单",
+        ["搬运、切菜和煎肉", "按照订单装盘", "把美食送到出菜口"],
+        "合作",
+      ],
+      [
+        "couple-ludo",
+        "情侣飞行棋",
+        "🎲",
+        "投骰子，一路完成甜蜜任务",
+        ["轮流投掷骰子", "完成停靠格的小任务", "先到终点就获胜"],
+        "较量",
+      ],
+      [
+        "hide-seek",
+        "双人躲猫猫",
+        "🔦",
+        "藏好自己，等 TA 来找",
+        ["选择盲选或实时躲藏", "寻找掩体或收集钥匙", "交换身份再玩一局"],
+        "较量",
+      ],
+      [
+        "couple-jump",
+        "双人跳一跳",
+        "🧊",
+        "掌握力度，一起跳向下一块",
+        ["按住蓄力，松开跳跃", "可以轮流跳或同步蓄力", "跳到中心获得默契加分"],
+        "动作",
+      ],
+    ] as [string, string, string, string, string[], string][]
+  ).map(([id, name, emoji, tagline, rules, tag]) => ({
+    id,
+    name,
+    emoji,
+    tagline,
+    intro: tagline,
+    rules,
+    tags: [tag],
+    duration: "5–10 分钟",
+    net: "一般网络即可",
+    gradient: "#FFD3BA,#FF87A5",
+    milestone: "M5",
+  })),
   {
     id: "talk-cards",
     name: "深夜聊天卡",

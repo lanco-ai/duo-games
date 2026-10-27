@@ -19,10 +19,8 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command:
-      "PORT=8791 DATA_DIR=" +
-      data +
-      " node --disable-warning=ExperimentalWarning scripts/serve-e2e.mjs",
+    command: "node --disable-warning=ExperimentalWarning scripts/serve-e2e.mjs",
+    env: { PORT: "8791", DATA_DIR: data },
     url: "http://127.0.0.1:8791/api/health",
     reuseExistingServer: false,
     timeout: 15000,

@@ -164,6 +164,7 @@ export class KnowMe extends BaseEngine {
   pending: Commitment<Answer> = commitment();
   phase: "answer" | "grade" | "revealed" = "answer";
   points = 0;
+  deadline = 0;
   history: {
     question: Question;
     answers: Answer[];
@@ -192,22 +193,28 @@ export class KnowMe extends BaseEngine {
     const pool = [
       ...questions.filter((q) => (o.categories as string[]).includes(q.cat)),
       ...custom,
-    ];
+    ].filter((q) => o.mode !== "blind" || q.type === "choice");
     const unused = pool.filter((q) => !c.seen.includes(q.id));
     this.order = shuffled(o.unused ? unused : pool, seed).slice(
       0,
       Number(o.count),
     );
     if (!this.order.length) throw new Error("INVALID");
+    if (o.mode === "blind") this.deadline = at + 5000;
   }
-  view(seat: Seat) {
+  view(seat: Seat, now = Date.now()) {
+    const visible = committedView(this.pending, seat);
+    if (this.options.mode === "blind" && now < this.deadline)
+      visible.answers = null;
     return {
       idx: this.idx,
       total: this.order.length,
       hero: this.idx % 2,
       question: this.order[this.idx],
       phase: this.phase,
-      ...committedView(this.pending, seat),
+      ...visible,
+      mode: this.options.mode,
+      deadline: this.deadline,
       points: this.points,
       history: this.history.slice(-3),
     };
@@ -217,10 +224,13 @@ export class KnowMe extends BaseEngine {
     if (cmd === "submit") {
       if (
         this.phase !== "answer" ||
-        !answerValid(this.order[this.idx], p.answer)
+        !answerValid(this.order[this.idx], p.answer) ||
+        (this.options.mode === "blind" && now >= this.deadline)
       )
         throw new Error("INVALID");
       commit(this.pending, seat, p.answer, now);
+      if (this.options.mode === "blind" && this.pending.revealAt)
+        this.pending.revealAt = this.deadline;
       return true;
     }
     if (cmd === "grade") {
@@ -264,6 +274,7 @@ export class KnowMe extends BaseEngine {
         this.idx++;
         this.phase = "answer";
         this.pending = commitment();
+        if (this.options.mode === "blind") this.deadline = now + 5000;
       }
       return true;
     }
@@ -282,6 +293,20 @@ export class KnowMe extends BaseEngine {
   }
   tick(now: number) {
     if (
+      this.options.mode === "blind" &&
+      this.phase === "answer" &&
+      now >= this.deadline
+    ) {
+      const a = this.pending.answers;
+      this.pending.revealAt = this.deadline;
+      this.record(
+        a[0] === null || a[1] === null
+          ? 0
+          : score(this.order[this.idx], a[0], a[1]),
+      );
+      return true;
+    }
+    if (
       this.phase === "answer" &&
       this.pending.revealAt &&
       now >= this.pending.revealAt
@@ -296,5 +321,6 @@ export class KnowMe extends BaseEngine {
   shift(ms: number) {
     super.shift(ms);
     if (this.pending.revealAt) this.pending.revealAt += ms;
+    if (this.deadline) this.deadline += ms;
   }
 }

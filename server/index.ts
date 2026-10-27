@@ -8,7 +8,7 @@ import {
   type ServerResponse,
 } from "node:http";
 import { readFileSync, statSync, existsSync } from "node:fs";
-import { resolve, dirname, extname } from "node:path";
+import { resolve, dirname, extname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer, WebSocket } from "ws";
 import { Store } from "./store";
@@ -363,7 +363,7 @@ export function createApp(options: Options = {}) {
       }
       const relative = decodeURIComponent(path.slice(prefix.length + 1));
       const target = resolve(web, relative || "index.html");
-      if (!target.startsWith(resolve(web) + "/")) {
+      if (!target.startsWith(resolve(web) + sep)) {
         json(res, 404, { error: "INVALID" });
         return;
       }
@@ -386,7 +386,7 @@ export function createApp(options: Options = {}) {
       };
       res.writeHead(200, {
         "Content-Type": types[extname(file)] || "application/octet-stream",
-        "Cache-Control": file.includes("/assets/")
+        "Cache-Control": file.includes(`${sep}assets${sep}`)
           ? "public,max-age=31536000,immutable"
           : "no-cache",
         "X-Content-Type-Options": "nosniff",

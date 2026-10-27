@@ -7,7 +7,7 @@ import {
 } from "./games/types";
 export type Seat = 0 | 1;
 // Physics changes require matching client and server simulations.
-export const VERSION = 3;
+export const VERSION = 4;
 export const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 export const AVATARS = ["🐰", "🐻", "🐱", "🐶", "🦊", "🐧"];
 export const COLORS = [
@@ -29,6 +29,7 @@ export interface Settings {
   decks: Deck[];
   limit: 10 | 20 | 0;
   games?: Partial<Record<ExtraId, GameOptions>>;
+  talkMode?: "classic" | "pro";
 }
 export type Phase =
   | "waiting"
@@ -89,6 +90,14 @@ export interface TalkView {
   played: number;
   skipped: number;
   remaining: number;
+  pro?: {
+    trigger: string;
+    pool: "truth" | "dare";
+    deadline: number;
+    outcome: string;
+    penalties: [number, number];
+  } | null;
+  mode?: "classic" | "pro";
 }
 export interface RoomView {
   code: string;
@@ -128,7 +137,13 @@ export type Action =
   | { type: "draw" }
   | { type: "next" | "skip"; idx: number }
   | { type: "fav"; cardId: string; on: boolean }
-  | { type: "answer"; cardId: string; text: string };
+  | { type: "answer"; cardId: string; text: string }
+  | {
+      type: "pro-draw";
+      trigger: "wheel" | "dice" | "joker";
+      pool: "truth" | "dare";
+    }
+  | { type: "pro-resolve"; outcome: "complete" | "drink" | "coupon" };
 export type ClientMessage =
   | { t: "stream"; run: string; kind: "ink" | "cur" | "rt"; data: any }
   | { t: "hello"; code: string; token: string; v: number }
@@ -193,6 +208,9 @@ export function validSettings(s: unknown): s is Settings {
     new Set(v.decks).size === v.decks.length &&
     v.decks.every((d) => DECKS.includes(d)) &&
     [0, 10, 20].includes(v.limit) &&
+    (v.talkMode === undefined ||
+      v.talkMode === "classic" ||
+      v.talkMode === "pro") &&
     (v.games === undefined ||
       (v.games !== null &&
         typeof v.games === "object" &&

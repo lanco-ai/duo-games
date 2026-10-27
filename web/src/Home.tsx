@@ -1,6 +1,6 @@
 import { useState } from "preact/hooks";
 import { ALPHABET, type Profile } from "../../shared/protocol";
-import type { GameMeta } from "../../shared/catalog";
+import { games, type GameMeta } from "../../shared/catalog";
 import { api, BASE, profile, remember, roomLink, roomStorageKey } from "./api";
 import { Catalog, GameInfo } from "./ui/catalog";
 import { Modal, ProfileForm, copyText } from "./ui/common";
@@ -140,7 +140,7 @@ export function Home() {
           <a class="round-button" href="#games">
             <Icon name="grid" />
             <span>游戏</span>
-            <b class="badge">10</b>
+            <b class="badge">{games.length}</b>
           </a>
           <button class="round-button" onClick={() => setPrivacy(true)}>
             <Icon name="book" />
@@ -237,7 +237,7 @@ export function Home() {
       {privacy && (
         <Modal title="关于二人世界" close={() => setPrivacy(false)}>
           <p>
-            一个专为两个人做的小游戏合集。十款游戏，从慢慢聊天到并肩闯关，总有一种适合今天的你们。
+            一个专为两个人做的小游戏合集。从慢慢聊天到并肩闯关，总有一种适合今天的你们。
           </p>
           <h3>只属于你们的空间</h3>
           <p>

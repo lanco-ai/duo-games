@@ -125,6 +125,36 @@ export default function Setup({
   return (
     <div class="game-setup">
       <fieldset disabled={room.proposal?.by !== seat || uploading}>
+        {id === "survival" &&
+          select("mode", "玩法", [
+            ["mixed", "混合挑战"],
+            ["quiz", "送命题问答"],
+            ["search", "抓包寻物"],
+          ])}
+        {id === "spot-difference" &&
+          select("scene", "场景", [
+            [0, "咖啡厅"],
+            [1, "电影院"],
+            [2, "游乐场"],
+            [3, "卧室"],
+            [4, "海边"],
+          ])}
+        {id === "couple-ludo" &&
+          select("mode", "题库", [
+            ["pure", "纯爱日常"],
+            ["warm", "微醺升温"],
+            ["fun", "趣味惩罚"],
+          ])}
+        {id === "hide-seek" &&
+          select("mode", "玩法", [
+            ["turn", "回合盲选"],
+            ["realtime", "实时躲藏"],
+          ])}
+        {id === "couple-jump" &&
+          select("mode", "玩法", [
+            ["relay", "轮流接力"],
+            ["sync", "同步蓄力"],
+          ])}
         {id === "draw-guess" && (
           <>
             {select("rounds", "轮数", [
@@ -148,6 +178,10 @@ export default function Setup({
           ])}
         {id === "know-me" && (
           <>
+            {select("mode", "玩法", [
+              ["classic", "猜你了解我"],
+              ["blind", "背靠背同步作答"],
+            ])}
             {select("count", "题数", [
               [10, "10 题"],
               [15, "15 题"],

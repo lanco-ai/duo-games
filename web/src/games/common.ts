@@ -12,6 +12,13 @@ export interface GameProps {
   disabled: boolean;
   code: string;
   token: string;
+  local?: {
+    seat: Seat;
+    view: ExtraView | null;
+    send: (a: Action) => Promise<boolean>;
+    transport: Transport;
+    token: string;
+  };
 }
 export function useGame(p: GameProps) {
   return (command: string, payload: any = {}) =>

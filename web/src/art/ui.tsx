@@ -372,6 +372,10 @@ export function GameIcon({ id }: { id: string }) {
         <path d={HEART(50, 53, 7)} fill="#FF4D6A" {...S} stroke-width="2" />
       </>
     );
+  if (!body) {
+    const symbols: Record<string, string> = {survival:'💌','spot-difference':'🔍','coop-kitchen':'🍳','couple-ludo':'🎲','hide-seek':'🔦','couple-jump':'🧊'};
+    body = <text x="32" y="44" text-anchor="middle" font-size="31">{symbols[id] || '💗'}</text>;
+  }
   const [a, b] = TILE_COLORS[id] || ["#FFD", "#FC8"];
   return (
     <svg class="game-icon" viewBox="0 0 64 64" aria-hidden="true">

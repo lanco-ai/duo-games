@@ -36,7 +36,10 @@ export default function Know(p: GameProps) {
   return (
     <section class="extra-stage know-stage" data-testid="know-stage">
       <span class="game-eyebrow">
-        第 {d.idx + 1} / {d.total} 题 · 主角是 {nickname(p, d.hero)}
+        第 {d.idx + 1} / {d.total} 题 ·{" "}
+        {d.mode === "blind"
+          ? `同步盲答 ${Math.max(0, Math.ceil((d.deadline - p.now) / 1000))} 秒`
+          : `主角是 ${nickname(p, d.hero)}`}
       </span>
       <div class="question-board">
         <Critter
@@ -49,9 +52,11 @@ export default function Know(p: GameProps) {
         <h2>{q.text.replaceAll("{name}", nickname(p, d.hero))}</h2>
       </div>
       <p class="muted">
-        {p.seat === d.hero
-          ? "答你自己的情况，让 TA 更懂你。"
-          : "猜猜 TA 会怎么回答。"}
+        {d.mode === "blind"
+          ? "两人独立选择，时间到后一起揭晓。"
+          : p.seat === d.hero
+            ? "答你自己的情况，让 TA 更懂你。"
+            : "猜猜 TA 会怎么回答。"}
       </p>
       {show ? (
         <>
@@ -62,7 +67,11 @@ export default function Know(p: GameProps) {
                   {nickname(p, seat)}
                   {seat === d.hero ? "的答案" : "的猜测"}
                 </small>
-                <strong>{answerText(q, d.answers[seat])}</strong>
+                <strong>
+                  {d.answers[seat] === null
+                    ? "未作答"
+                    : answerText(q, d.answers[seat])}
+                </strong>
               </article>
             ))}
           </div>
