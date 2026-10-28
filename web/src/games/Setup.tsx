@@ -58,13 +58,22 @@ export default function Setup({
           <option
             value={value}
             disabled={
-              (key === "chapter" || key === "level") &&
-              ["couple-jump", "coop-kitchen", "survival"].includes(id) &&
+              (key === "chapter" ||
+                key === "level" ||
+                (key === "scene" && id === "spot-difference")) &&
+              [
+                "couple-jump",
+                "coop-kitchen",
+                "survival",
+                "spot-difference",
+              ].includes(id) &&
               (value === "endless"
                 ? id === "couple-jump"
                   ? 5
                   : 6
-                : Number(value)) > (room.progress?.[id] || 1)
+                : key === "scene"
+                  ? Number(value) + 1
+                  : Number(value)) > (room.progress?.[id] || 1)
             }
           >
             {label}
@@ -154,6 +163,11 @@ export default function Setup({
             ["3", "磨合期"],
             ["4", "见家长"],
             ["5", "纪念日"],
+          ])}
+        {id === "spot-difference" &&
+          select("mode", "图片模式", [
+            ["split", "各看一半"],
+            ["easy", "同屏简单模式"],
           ])}
         {id === "spot-difference" &&
           select("scene", "场景", [

@@ -151,3 +151,54 @@ test("P3 both seats privately choose five answers, settle and rematch", async ({
     await b.close();
   }
 });
+
+test("P4 two browsers compare tutorial pictures, share finds, settle and rematch", async ({
+  browser,
+}) => {
+  const { a, b, one, two } = await pair(browser);
+  try {
+    await start(one, two, "各看一半");
+    await expect(one.getByTestId("spot-stage")).toBeVisible();
+    await expect(one.locator(".game-overlay")).toBeHidden();
+    const top = one.locator(".spot-panel svg").nth(0),
+      bottom = one.locator(".spot-panel svg").nth(1);
+    const candidates = await top
+      .locator("g[data-id]")
+      .evaluateAll((nodes) =>
+        nodes.map((n) => ({
+          id: n.getAttribute("data-id"),
+          html: n.innerHTML,
+        })),
+      );
+    const other = await bottom
+      .locator("g[data-id]")
+      .evaluateAll((nodes) =>
+        nodes.map((n) => ({
+          id: n.getAttribute("data-id"),
+          html: n.innerHTML,
+        })),
+      );
+    const diffs = candidates.filter(
+      (x) => other.find((y) => y.id === x.id)?.html !== x.html,
+    );
+    expect(diffs).toHaveLength(5);
+    for (let i = 0; i < diffs.length; i++) {
+      const object = top.locator('g[data-id="' + diffs[i].id + '"] rect');
+      await object.click({ force: true });
+      if (i < 4)
+        await expect(two.getByTestId("spot-stage")).toContainText(
+          "找到 " + (i + 1) + " / 5",
+        );
+    }
+    await expect(one.locator(".result-page")).toContainText("找到了全部不同");
+    await expect(two.locator(".result-page")).toContainText("5 / 5");
+    await one.getByRole("button", { name: "再来一局", exact: true }).click();
+    await two.getByRole("button", { name: "再来一局", exact: true }).click();
+    await one.getByRole("button", { name: "我准备好了", exact: true }).click();
+    await two.getByRole("button", { name: "我准备好了", exact: true }).click();
+    await expect(one.getByTestId("spot-stage")).toBeVisible({ timeout: 20000 });
+  } finally {
+    await a.close();
+    await b.close();
+  }
+});

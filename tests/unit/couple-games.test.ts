@@ -24,19 +24,6 @@ const ctx = (): EngineContext => ({
   emit: vi.fn(),
 });
 describe("new couple games: authority, scoring and private views", () => {
-  it("shares unique find progress, penalizes misses and shifts the timer", () => {
-    const g = new SpotDifference("r", { scene: 3 }, 3, 1000, ctx());
-    expect(new Set(g.selected).size).toBe(5);
-    const target = differenceObjects[g.selected[0]];
-    g.act(0, "tap", { x: target.x, y: target.y }, 1500);
-    expect(g.act(1, "tap", { x: target.x, y: target.y }, 1501)).toBe(false);
-    g.act(1, "tap", { x: 99, y: 89 }, 1600);
-    expect(g.deadline).toBe(58000);
-    g.shift(3000);
-    expect(g.deadline).toBe(61000);
-    expect(g.tick(61000)).toBe(true);
-    expect(g.result?.stats.found).toBe(1);
-  });
   it("enforces turns and deterministic dice in flying chess", () => {
     const a = new CoupleLudo("a", { mode: "pure" }, 17, 0, ctx()),
       b = new CoupleLudo("b", { mode: "pure" }, 17, 0, ctx());

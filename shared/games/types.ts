@@ -59,7 +59,7 @@ export const defaults: Record<ExtraId, GameOptions> = {
   "puzzle-us": { pieces: 24, image: "scene:sunset" },
   heartbeat: { track: "meet" },
   survival: { mode: "mixed", chapter: "1" },
-  "spot-difference": { scene: 0 },
+  "spot-difference": { scene: 0, mode: "split" },
   "coop-kitchen": { level: "1" },
   "couple-ludo": { mode: "pure" },
   "hide-seek": { mode: "turn" },
@@ -130,7 +130,10 @@ export function validOptions(id: string, value: unknown): value is GameOptions {
         ["1", "2", "3", "4", "5"].includes(String(o.chapter))
       );
     case "spot-difference":
-      return [0, 1, 2, 3, 4].includes(Number(o.scene));
+      return (
+        [0, 1, 2, 3, 4].includes(Number(o.scene)) &&
+        ["easy", "split"].includes(String(o.mode))
+      );
     case "coop-kitchen":
       return ["1", "2", "3", "4", "5", "endless"].includes(String(o.level));
     case "couple-ludo":

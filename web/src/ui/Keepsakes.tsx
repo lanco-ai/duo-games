@@ -90,7 +90,53 @@ function Artwork({
         ctx.fillText("♥", 500, y + 2);
       });
     }
-    if (!["drawing", "puzzle", "chain"].includes(item.kind)) {
+    if (item.kind === "difference") {
+      c.height = 780;
+      ctx.fillStyle = item.data.background;
+      ctx.fillRect(0, 0, 1000, 780);
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#603d52";
+      ctx.font = '42px "DuoDisplay",sans-serif';
+      ctx.fillText(item.title, 500, 70, 920);
+      (item.data.images as any[][]).forEach((objects, i) => {
+        const left = 20 + i * 500;
+        ctx.fillStyle = "#603d52";
+        ctx.font = "28px sans-serif";
+        ctx.fillText(i ? "修改图" : "原图", left + 220, 140);
+        objects.forEach((o) => {
+          const x = left + o.x * 4.5,
+            y = 180 + o.y * 4.5;
+          ctx.fillStyle = o.color;
+          ctx.fillRect(x - 22, y - 30, 44, 55);
+          ctx.font = o.size * 4.5 + "px sans-serif";
+          ctx.fillText(o.icon.repeat(o.count), x, y + 10);
+          ctx.fillStyle = "#422f46";
+          ctx.font = "13px sans-serif";
+          ctx.fillText(o.direction < 0 ? "◀" : "▶", x, y + 38);
+          if (o.pattern === "striped") {
+            ctx.strokeStyle = "#83378b";
+            ctx.lineWidth = 4;
+            for (let n = 0; n < 3; n++) {
+              ctx.beginPath();
+              ctx.moveTo(x - 16 + n * 15, y - 25);
+              ctx.lineTo(x - 16 + n * 15, y + 20);
+              ctx.stroke();
+            }
+          }
+        });
+        ctx.strokeStyle = "#e94477";
+        ctx.lineWidth = 4;
+        for (const f of item.data.found) {
+          ctx.beginPath();
+          ctx.arc(left + f.x * 4.5, 180 + f.y * 4.5, 30, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      });
+      ctx.fillStyle = "#bf4267";
+      ctx.font = "32px sans-serif";
+      ctx.fillText("把每一个不同，说给你听", 500, 735);
+    }
+    if (!["drawing", "puzzle", "chain", "difference"].includes(item.kind)) {
       c.height = 1000;
       ctx.fillStyle = "#fff1de";
       ctx.fillRect(0, 0, 1000, 1000);
