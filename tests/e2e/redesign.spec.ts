@@ -1,7 +1,10 @@
 import { test, expect, type Browser, type Page } from "@playwright/test";
+import { observe, gameData, kitchenWalk } from "./redesign-helpers";
 async function pair(browser: Browser) {
   const a = await browser.newContext({ viewport: { width: 375, height: 667 } }),
     b = await browser.newContext({ viewport: { width: 375, height: 667 } });
+  await observe(a);
+  await observe(b);
   const one = await a.newPage(),
     two = await b.newPage();
   await one.goto("/");
@@ -23,26 +26,57 @@ async function start(one: Page, two: Page, name: string) {
   await two.getByRole("button", { name: "我准备好了", exact: true }).click();
   await expect(one.locator(".game-overlay")).toBeHidden({ timeout: 20000 });
 }
-test("P1 two browser contexts finish the grass journey and rematch", async ({
+test("P1 two browser contexts reload during a charge, finish the grass journey and rematch", async ({
   browser,
 }) => {
   const { a, b, one, two } = await pair(browser);
   try {
     await start(one, two, "双人跳一跳");
     await expect(one.getByTestId("jump-stage")).toBeVisible();
+    await expect(one.locator('[data-testid^="jump-animal-"]')).toHaveCount(2);
     for (let i = 0; i < 10; i++) {
       const page = i % 2 ? two : one;
+      if (i === 2) {
+        const held = page.getByRole("button", {
+          name: "按住蓄力 · 松开起跳",
+          exact: true,
+        });
+        await expect(held).toBeEnabled();
+        await held.scrollIntoViewIfNeeded();
+        const box = (await held.boundingBox())!;
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.down();
+        await expect
+          .poll(async () => (await gameData(page)).charging[0])
+          .toBe(true);
+        await page.reload();
+        await page.mouse.up();
+        await page.waitForFunction(
+          () => (window as any).duoTest.room?.phase === "playing",
+        );
+        await expect(page.locator(".game-overlay")).toBeHidden();
+        expect((await gameData(page)).charging).toEqual([false, false]);
+      }
+      const button = page.getByRole("button", { name: "按住蓄力 · 松开起跳" });
+      await expect(button).toBeEnabled();
       const distance = Number(
         await page.getByTestId("jump-platform-0").getAttribute("data-distance"),
       );
-      const button = page.getByRole("button", { name: "按住蓄力 · 松开起跳" });
-      await expect(button).toBeEnabled();
       await button.scrollIntoViewIfNeeded();
       const box = (await button.boundingBox())!;
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
       await page.mouse.down();
       await page.waitForTimeout(distance * 4);
       await page.mouse.up();
+      if (i === 0)
+        expect(
+          Number(
+            await page
+              .getByTestId("jump-platform-0")
+              .getAttribute("data-distance"),
+          ),
+        ).toBe(distance);
+      await expect.poll(async () => (await gameData(page)).step).toBe(i + 1);
     }
     await expect(one.locator(".result-page")).toBeVisible();
     await expect(two.locator(".result-page")).toBeVisible();
@@ -58,47 +92,106 @@ test("P1 two browser contexts finish the grass journey and rematch", async ({
   }
 });
 
-test("P2 two cooks move without action round trips, interact, settle and rematch", async ({
+test("P2 two cooks prepare real orders, earn a star, settle and rematch", async ({
   browser,
   request,
 }) => {
-  test.setTimeout(120000);
+  test.setTimeout(180000);
   const { a, b, one, two } = await pair(browser);
+  const operate = async (page: Page, icon: string, hold = false) => {
+    // Face the intended counter after walking; a tiny coordinate correction may
+    // otherwise leave the chef facing away from a nearby worktop.
+    const face: Record<string, string> = {
+      "🍅": "a",
+      "🥬": "w",
+      "🍞": "d",
+      "🔪": "a",
+      "🍽️": "s",
+      "🔔": "w",
+    };
+    await page.keyboard.press(face[icon]);
+    const button = page.getByRole("button", {
+      name: "操作" + icon,
+      exact: true,
+    });
+    await expect(button).toBeEnabled();
+    if (!hold) {
+      await button.click();
+      return;
+    }
+    await button.scrollIntoViewIfNeeded();
+    const box = (await button.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await expect
+      .poll(async () => (await gameData(page)).boards[0]?.stage)
+      .toBe("chopped");
+    await page.mouse.up();
+  };
+  const chop = async (page: Page, seat: number) => {
+    await kitchenWalk(page, seat, 1, 0.7);
+    await kitchenWalk(page, seat, 0.7, 2);
+    await operate(page, "🔪");
+    await operate(page, "🔪", true);
+    await operate(page, "🔪");
+    await expect(page.getByTestId("kitchen-stage")).toContainText("已切");
+    await kitchenWalk(page, seat, 1, 6.2);
+    await kitchenWalk(page, seat, 2, 6.2);
+    await operate(page, "🍽️");
+  };
   try {
     await start(one, two, "双人厨房");
     await expect(one.getByTestId("kitchen-stage")).toBeVisible();
-    await expect(one.locator(".game-overlay")).toBeHidden();
-    const chef = one.locator(".chef.player-0");
-    const before = Number(await chef.getAttribute("data-y"));
-    await one.keyboard.down("w");
-    await one.waitForTimeout(500);
-    await one.keyboard.up("w");
-    await expect
-      .poll(async () => Number(await chef.getAttribute("data-y")))
-      .toBeLessThan(before - 1);
-    await one.keyboard.down("w");
-    await one.waitForTimeout(350);
-    await one.keyboard.up("w");
-    await one.keyboard.down("a");
-    await one.waitForTimeout(100);
-    await one.keyboard.up("a");
-    await one.getByRole("button", { name: "操作🍅", exact: true }).click();
-    await expect(one.getByTestId("kitchen-stage")).toContainText("待处理");
-    await two.keyboard.down("a");
-    await two.waitForTimeout(300);
-    await two.keyboard.up("a");
-    await expect
-      .poll(async () =>
-        Number(await two.locator(".chef.player-1").getAttribute("data-x")),
-      )
-      .toBeLessThan(6);
     await expect(one.locator(".kitchen-tickets > div")).toHaveCount(2);
+    for (let served = 0; served < 3; served++) {
+      if (served) {
+        await kitchenWalk(two, 1, 6, 6.2);
+        await kitchenWalk(two, 1, 2, 6.2);
+        await operate(two, "🍽️");
+      }
+      const kind = (await gameData(one)).orders[0].kind;
+      expect(["salad", "sandwich"]).toContain(kind);
+      console.log(`Cooking order ${served + 1}: ${kind}`);
+      await kitchenWalk(one, 0, 1, 0.7);
+      await kitchenWalk(one, 0, 0.6, 0.7);
+      await operate(one, "🍅");
+      await chop(one, 0);
+      if (kind === "salad") {
+        await kitchenWalk(two, 1, 6, 0.7);
+        await kitchenWalk(two, 1, 2, 0.7);
+        await operate(two, "🥬");
+        await chop(two, 1);
+      } else {
+        await kitchenWalk(two, 1, 6, 0.7);
+        await kitchenWalk(two, 1, 6.4, 0.7);
+        await operate(two, "🍞");
+        await kitchenWalk(two, 1, 6, 6.2);
+        await kitchenWalk(two, 1, 2, 6.2);
+        await operate(two, "🍽️");
+      }
+      await operate(two, "🍽️");
+      await kitchenWalk(two, 1, 6, 0.7);
+      await operate(two, "🔔");
+      await expect
+        .poll(async () => (await gameData(one)).served)
+        .toBe(served + 1);
+    }
+    expect((await gameData(one)).score).toBeGreaterThanOrEqual(300);
     const advanced = await request.post("http://127.0.0.1:8792/advance", {
       data: { ms: 121000 },
     });
     expect(advanced.ok()).toBe(true);
     await expect(one.locator(".result-page")).toContainText("厨房打烊");
-    await expect(two.locator(".result-page")).toContainText("厨房打烊");
+    await expect(two.locator(".result-page")).toContainText("3 单");
+    await expect(one.locator(".result-page h1")).toContainText("★");
+    // Advancing the server clock can expire its transport liveness lease.
+    // Wait for both real UI connections before asking either seat to rematch.
+    await expect(
+      one.getByRole("button", { name: "发送❤️", exact: true }),
+    ).toBeEnabled();
+    await expect(
+      two.getByRole("button", { name: "发送❤️", exact: true }),
+    ).toBeEnabled();
     await one.getByRole("button", { name: "再来一局", exact: true }).click();
     await two.getByRole("button", { name: "再来一局", exact: true }).click();
     await one.getByRole("button", { name: "我准备好了", exact: true }).click();
@@ -361,6 +454,12 @@ test("P7 rhythm partners settle a song and return for another chart", async ({
     expect(result.ok()).toBe(true);
     await expect(one.locator(".result-page")).toContainText("我们的心跳同步率");
     await expect(two.locator(".result-page")).toContainText("副歌连打");
+    await expect(
+      one.getByRole("button", { name: "发送❤️", exact: true }),
+    ).toBeEnabled();
+    await expect(
+      two.getByRole("button", { name: "发送❤️", exact: true }),
+    ).toBeEnabled();
     await one.getByRole("button", { name: "再来一局", exact: true }).click();
     await two.getByRole("button", { name: "再来一局", exact: true }).click();
     await one.getByRole("button", { name: "我准备好了", exact: true }).click();

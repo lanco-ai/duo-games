@@ -1,4 +1,5 @@
 import { test, expect, type Page, type Browser } from "@playwright/test";
+import { firstDifference } from "./redesign-helpers";
 test.setTimeout(45000);
 test.use({ actionTimeout: 10000 });
 
@@ -28,55 +29,69 @@ async function start(p: Page, name: string, setup?: () => Promise<void>) {
   await expect(p.locator(".game-overlay")).toBeHidden({ timeout: 20000 });
 }
 
-test("local seat uses separate credentials and both can roll and complete turns", async ({
+test("local seats can choose dice and pass turns with separate authority", async ({
   browser,
 }) => {
   const { c, p } = await newRoom(browser);
-  const errors: string[] = [];
-  p.on("pageerror", (e) => errors.push(e.message));
-  await localPartner(p);
-  await start(p, "情侣飞行棋");
-  await expect(p.getByTestId("ludo-stage")).toBeVisible();
-  await expect(p.locator(".game-overlay")).toBeHidden({ timeout: 12000 });
-  await p.screenshot({ path: "test-results/new-ludo.png", fullPage: true });
-  await p.getByRole("button", { name: "🎲 投掷骰子" }).click();
-  await expect(p.locator(".ludo-task")).toBeVisible();
-  await p.getByRole("button", { name: "完成，交给 TA" }).click();
-  await expect(p.getByText("💞 当前：玩家 2")).toBeVisible();
-  await p.getByRole("button", { name: "🎲 投掷骰子" }).click();
-  expect(errors).toEqual([]);
-  await c.close();
+  try {
+    await localPartner(p);
+    await start(p, "心动棋");
+    await expect(p.getByTestId("ludo-stage")).toBeVisible();
+    await p
+      .getByRole("button", { name: "🎲 投掷两颗骰子", exact: true })
+      .click();
+    await expect(p.getByRole("button", { name: /^选 \d 点$/ })).toHaveCount(2);
+    await p
+      .getByRole("button", { name: "让一步 · 两颗都给 TA", exact: true })
+      .click();
+    await expect(p.getByTestId("ludo-stage")).toHaveAttribute("data-turn", "1");
+    await p
+      .getByRole("button", { name: "🎲 投掷两颗骰子", exact: true })
+      .click();
+    await p
+      .getByRole("button", { name: "让一步 · 两颗都给 TA", exact: true })
+      .click();
+    await expect(p.getByTestId("ludo-stage")).toHaveAttribute("data-turn", "0");
+  } finally {
+    await c.close();
+  }
 });
 
-test("survival clues and local hide-and-seek use the correct seat and cover secrets on handoff", async ({
+test("local hide-and-seek covers the hiding place on handoff", async ({
   browser,
 }) => {
   const { c, p } = await newRoom(browser);
-  await localPartner(p);
-  await start(p, "情侣求生欲", async () => {
-    await p.getByLabel("玩法").selectOption("search");
-  });
-  const survival = p.getByTestId("survival-stage");
-  await expect(survival).toBeVisible();
-  await survival.getByRole("button", { name: "💡 提示" }).click();
-  await expect(survival.locator(".couple-hint")).toBeVisible();
-  await survival.getByRole("button", { name: "调查口红" }).click();
-  await p.getByLabel("退出本局").click();
-  await p.getByRole("button", { name: "结束本局" }).click();
-  await p.getByRole("button", { name: "换个游戏" }).click();
-  await start(p, "双人躲猫猫");
-  const stage = p.getByTestId("hide-stage");
-  await expect(stage).toBeVisible();
-  const covers = stage.locator(".hide-room button");
-  await covers.nth(7).click();
-  await covers.nth(0).click();
-  await covers.nth(1).click();
-  await stage.getByRole("button", { name: "藏好了" }).click();
-  await expect(p.getByRole("heading", { name: "请交给抓捕者" })).toBeVisible();
-  await p.getByRole("button", { name: "开始寻找" }).click();
-  await expect(p.getByTestId("hide-stage")).toContainText("还可寻找 3 次");
-  await expect(p.locator(".hide-room .chosen")).toHaveCount(0);
-  await c.close();
+  try {
+    await localPartner(p);
+    await start(p, "房间里的秘密");
+    await expect(
+      p.getByRole("heading", { name: "请交给玩家 2", exact: true }),
+    ).toBeVisible();
+    await p
+      .getByRole("button", { name: "准备好了，打开我的视图", exact: true })
+      .click();
+    for (const id of [8, 0, 3])
+      await p
+        .getByRole("button", { name: new RegExp("^布置.* " + id + "$") })
+        .click();
+    await p.getByRole("button", { name: "藏好了", exact: true }).click();
+    await expect(
+      p.getByRole("heading", { name: "请交给玩家 1", exact: true }),
+    ).toBeVisible();
+    await expect(p.getByTestId("hide-stage")).toHaveCount(0);
+    await p
+      .getByRole("button", { name: "准备好了，打开我的视图", exact: true })
+      .click();
+    await expect(p.getByTestId("hide-stage")).toContainText("还可搜查 6 次");
+    await expect(p.locator(".hide-apartment button.chosen")).toHaveCount(0);
+    await p.getByRole("button", { name: /^搜查.* 8$/ }).click();
+    await p
+      .getByRole("button", { name: "准备好了，打开我的视图", exact: true })
+      .click();
+    await expect(p.getByTestId("hide-stage")).toContainText("本轮已结束");
+  } finally {
+    await c.close();
+  }
 });
 
 test("blind answers remain hidden until five seconds, and Pro cards use a separate dare pool", async ({
@@ -123,12 +138,16 @@ test("same device opens both kitchen and jumping controls with separate seat aut
   await expect(p.getByRole("group", { name: "玩家2摇杆" })).toBeVisible();
   const before = await p.locator(".chef.player-1").boundingBox();
   expect(before).not.toBeNull();
-  await p.keyboard.press("ArrowRight");
+  await p.keyboard.down("ArrowRight");
+  await p.waitForTimeout(200);
+  await p.keyboard.up("ArrowRight");
   await expect
     .poll(async () => (await p.locator(".chef.player-1").boundingBox())?.x)
     .toBeGreaterThan(before!.x);
   const firstChef = await p.locator(".chef.player-0").boundingBox();
-  const stick = p.getByRole("group", { name: "玩家1摇杆" });
+  const stick = p
+    .getByRole("group", { name: "玩家1摇杆" })
+    .getByRole("button", { name: "→", exact: true });
   await stick.scrollIntoViewIfNeeded();
   const stickBox = (await stick.boundingBox())!;
   const cdp = await c.newCDPSession(p);
@@ -137,7 +156,7 @@ test("same device opens both kitchen and jumping controls with separate seat aut
     type: "touchStart",
     touchPoints: [
       {
-        x: stickBox.x + stickBox.width * 0.85,
+        x: stickBox.x + stickBox.width / 2,
         y: stickBox.y + stickBox.height / 2,
       },
     ],
@@ -176,7 +195,7 @@ test("two remote seats see shared difference progress and can reconnect", async 
   await two.getByLabel("你的昵称").fill("阿北");
   await two.getByRole("button", { name: "进入房间 ❤" }).click();
   await expect(one.locator(".couple-names")).toContainText("阿北");
-  await one.getByRole("button", { name: "了解情侣找茬" }).click();
+  await one.getByRole("button", { name: "了解各看一半" }).click();
   await one.getByRole("button", { name: "一起玩这个 ❤" }).click();
   await two.getByRole("button", { name: "好呀", exact: true }).click();
   await one.getByRole("button", { name: "我准备好了", exact: true }).click();
@@ -184,28 +203,7 @@ test("two remote seats see shared difference progress and can reconnect", async 
   await expect(one.locator(".game-overlay")).toBeHidden({ timeout: 20000 });
   await expect(one.getByTestId("spot-stage")).toBeVisible();
   await expect(two.getByTestId("spot-stage")).toBeVisible();
-  const panels = one.locator(".spot-panel svg");
-  const objectsA = panels.nth(0).locator(":scope > g");
-  const objectsB = panels.nth(1).locator(":scope > g");
-  const count = await objectsA.count();
-  let difference = -1;
-  for (let i = count - 10; i < count; i++) {
-    if (
-      (await objectsA.nth(i).innerHTML()) !==
-        (await objectsB.nth(i).innerHTML()) ||
-      (await objectsA.nth(i).getAttribute("transform")) !==
-        (await objectsB.nth(i).getAttribute("transform"))
-    ) {
-      difference = i;
-      break;
-    }
-  }
-  expect(difference).toBeGreaterThanOrEqual(0);
-  await objectsA
-    .nth(difference)
-    .locator("circle")
-    .first()
-    .click({ force: true });
+  await firstDifference(one);
   await expect(one.getByTestId("spot-stage")).toContainText("找到 1 / 5");
   await expect(two.getByTestId("spot-stage")).toContainText("找到 1 / 5");
   await two.reload();
@@ -220,20 +218,56 @@ test("two remote seats see shared difference progress and can reconnect", async 
   await b.close();
 });
 
-test("local realtime hide-and-seek provides separate controls and views", async ({
+test("local hiding partner can relocate and play dead behind a handoff cover", async ({
   browser,
 }) => {
   const { c, p } = await newRoom(browser);
-  await localPartner(p);
-  await start(p, "双人躲猫猫", async () => {
-    await p.getByLabel("玩法").selectOption("realtime");
-  });
-  const choosing = p.getByTestId("hide-stage");
-  await choosing.locator(".hide-room button").nth(7).click();
-  await choosing.getByRole("button", { name: "藏好了" }).click();
-  await expect(p.locator(".dual-hide")).toBeVisible();
-  await expect(p.getByRole("group", { name: "抓捕者摇杆" })).toBeVisible();
-  await expect(p.getByRole("group", { name: "躲藏者摇杆" })).toBeVisible();
-  await p.screenshot({ path: "test-results/new-hide.png", fullPage: true });
-  await c.close();
+  try {
+    await localPartner(p);
+    await start(p, "房间里的秘密");
+    await p
+      .getByRole("button", { name: "准备好了，打开我的视图", exact: true })
+      .click();
+    for (const id of [8, 0, 3])
+      await p
+        .getByRole("button", { name: new RegExp("^布置.* " + id + "$") })
+        .click();
+    await p.getByRole("button", { name: "藏好了", exact: true }).click();
+    await p
+      .getByRole("button", { name: "准备好了，打开我的视图", exact: true })
+      .click();
+    await p
+      .getByRole("button", { name: "遮挡屏幕，交给玩家 2", exact: true })
+      .click();
+    await p
+      .getByRole("button", { name: "准备好了，打开我的视图", exact: true })
+      .click();
+    await p
+      .getByRole("button", { name: "换位 · 剩余 2 次", exact: true })
+      .click();
+    await p.getByRole("button", { name: /^搜查.* 7$/ }).click();
+    await expect(
+      p.getByRole("button", { name: "换位 · 剩余 1 次", exact: true }),
+    ).toBeVisible();
+    await p.getByRole("button", { name: "装死 · 一次", exact: true }).click();
+    await expect(
+      p.getByRole("button", { name: "装死 · 一次", exact: true }),
+    ).toBeDisabled();
+    await p
+      .getByRole("button", { name: "遮挡屏幕，交给玩家 1", exact: true })
+      .click();
+    await p
+      .getByRole("button", { name: "准备好了，打开我的视图", exact: true })
+      .click();
+    await expect(p.locator(".hide-apartment button.chosen")).toHaveCount(0);
+    await p.getByRole("button", { name: /^搜查.* 7$/ }).click();
+    await expect(p.getByTestId("hide-stage")).toContainText("很安静");
+    await p.getByRole("button", { name: /^搜查.* 7$/ }).click();
+    await p
+      .getByRole("button", { name: "准备好了，打开我的视图", exact: true })
+      .click();
+    await expect(p.getByTestId("hide-stage")).toContainText("本轮已结束");
+  } finally {
+    await c.close();
+  }
 });

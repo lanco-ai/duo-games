@@ -224,6 +224,17 @@ test("desktop and smallest mobile layouts, categories and playable game descript
   });
   await noOverflow(page);
   expect(await page.locator(".game-card").count()).toBe(16);
+  for (const group of ["聊天", "合作", "较量", "动作"])
+    await expect(
+      page.getByRole("region", { name: group + "游戏", exact: true }),
+    ).toBeVisible();
+  await expect(page.locator(".game-card .device-tag")).toHaveCount(16);
+  await expect(
+    page.getByRole("button", { name: "了解双人厨房", exact: true }),
+  ).toContainText("一台设备也能玩");
+  await expect(
+    page.getByRole("button", { name: "了解求生欲·双人版", exact: true }),
+  ).toContainText("两台设备");
   await page.getByRole("button", { name: "较量", exact: true }).click();
   expect(await page.locator(".game-card").count()).toBe(3);
   await page.getByRole("button", { name: "了解爱心五子棋" }).click();

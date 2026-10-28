@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { firstDifference, kitchenWalk, jump } from "./redesign-helpers";
 
 test("matched players can interact in all six new games", async ({
   browser,
@@ -39,7 +40,7 @@ test("matched players can interact in all six new games", async ({
     await expect(two.locator(".result-page")).toBeVisible();
     await one.getByRole("button", { name: "换个游戏" }).click();
     await expect(
-      one.getByRole("button", { name: "了解情侣求生欲" }),
+      one.getByRole("button", { name: "了解求生欲·双人版" }),
     ).toBeVisible();
   };
   try {
@@ -67,153 +68,128 @@ test("matched players can interact in all six new games", async ({
     owned = true;
     console.log("MATCH: two browsers joined the same room");
 
-    await start("情侣求生欲", async (page) => {
-      await page.getByLabel("玩法").selectOption("quiz");
-    });
+    await start("求生欲·双人版");
     await one
-      .getByTestId("survival-stage")
-      .getByRole("button", { name: "💡 提示" })
+      .getByRole("button", { name: /^高亮线索/ })
+      .first()
       .click();
-    await expect(two.locator(".couple-hint")).toBeVisible();
+    await expect(two.locator(".survival-objects .chosen")).toHaveCount(1);
     await one.locator(".answer-options button").first().click();
-    await expect(
-      two.getByTestId("survival-stage").locator("[aria-live=polite]"),
-    ).toBeVisible();
-    console.log("PASS: survival shared action");
+    await expect(two.locator(".answer-pair")).toHaveCount(0);
+    await two.locator(".answer-options button").first().click();
+    await expect(two.locator(".answer-pair")).toBeVisible();
+    await expect(one.getByTestId("survival-stage")).toContainText("求生成功");
     await finish();
 
-    await start("情侣找茬");
-    const panels = one.locator(".spot-panel svg"),
-      top = panels.nth(0).locator(":scope > g"),
-      bottom = panels.nth(1).locator(":scope > g");
-    const count = await top.count();
-    let found = -1;
-    for (let i = count - 10; i < count; i++) {
-      if (
-        (await top.nth(i).innerHTML()) !== (await bottom.nth(i).innerHTML()) ||
-        (await top.nth(i).getAttribute("transform")) !==
-          (await bottom.nth(i).getAttribute("transform"))
-      ) {
-        found = i;
-        break;
-      }
-    }
-    expect(found).toBeGreaterThanOrEqual(0);
-    await top.nth(found).locator("circle").first().click({ force: true });
+    await start("各看一半");
+    await firstDifference(one);
     await expect(two.getByTestId("spot-stage")).toContainText("找到 1 / 5");
-    console.log("PASS: spot difference sync");
     await finish();
 
     await start("双人厨房");
-    const before0 = await one.locator(".chef.player-0").boundingBox(),
-      before1 = await one.locator(".chef.player-1").boundingBox();
-    await two.keyboard.press("d");
-    await expect
-      .poll(async () => (await one.locator(".chef.player-1").boundingBox())?.x)
-      .toBeGreaterThan(before1!.x);
-    await one.keyboard.press("d");
-    await expect
-      .poll(async () => (await two.locator(".chef.player-0").boundingBox())?.x)
-      .toBeGreaterThan(before0!.x);
-    for (const page of [one, two]) {
-      await page.keyboard.press("w");
-      await page.waitForTimeout(150);
-      await page.keyboard.press("w");
-    }
-    await one.getByRole("button", { name: "🥬 生菜" }).click();
-    await two.getByRole("button", { name: "🥩 肉饼" }).click();
-    await expect(one.getByTestId("kitchen-stage")).toContainText(
-      "你拿着：🥬生",
+    const before = Number(
+      await one.locator(".chef.player-1").getAttribute("data-x"),
     );
-    await expect(two.getByTestId("kitchen-stage")).toContainText(
-      "你拿着：🥩生",
-    );
-    console.log("PASS: both kitchen players move and pick up ingredients");
+    await two.keyboard.down("d");
+    await two.waitForTimeout(180);
+    await two.keyboard.up("d");
+    await expect
+      .poll(async () =>
+        Number(await one.locator(".chef.player-1").getAttribute("data-x")),
+      )
+      .toBeGreaterThan(before);
+    await kitchenWalk(one, 0, 1, 0.7);
+    await kitchenWalk(one, 0, 0.6, 0.7);
+    await one.getByRole("button", { name: "操作🍅", exact: true }).click();
+    await expect(one.getByTestId("kitchen-stage")).toContainText("待处理");
     await finish();
 
-    await start("情侣飞行棋");
-    await one.getByRole("button", { name: "🎲 投掷骰子" }).click();
-    await expect(two.locator(".ludo-task")).toBeVisible();
-    await one.getByRole("button", { name: "完成，交给 TA" }).click();
-    await expect(two.getByText("💞 当前：玩家 2")).toBeVisible();
-    await two.getByRole("button", { name: "🎲 投掷骰子" }).click();
-    await expect(one.locator(".ludo-task")).toBeVisible();
-    console.log("PASS: ludo turns on both devices");
-    await finish();
-
-    await start("双人躲猫猫");
-    const hiding = two.getByTestId("hide-stage").locator(".hide-room button");
-    await hiding.nth(7).click();
-    await hiding.nth(0).click();
-    await hiding.nth(1).click();
-    await two.getByRole("button", { name: "藏好了" }).click();
-    await expect(one.getByTestId("hide-stage")).toContainText("还可寻找 3 次");
-    await expect(one.locator(".hide-room .chosen")).toHaveCount(0);
+    await start("心动棋");
     await one
-      .getByTestId("hide-stage")
-      .locator(".hide-room button")
-      .nth(7)
+      .getByRole("button", { name: "🎲 投掷两颗骰子", exact: true })
       .click();
-    await expect(one.locator(".result-page")).toBeVisible();
-    await expect(two.locator(".result-page")).toBeVisible();
-    console.log("PASS: hide and seek privacy and shared result");
+    await expect(one.getByRole("button", { name: /^选 \d 点$/ })).toHaveCount(
+      2,
+    );
+    await one
+      .getByRole("button", { name: "让一步 · 两颗都给 TA", exact: true })
+      .click();
+    await expect(two.getByTestId("ludo-stage")).toHaveAttribute(
+      "data-turn",
+      "1",
+    );
+    await two
+      .getByRole("button", { name: "🎲 投掷两颗骰子", exact: true })
+      .click();
+    await two
+      .getByRole("button", { name: "让一步 · 两颗都给 TA", exact: true })
+      .click();
+    await expect(one.getByTestId("ludo-stage")).toHaveAttribute(
+      "data-turn",
+      "0",
+    );
+    await finish();
+
+    await start("房间里的秘密");
+    for (const id of [8, 0, 3])
+      await two
+        .getByRole("button", { name: new RegExp("^布置.* " + id + "$") })
+        .click();
+    await two.getByRole("button", { name: "藏好了", exact: true }).click();
+    await expect(one.getByTestId("hide-stage")).toContainText("还可搜查 6 次");
+    await expect(one.locator(".hide-apartment button.chosen")).toHaveCount(0);
+    await one.getByRole("button", { name: /^搜查.* 8$/ }).click();
+    await expect(one.getByTestId("hide-stage")).toHaveAttribute(
+      "data-phase",
+      "round-end",
+    );
+    await expect(two.getByTestId("hide-stage")).toHaveAttribute(
+      "data-phase",
+      "round-end",
+    );
     await finish();
 
     await start("双人跳一跳");
-    const charge = one.getByRole("button", { name: "按住蓄力 · 松开起跳" });
-    const box = (await charge.boundingBox())!;
-    await one.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await one.mouse.down();
-    await one.waitForTimeout(800);
-    await one.mouse.up();
-    await expect
-      .poll(
-        async () =>
-          (await two.getByTestId("jump-stage").count()) === 0 ||
-          (await two.getByTestId("jump-stage").textContent())?.includes(
-            "轮到玩家 2",
-          ),
-      )
-      .toBeTruthy();
-    console.log("PASS: jump outcome synchronized");
+    await jump(one);
+    await expect(two.getByTestId("jump-stage")).toContainText("轮到玩家 2");
+    await expect(one.getByTestId("jump-stage")).toContainText("稳稳落地");
     await finish();
 
     await start("双人跳一跳", async (page) => {
       await page.getByLabel("玩法").selectOption("sync");
     });
-    const buttonA = one.getByRole("button", { name: "按住蓄力 · 松开起跳" });
-    const buttonB = two.getByRole("button", { name: "按住蓄力 · 松开起跳" });
-    const boundsA = (await buttonA.boundingBox())!,
-      boundsB = (await buttonB.boundingBox())!;
-    await Promise.all([
-      one.mouse.move(
-        boundsA.x + boundsA.width / 2,
-        boundsA.y + boundsA.height / 2,
+    const duration = await Promise.all(
+      [one, two].map(
+        async (page, seat) =>
+          Number(
+            await page
+              .getByTestId("jump-platform-" + seat)
+              .getAttribute("data-distance"),
+          ) * 4,
       ),
-      two.mouse.move(
-        boundsB.x + boundsB.width / 2,
-        boundsB.y + boundsB.height / 2,
-      ),
-    ]);
-    await Promise.all([one.mouse.down(), two.mouse.down()]);
-    await one.waitForTimeout(800);
-    await Promise.all([one.mouse.up(), two.mouse.up()]);
-    await expect
-      .poll(
-        async () =>
-          (await two.getByTestId("jump-stage").count()) === 0 ||
-          (await two.getByTestId("jump-stage").textContent())?.includes(
-            "心有灵犀",
-          ) ||
-          (await two.getByTestId("jump-stage").textContent())?.includes(
-            "稳稳落地",
-          ) ||
-          (await two.getByTestId("jump-stage").textContent())?.includes(
-            "完美落点",
-          ),
-      )
-      .toBeTruthy();
-    console.log("PASS: both players charge in sync");
+    );
+    const order = duration[0] >= duration[1] ? [0, 1] : [1, 0],
+      pages = [one, two];
+    for (const page of pages) {
+      const button = page.getByRole("button", {
+        name: "按住蓄力 · 松开起跳",
+        exact: true,
+      });
+      await button.scrollIntoViewIfNeeded();
+      const box = (await button.boundingBox())!;
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    }
+    await pages[order[0]].mouse.down();
+    await one.waitForTimeout(Math.abs(duration[0] - duration[1]));
+    await pages[order[1]].mouse.down();
+    await one.waitForTimeout(Math.min(...duration));
+    await Promise.all(pages.map((page) => page.mouse.up()));
+    await expect(one.getByTestId("jump-stage")).toContainText(
+      /心有灵犀|稳稳落地/,
+    );
+    await expect(two.getByTestId("jump-stage")).toContainText(
+      /心有灵犀|稳稳落地/,
+    );
     await finish();
   } finally {
     if (owned) {
