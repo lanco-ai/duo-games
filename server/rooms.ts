@@ -146,6 +146,8 @@ export class RoomManager {
     const old = r.peers[seat];
     r.peers[seat] = p;
     if (old) {
+      // A new socket can arrive before the old close event during refresh.
+      this.pause(r);
       old.send({ t: "err", code: "REPLACED", msg: errors.REPLACED });
       old.close(4001);
     }

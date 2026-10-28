@@ -4,6 +4,7 @@ import { mulberry32 } from "../../shared/rng";
 import {
   jumpLevels,
   jumpLanding,
+  platformX,
   type JumpPlatform,
 } from "../../shared/games/couple-jump/levels";
 import type { GameOptions, EngineContext } from "../../shared/games/types";
@@ -127,6 +128,11 @@ export class CoupleJump extends BaseEngine {
       center: landed && center,
       perfect,
       landings,
+      seats,
+      platforms: this.platforms.map((p) => ({
+        ...p,
+        x: platformX(p, elapsed),
+      })),
       at: now,
       attempt: this.attempt,
     };

@@ -66,13 +66,12 @@ function Charge({
     </button>
   );
 }
+type Flight = { distance: number; at: number; platforms: any[] };
 export default function Jump(p: GameProps) {
   const d = p.view.data,
     send = useGame(p),
-    [preview, setPreview] = useState<{ distance: number; at: number } | null>(
-      null,
-    ),
-    [frame, setFrame] = useState(0),
+    [flights, setFlights] = useState<(Flight | null)[]>([null, null]),
+    [frame, setFrame] = useState(performance.now()),
     clock = useRef(p.transport.now());
   if (!p.disabled) clock.current = p.transport.now();
   useEffect(() => {
@@ -85,14 +84,51 @@ export default function Jump(p: GameProps) {
     return () => cancelAnimationFrame(id);
   }, []);
   useEffect(() => {
-    if (d.last?.landings && preview && performance.now() - preview.at < 550) {
-      const landing = d.last.landings[d.mode === "sync" ? p.seat : 0];
-      setPreview({ ...preview, distance: landing.distance });
-    }
+    if (p.disabled) setFlights([null, null]);
+  }, [p.disabled]);
+  useEffect(() => {
+    const last = d.last;
+    if (!last?.landings || last.attempt !== d.attempt - 1 || p.disabled) return;
+    const elapsed = Math.max(0, p.transport.now() - last.at);
+    if (elapsed >= 650) return;
+    setFlights((old) => {
+      const next = [...old];
+      (last.seats || [p.seat]).forEach((seat: number, i: number) => {
+        const prior = old[seat],
+          fresh = prior && performance.now() - prior.at < 550;
+        next[seat] = {
+          distance: last.landings[i].distance,
+          at: fresh ? prior.at : performance.now() - elapsed,
+          platforms: last.platforms || d.platforms,
+        };
+      });
+      return next;
+    });
   }, [d.attempt]);
-  const elapsed = preview ? Math.min(1, (frame - preview.at) / 650) : 1,
-    animalX = preview ? 70 + preview.distance * elapsed : 70,
-    animalY = preview ? -Math.sin(elapsed * Math.PI) * 100 : 0;
+  const active = (f: Flight | null) => (f && frame - f.at < 650 ? f : null),
+    flight = flights.map(active).find(Boolean),
+    platforms = flight
+      ? flight.platforms
+      : d.platforms.map((t: any) => ({
+          ...t,
+          x:
+            t.baseX +
+            Math.sin((clock.current - d.startAt) / 1300 + t.phase) *
+              t.amplitude,
+        })),
+    animals = [0, 1].map((seat) => {
+      const f = d.mode === "sync" ? active(flights[seat]) : flight,
+        k = f ? Math.max(0, Math.min(1, (frame - f.at) / 650)) : 0,
+        target = platforms[d.mode === "sync" ? seat : 0],
+        offset = (seat ? 16 : -16) * (d.mode === "sync" ? 1 - k : 1);
+      return {
+        x: 70 + offset + (f ? f.distance * k : 0),
+        y:
+          225 +
+          ((target?.y || 225) - 225) * k -
+          Math.sin(k * Math.PI) * (seat ? 90 : 100),
+      };
+    });
   return (
     <section class="couple-new-stage jump-stage" data-testid="jump-stage">
       <header class="couple-bar">
@@ -118,14 +154,7 @@ export default function Jump(p: GameProps) {
         </text>
         <path d="M0 280Q100 240 200 280T500 280" fill="#92c783" />
         <rect x="35" y="225" width="70" height="30" rx="12" fill="#b87953" />
-        {d.platforms
-          .map((t: any) => ({
-            ...t,
-            x:
-              t.baseX +
-              Math.sin((clock.current - d.startAt) / 1300 + t.phase) *
-                t.amplitude,
-          }))
+        {platforms
           .slice(0, d.mode === "sync" ? 2 : 1)
           .map((t: any, i: number) => (
             <g>
@@ -146,14 +175,21 @@ export default function Jump(p: GameProps) {
             </g>
           ))}
         <path
-          d={"M" + animalX + "," + (210 + animalY) + " Q90,180 90,215"}
+          d={`M${animals[0].x},${animals[0].y - 12} Q${(animals[0].x + animals[1].x) / 2},${Math.max(animals[0].y, animals[1].y) + 8} ${animals[1].x},${animals[1].y - 12}`}
           fill="none"
           stroke="#ed6684"
           stroke-width="3"
         />
-        <text x={animalX - 12} y={215 + animalY} font-size="30">
-          {p.seat ? "🐻" : "🐰"}
-        </text>
+        {animals.map((a, seat) => (
+          <text
+            data-testid={"jump-animal-" + seat}
+            x={a.x - 12}
+            y={a.y}
+            font-size="28"
+          >
+            {seat ? "🐻" : "🐰"}
+          </text>
+        ))}
       </svg>
       <p>
         {d.mode === "sync"
@@ -184,6 +220,10 @@ export default function Jump(p: GameProps) {
           }
           disabled={
             p.disabled ||
+            (d.last?.landings &&
+              d.last.attempt === d.attempt - 1 &&
+              clock.current < d.last.at + 650) ||
+            (d.mode === "sync" ? !!active(flights[s]) : !!flight) ||
             (d.mode === "relay" && s !== d.step % 2) ||
             d.released[s]
           }
@@ -198,9 +238,14 @@ export default function Jump(p: GameProps) {
                 })
           }
           onPreview={(ms) =>
-            setPreview({
-              distance: Math.min(ms, 2200) * 0.25,
-              at: performance.now(),
+            setFlights((old) => {
+              const next = [...old];
+              next[s] = {
+                distance: Math.min(ms, 2200) * 0.25,
+                at: performance.now(),
+                platforms,
+              };
+              return next;
             })
           }
         />

@@ -83,9 +83,10 @@ export default function Bounce(p: GameProps) {
       window.removeEventListener("blur", blur);
     };
   }, []);
-  const paddleWidth = () =>
-    (d.paused ? d.startAt + (d.pausedTick / 60) * 1000 : p.transport.now()) <
-    (f.current.wideUntil || 0)
+  const paddleWidth = (
+    at = d.paused ? d.startAt + (d.pausedTick / 60) * 1000 : p.transport.now(),
+  ) =>
+    at < (f.current.wideUntil || 0)
       ? Math.round(sim.PADDLE_WIDTH * 1.6)
       : sim.PADDLE_WIDTH;
   useFrame((time) => {
@@ -118,7 +119,12 @@ export default function Bounce(p: GameProps) {
         if (
           crossing > previous.current &&
           crossing <= tick &&
-          sim.canHit(v.hit, crossing, local.current, paddleWidth())
+          sim.canHit(
+            v.hit,
+            crossing,
+            local.current,
+            paddleWidth(v.startAt + (crossing / 60) * 1000),
+          )
         ) {
           pending.current = v.hit.n;
           const next = sim.makeHit(
@@ -127,7 +133,7 @@ export default function Bounce(p: GameProps) {
             local.current,
             v.combo + 1,
             v.seed,
-            paddleWidth(),
+            paddleWidth(v.startAt + (crossing / 60) * 1000),
           )!;
           f.current = {
             ...v,
