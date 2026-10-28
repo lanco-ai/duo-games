@@ -5,6 +5,7 @@ import type { Consent } from "../../shared/consent";
 import { respond } from "../../shared/consent";
 import { integer } from "../../shared/text";
 import { mulberry32 } from "../../shared/rng";
+import { forbiddenMove } from "../../shared/games/gomoku/rules";
 export function winningLine(board: number[], x: number, y: number, seat: Seat) {
   for (const [dx, dy] of [
     [1, 0],
@@ -35,6 +36,7 @@ export class Gomoku extends BaseEngine {
   board = new Array<number>(225).fill(-1);
   moves: { x: number; y: number; seat: Seat }[] = [];
   turn: Seat;
+  blackSeat: Seat;
   line: number[] = [];
   pending: Consent<number> | null = null;
   deadline = 0;
@@ -54,6 +56,7 @@ export class Gomoku extends BaseEngine {
         : o.first === "TA"
           ? 1
           : (Math.floor(this.random() * 2) as Seat);
+    this.blackSeat = this.turn;
     this.nextDeadline(at);
   }
   nextDeadline(now: number) {
@@ -64,6 +67,8 @@ export class Gomoku extends BaseEngine {
   view() {
     return {
       board: this.board,
+      blackSeat: this.blackSeat,
+      forbidden: !!this.options.forbidden,
       turn: this.turn,
       move: this.moves.length,
       last: this.moves.at(-1) || null,
@@ -76,6 +81,12 @@ export class Gomoku extends BaseEngine {
   place(seat: Seat, x: number, y: number, now: number) {
     if (this.turn !== seat) throw new Error("NOT_YOUR_TURN");
     if (this.board[y * 15 + x] !== -1 || this.pending)
+      throw new Error("INVALID");
+    if (
+      this.options.forbidden &&
+      seat === this.blackSeat &&
+      forbiddenMove(this.board, y * 15 + x, seat)
+    )
       throw new Error("INVALID");
     this.board[y * 15 + x] = seat;
     this.moves.push({ x, y, seat });
@@ -98,7 +109,17 @@ export class Gomoku extends BaseEngine {
             ? "小约定：" + this.options.wager
             : "好棋，下次再来！",
       ],
-      { winner, moves: this.moves.length },
+      {
+        winner,
+        moves: this.moves.length,
+        blackSeat: this.blackSeat,
+        ...Object.fromEntries(
+          [...this.line]
+            .sort((a, b) => a - b)
+            .slice(0, 5)
+            .map((cell, i) => ["win" + i, cell]),
+        ),
+      },
     );
   }
   act(seat: Seat, cmd: string, p: any, now: number) {
@@ -152,9 +173,17 @@ export class Gomoku extends BaseEngine {
       this.deadline &&
       now > this.deadline + 400
     ) {
-      const empty = this.board.flatMap((v, i) => (v === -1 ? [i] : [])),
+      const empty = this.board.flatMap((v, i) =>
+          v === -1 &&
+          (!this.options.forbidden ||
+            this.turn !== this.blackSeat ||
+            !forbiddenMove(this.board, i, this.turn))
+            ? [i]
+            : [],
+        ),
         cell = empty[Math.floor(this.random() * empty.length)];
-      this.place(this.turn, cell % 15, Math.floor(cell / 15), now);
+      if (!empty.length) this.end(-1);
+      else this.place(this.turn, cell % 15, Math.floor(cell / 15), now);
       return true;
     }
     return false;

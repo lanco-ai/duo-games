@@ -1,12 +1,14 @@
 import { useEffect, useState } from "preact/hooks";
 import { useGame, nickname, type GameProps } from "./common";
+import { forbiddenMove } from "../../../shared/games/gomoku/rules";
 import { Critter } from "../art/ui";
 export default function Gomoku(p: GameProps) {
   const d = p.view.data,
     send = useGame(p),
     [preview, setPreview] = useState<number | null>(null),
     [pending, setPending] = useState<number | null>(null),
-    [resign, setResign] = useState(false);
+    [resign, setResign] = useState(false),
+    [warning, setWarning] = useState("");
   useEffect(() => {
     setPreview(null);
     setPending(null);
@@ -26,6 +28,18 @@ export default function Gomoku(p: GameProps) {
       setPreview(i);
       return;
     }
+    if (d.forbidden && p.seat === d.blackSeat) {
+      const reason = forbiddenMove(d.board, i, p.seat);
+      if (reason) {
+        setWarning(
+          reason === "double-three"
+            ? "这里会形成三三禁手，请换一个位置。"
+            : "这里会形成四四禁手，请换一个位置。",
+        );
+        return;
+      }
+    }
+    setWarning("");
     setPending(i);
     await send("place", { move: d.move, x: i % 15, y: Math.floor(i / 15) });
     setPending(null);
@@ -60,6 +74,12 @@ export default function Gomoku(p: GameProps) {
         </span>
         <b>第 {d.move + 1} 手</b>
       </div>
+      {d.forbidden && (
+        <p class="muted">
+          {nickname(p, d.blackSeat)}执黑 · 三三 / 四四禁手（连五优先）
+        </p>
+      )}
+      {warning && <p role="status">{warning}</p>}
       {d.deadline > 0 && (
         <p class="muted">
           本步剩余 {Math.max(0, Math.ceil((d.deadline - p.now) / 1000))} 秒

@@ -34,6 +34,7 @@ import { drawCritter, kindOf } from "./art/critter";
 import { chunkyText, cloud, rope, sky as paintSky } from "./art/paint";
 const ExtraStage = lazy(() => import("./games/ExtraStage"));
 const Setup = lazy(() => import("./games/Setup"));
+const ResultDetails = lazy(() => import("./ui/ResultDetails"));
 const Keepsakes = lazy(() => import("./ui/Keepsakes"));
 const Talk = lazy(() => import("./games/Talk"));
 type PublicRoom = {
@@ -929,6 +930,11 @@ export function Room({ code }: { code: string }) {
             <h1>{room.result.primary.value}</h1>
             {activeGame.id === "talk-cards" && (
               <p>收藏了 {room.result.stats.favorites || 0} 张卡片</p>
+            )}
+            {activeGame.id === "gomoku" && (
+              <Suspense fallback={null}>
+                <ResultDetails game={activeGame.id} stats={room.result.stats} />
+              </Suspense>
             )}
             <div class="result-highlight">
               {room.result.highlights.map((h) => (

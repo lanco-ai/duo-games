@@ -263,6 +263,16 @@ export default function Setup({
         )}
         {id === "gomoku" && (
           <>
+            <label class="check">
+              <input
+                type="checkbox"
+                checked={!!opts.forbidden}
+                onChange={(e) =>
+                  void update({ forbidden: e.currentTarget.checked })
+                }
+              />
+              黑棋禁手（三三 / 四四）
+            </label>
             {select("first", "谁先下", [
               ["随机", "随机"],
               ["房主", "房主"],

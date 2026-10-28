@@ -52,7 +52,7 @@ export const defaults: Record<ExtraId, GameOptions> = {
     unused: true,
     mode: "classic",
   },
-  gomoku: { first: "随机", seconds: 0, wager: "请喝奶茶" },
+  gomoku: { forbidden: false, first: "随机", seconds: 0, wager: "请喝奶茶" },
   "red-thread": { level: "1" },
   "my-eyes": {},
   "heart-bounce": {},
@@ -108,6 +108,7 @@ export function validOptions(id: string, value: unknown): value is GameOptions {
     case "gomoku":
       return (
         ["随机", "房主", "TA"].includes(String(o.first)) &&
+        (o.forbidden === undefined || typeof o.forbidden === "boolean") &&
         [0, 30, 60].includes(Number(o.seconds)) &&
         typeof o.wager === "string" &&
         [...o.wager].length <= 20
