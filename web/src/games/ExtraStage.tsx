@@ -15,7 +15,7 @@ const components = {
   "spot-difference": lazy(() => import("./Difference")),
   "coop-kitchen": lazy(() => import("./Kitchen")),
   "couple-ludo": lazy(() => import("./Ludo")),
-  "hide-seek": lazy(() => import("./CoupleGames")),
+  "hide-seek": lazy(() => import("./HideSeek")),
   "couple-jump": lazy(() => import("./Jump")),
 };
 export default function ExtraStage(p: GameProps) {

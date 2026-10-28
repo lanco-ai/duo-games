@@ -277,3 +277,64 @@ test("P5 two partners choose dice and complete the cooperative route before rema
     await b.close();
   }
 });
+
+test("P6 two browsers hide, search and exchange roles over three rounds then rematch", async ({
+  browser,
+}) => {
+  const { a, b, one, two } = await pair(browser);
+  try {
+    await start(one, two, "房间里的秘密");
+    await expect(one.getByTestId("hide-stage")).toBeVisible();
+    await expect(one.locator(".game-overlay")).toBeHidden();
+    for (let round = 0; round < 3; round++) {
+      const hider = Number(
+        await one.getByTestId("hide-stage").getAttribute("data-hider"),
+      );
+      const hide = hider ? two : one,
+        seek = hider ? one : two;
+      for (const id of [8, 0, 3])
+        await hide
+          .getByRole("button", { name: new RegExp("^布置.* " + id + "$") })
+          .click();
+      await hide.getByRole("button", { name: "藏好了", exact: true }).click();
+      await expect(seek.getByTestId("hide-stage")).toHaveAttribute(
+        "data-phase",
+        "seek",
+      );
+      await expect(seek.locator(".hide-apartment button.chosen")).toHaveCount(
+        0,
+      );
+      await seek.getByRole("button", { name: /^搜查.* 8$/ }).click();
+      await expect(one.getByTestId("hide-stage")).toHaveAttribute(
+        "data-phase",
+        "round-end",
+      );
+      await one
+        .getByRole("button", {
+          name: round === 2 ? "查看结算" : "交换身份，下一轮",
+          exact: true,
+        })
+        .click();
+      if (round < 2)
+        await expect(one.getByTestId("hide-stage")).toHaveAttribute(
+          "data-round",
+          String(round + 1),
+        );
+    }
+    await expect(one.locator(".result-page")).toContainText("房间里的秘密");
+    await expect(two.locator(".result-page")).toBeVisible();
+    await one.getByRole("button", { name: "再来一局", exact: true }).click();
+    await two.getByRole("button", { name: "再来一局", exact: true }).click();
+    await one.getByRole("button", { name: "我准备好了", exact: true }).click();
+    await two.getByRole("button", { name: "我准备好了", exact: true }).click();
+    await expect(one.getByTestId("hide-stage")).toBeVisible({ timeout: 20000 });
+    expect(
+      await one.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  } finally {
+    await a.close();
+    await b.close();
+  }
+});

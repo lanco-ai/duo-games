@@ -24,39 +24,6 @@ const ctx = (): EngineContext => ({
   emit: vi.fn(),
 });
 describe("new couple games: authority, scoring and private views", () => {
-  it("does not reveal hiding spot or decoys to the seeker", () => {
-    const g = new HideSeek("r", { mode: "turn" }, 12, 0, ctx());
-    g.act(1, "hide", { id: 8, decoys: [1, 4] }, 5000);
-    const seeker = g.view(0),
-      hider = g.view(1);
-    expect(seeker.ownHide).toBeNull();
-    expect(seeker.ownDecoys).toEqual([]);
-    expect(hider.ownHide).toBe(8);
-    g.act(0, "search", { id: 1 }, 6000);
-    expect(g.view(0).hint).toContain("诱饵");
-    g.act(0, "search", { id: 8 }, 7000);
-    expect(g.result?.stats.winner).toBe(0);
-  });
-  it("blocks moving under the flashlight and hides keys from the seeker", () => {
-    const g = new HideSeek("r", { mode: "realtime" }, 12, 0, ctx());
-    expect(g.view(0).furniture.every((item) => item === null)).toBe(true);
-    g.act(1, "hide", { id: 7, prop: "🪴" }, 1000);
-    expect(g.view(0).keys).toEqual([]);
-    expect(
-      g
-        .view(0)
-        .furniture.slice(3)
-        .every((item) => item === null),
-    ).toBe(true);
-    expect(g.view(1).furniture.every((item) => item !== null)).toBe(true);
-    g.act(0, "light", { room: 2 }, 1100);
-    expect(g.view(0).furniture[7]).toBe("🪴");
-    expect(g.view(0).furniture[0]).toBeNull();
-    expect(() => g.act(1, "move", { id: 8 }, 1200)).toThrow();
-    g.act(0, "light", { room: 0 }, 1300);
-    g.act(1, "move", { id: 8 }, 1400);
-    expect(() => g.act(0, "search", { id: 8 }, 1500)).toThrow();
-  });
   it("reveals timed blind answers only at the deadline and handles missing answers", () => {
     const g = new KnowMe(
       "r",

@@ -199,7 +199,29 @@ export default function Kitchen(p: GameProps) {
           <div>
             {recipes[o.kind as keyof typeof recipes].name}
             <small>
-              {recipes[o.kind as keyof typeof recipes].foods.join(" + ")}
+              {recipes[o.kind as keyof typeof recipes].foods
+                .map((f) => {
+                  const [kind, stage] = f.split(":");
+                  return (
+                    (
+                      {
+                        raw: "",
+                        chopped: "切",
+                        cooked: "煎",
+                        boiled: "煮",
+                      } as Record<string, string>
+                    )[stage] +
+                    (
+                      {
+                        tomato: "番茄",
+                        lettuce: "生菜",
+                        meat: "肉饼",
+                        bread: "面包",
+                      } as Record<string, string>
+                    )[kind]
+                  );
+                })
+                .join(" + ")}
             </small>
             <progress value={Math.max(0, o.deadline - p.now)} max="60000" />
           </div>

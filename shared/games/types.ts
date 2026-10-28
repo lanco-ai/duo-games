@@ -62,7 +62,7 @@ export const defaults: Record<ExtraId, GameOptions> = {
   "spot-difference": { scene: 0, mode: "split" },
   "coop-kitchen": { level: "1" },
   "couple-ludo": { mode: "pure", victory: "coop" },
-  "hide-seek": { mode: "turn" },
+  "hide-seek": { mode: "turn", map: "1" },
   "couple-jump": { mode: "relay", level: "1" },
 };
 export function isExtra(id: string): id is ExtraId {
@@ -142,7 +142,10 @@ export function validOptions(id: string, value: unknown): value is GameOptions {
         ["coop", "versus"].includes(String(o.victory))
       );
     case "hide-seek":
-      return ["turn", "realtime"].includes(String(o.mode));
+      return (
+        ["turn", "realtime"].includes(String(o.mode)) &&
+        ["1", "2", "3"].includes(String(o.map))
+      );
     case "couple-jump":
       return (
         ["relay", "sync"].includes(String(o.mode)) &&

@@ -58,7 +58,8 @@ export default function Setup({
           <option
             value={value}
             disabled={
-              (key === "chapter" ||
+              (key === "map" ||
+                key === "chapter" ||
                 key === "level" ||
                 (key === "scene" && id === "spot-difference")) &&
               [
@@ -66,6 +67,7 @@ export default function Setup({
                 "coop-kitchen",
                 "survival",
                 "spot-difference",
+                "hide-seek",
               ].includes(id) &&
               (value === "endless"
                 ? id === "couple-jump"
@@ -189,9 +191,10 @@ export default function Setup({
             ["fun", "趣味惩罚"],
           ])}
         {id === "hide-seek" &&
-          select("mode", "玩法", [
-            ["turn", "回合盲选"],
-            ["realtime", "实时躲藏"],
+          select("map", "藏在哪一张地图", [
+            ["1", "小公寓"],
+            ["2", "森林木屋"],
+            ["3", "游乐园鬼屋"],
           ])}
         {id === "couple-jump" &&
           select("level", "旅程", [
