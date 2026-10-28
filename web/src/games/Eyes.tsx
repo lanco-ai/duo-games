@@ -18,11 +18,53 @@ export default function Eyes(p: GameProps) {
     [optimistic, setOptimistic] = useState(d.pos),
     [bump, setBump] = useState(false),
     start = useRef<[number, number] | null>(null),
-    [signal, setSignal] = useState("");
+    [signal, setSignal] = useState(""),
+    [drawing, setDrawing] = useState(false),
+    [draft, setDraft] = useState<number[]>([]),
+    path = useRef<number[]>([]),
+    eatenClick = useRef(false);
+  const clock = useRef(p.now);
+  if (p.room.phase !== "paused") clock.current = p.now;
+  const now = clock.current;
+  const route = drawing
+    ? draft
+    : d.route && now < d.route.until
+      ? d.route.cells
+      : [];
+  function drawAt(e: PointerEvent & { currentTarget: HTMLDivElement }) {
+    if (!drawing || walker || p.disabled || d.routeUsed) return;
+    const rect = e.currentTarget.getBoundingClientRect(),
+      x = Math.floor(((e.clientX - rect.left) / rect.width) * d.w),
+      y = Math.floor(((e.clientY - rect.top) / rect.height) * d.h),
+      cell = y * d.w + x,
+      prev = path.current.at(-1);
+    if (
+      x < 0 ||
+      x >= d.w ||
+      y < 0 ||
+      y >= d.h ||
+      d.grid[cell] ||
+      path.current.includes(cell)
+    )
+      return;
+    if (
+      prev === undefined
+        ? cell !== d.pos
+        : Math.abs((cell % d.w) - (prev % d.w)) +
+            Math.abs(Math.floor(cell / d.w) - Math.floor(prev / d.w)) !==
+          1
+    )
+      return;
+    path.current = [...path.current, cell];
+    setDraft(path.current);
+  }
   useEffect(() => {
     next.current = d.lastMove + 1;
     inFlight.current.clear();
     setOptimistic(d.pos);
+    setDrawing(false);
+    setDraft([]);
+    path.current = [];
   }, [d.round, p.view.run]);
   useEffect(() => {
     for (const n of inFlight.current)
@@ -133,9 +175,36 @@ export default function Eyes(p: GameProps) {
       <div
         class={"maze-board " + (bump ? "bump" : "")}
         style={{ aspectRatio: `${d.w}/${d.h}`, "--ratio": d.w / d.h }}
-        onPointerDown={(e) => (start.current = [e.clientX, e.clientY])}
+        onPointerDown={(e) => {
+          start.current = [e.clientX, e.clientY];
+          if (drawing) {
+            e.currentTarget.setPointerCapture(e.pointerId);
+            drawAt(e);
+          }
+        }}
+        onPointerMove={(e) => {
+          if (start.current) drawAt(e);
+        }}
+        onPointerCancel={() => {
+          start.current = null;
+          path.current = [];
+          setDraft([]);
+        }}
         onPointerUp={(e) => {
-          if (!walker || !start.current) return;
+          if (drawing) {
+            eatenClick.current = true;
+            if (path.current.length > 1)
+              void send("route", { round: d.round, cells: path.current });
+            setDrawing(false);
+            setDraft([]);
+            path.current = [];
+            start.current = null;
+            return;
+          }
+          if (!walker || !start.current) {
+            start.current = null;
+            return;
+          }
           const dx = e.clientX - start.current[0],
             dy = e.clientY - start.current[1];
           if (Math.max(Math.abs(dx), Math.abs(dy)) > 18)
@@ -160,9 +229,16 @@ export default function Eyes(p: GameProps) {
                 }
                 aria-label={"迷宫格" + i}
                 disabled={
-                  walker || !d.lights || p.disabled || d.stage !== "walking"
+                  walker ||
+                  (!d.lights && !drawing) ||
+                  p.disabled ||
+                  d.stage !== "walking"
                 }
-                onClick={() => void send("light", { round: d.round, cell: i })}
+                onClick={() => {
+                  if (!drawing && !start.current && !eatenClick.current)
+                    void send("light", { round: d.round, cell: i });
+                  eatenClick.current = false;
+                }}
               >
                 {(
                   { trap: "✦", key: "⚿", exit: "♡", door: "▥" } as Record<
@@ -175,6 +251,35 @@ export default function Eyes(p: GameProps) {
             );
           })}
         </div>
+        {route.length > 1 && (
+          <svg
+            class="maze-route"
+            viewBox={`0 0 ${d.w * 100} ${d.h * 100}`}
+            aria-label="引路人画的路线"
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              pointerEvents: "none",
+              opacity: drawing ? 1 : Math.min(1, (d.route.until - now) / 500),
+            }}
+          >
+            <polyline
+              points={route
+                .map(
+                  (cell: number) =>
+                    `${(cell % d.w) * 100 + 50},${Math.floor(cell / d.w) * 100 + 50}`,
+                )
+                .join(" ")}
+              fill="none"
+              stroke="#FFA62B"
+              stroke-width="16"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        )}
         <div
           class="maze-player"
           style={{
@@ -243,6 +348,24 @@ export default function Eyes(p: GameProps) {
         </div>
       ) : (
         <div class="guide-controls">
+          <button
+            class="secondary"
+            disabled={p.disabled || d.routeUsed}
+            onClick={() => {
+              setDrawing(!drawing);
+              path.current = [];
+              setDraft([]);
+            }}
+          >
+            {d.routeUsed
+              ? "本关路线已画过"
+              : drawing
+                ? "取消画路线"
+                : "画一条路线（显示 2 秒）"}
+          </button>
+          {drawing && (
+            <p class="muted">从行者所在格开始，沿通路拖动，松手发送。</p>
+          )}
           <div class="game-actions">
             {["↑", "→", "↓", "←", "停！"].map((text) => (
               <button

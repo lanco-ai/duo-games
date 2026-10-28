@@ -114,6 +114,8 @@ export class MyEyes extends BaseEngine {
   history: { stars: number; time: number; guide: Seat }[] = [];
   light: { cell: number; until: number } | null = null;
   signal: { text: string; at: number } | null = null;
+  route: { cells: number[]; until: number } | null = null;
+  routeUsed = false;
   stage = "walking";
   signals: number[] = [];
   constructor(
@@ -149,6 +151,8 @@ export class MyEyes extends BaseEngine {
       bumps: this.bumps,
       falls: this.falls,
       lights: this.lights,
+      routeUsed: this.routeUsed,
+      route: this.route && now < this.route.until ? this.route : null,
       lastMove: this.lastMove,
       stage: this.stage,
       stars: this.stars,
@@ -204,6 +208,8 @@ export class MyEyes extends BaseEngine {
       this.roundStart = now;
       this.light = null;
       this.signal = null;
+      this.route = null;
+      this.routeUsed = false;
       this.stage = "walking";
       return true;
     }
@@ -265,6 +271,36 @@ export class MyEyes extends BaseEngine {
       return true;
     }
     if (seat === walker) throw new Error("NOT_YOUR_TURN");
+    if (cmd === "route") {
+      if (
+        this.routeUsed ||
+        !Array.isArray(p.cells) ||
+        p.cells.length < 2 ||
+        p.cells.length > m.grid.length
+      )
+        throw new Error("INVALID");
+      const cells = p.cells.map((cell: unknown) =>
+        integer(cell, 0, m.grid.length - 1),
+      );
+      if (
+        cells[0] !== this.pos ||
+        new Set(cells).size !== cells.length ||
+        cells.some((cell: number, i: number) => {
+          if (m.grid[cell]) return true;
+          if (!i) return false;
+          const prev = cells[i - 1];
+          return (
+            Math.abs((cell % m.w) - (prev % m.w)) +
+              Math.abs(Math.floor(cell / m.w) - Math.floor(prev / m.w)) !==
+            1
+          );
+        })
+      )
+        throw new Error("INVALID");
+      this.route = { cells, until: now + 2000 };
+      this.routeUsed = true;
+      return true;
+    }
     if (cmd === "signal") {
       const allowed = [
         "↑",
@@ -299,6 +335,7 @@ export class MyEyes extends BaseEngine {
     super.shift(ms);
     this.roundStart += ms;
     if (this.light) this.light.until += ms;
+    if (this.route) this.route.until += ms;
     if (this.signal) this.signal.at += ms;
   }
 }
