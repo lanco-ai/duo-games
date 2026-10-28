@@ -16,7 +16,7 @@ const components = {
   "coop-kitchen": lazy(() => import("./CoupleGames")),
   "couple-ludo": lazy(() => import("./CoupleGames")),
   "hide-seek": lazy(() => import("./CoupleGames")),
-  "couple-jump": lazy(() => import("./CoupleGames")),
+  "couple-jump": lazy(() => import("./Jump")),
 };
 export default function ExtraStage(p: GameProps) {
   const Component = components[p.view.kind];

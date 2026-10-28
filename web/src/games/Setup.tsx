@@ -55,7 +55,20 @@ export default function Setup({
         }
       >
         {values.map(([value, label]) => (
-          <option value={value}>{label}</option>
+          <option
+            value={value}
+            disabled={
+              key === "level" &&
+              ["couple-jump", "coop-kitchen"].includes(id) &&
+              (value === "endless"
+                ? id === "couple-jump"
+                  ? 5
+                  : 6
+                : Number(value)) > (room.progress?.[id] || 1)
+            }
+          >
+            {label}
+          </option>
         ))}
       </select>
     </label>
@@ -149,6 +162,14 @@ export default function Setup({
           select("mode", "玩法", [
             ["turn", "回合盲选"],
             ["realtime", "实时躲藏"],
+          ])}
+        {id === "couple-jump" &&
+          select("level", "旅程", [
+            ["1", "草地"],
+            ["2", "雪山"],
+            ["3", "云端"],
+            ["4", "星河"],
+            ["endless", "无尽模式"],
           ])}
         {id === "couple-jump" &&
           select("mode", "玩法", [

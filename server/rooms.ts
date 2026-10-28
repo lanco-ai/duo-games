@@ -1,3 +1,4 @@
+import { levelProgress } from "../shared/games/progress";
 import { createGame } from "./games/index";
 import {
   isExtra,
@@ -211,6 +212,7 @@ export class RoomManager {
   snapshot(r: LiveRoom): RoomView {
     const view = {
       ...r.view,
+      progress: levelProgress(r.data.seenQuestions || []),
       journal: [...r.view.journal],
       chat: r.view.chat.slice(-10),
     };

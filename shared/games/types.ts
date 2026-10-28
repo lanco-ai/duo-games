@@ -63,7 +63,7 @@ export const defaults: Record<ExtraId, GameOptions> = {
   "coop-kitchen": {},
   "couple-ludo": { mode: "pure" },
   "hide-seek": { mode: "turn" },
-  "couple-jump": { mode: "relay" },
+  "couple-jump": { mode: "relay", level: "1" },
 };
 export function isExtra(id: string): id is ExtraId {
   return (extraIds as readonly string[]).includes(id);
@@ -135,7 +135,10 @@ export function validOptions(id: string, value: unknown): value is GameOptions {
     case "hide-seek":
       return ["turn", "realtime"].includes(String(o.mode));
     case "couple-jump":
-      return ["relay", "sync"].includes(String(o.mode));
+      return (
+        ["relay", "sync"].includes(String(o.mode)) &&
+        ["1", "2", "3", "4", "endless"].includes(String(o.level))
+      );
     default:
       return true;
   }

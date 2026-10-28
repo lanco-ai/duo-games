@@ -100,6 +100,7 @@ export interface TalkView {
   mode?: "classic" | "pro";
 }
 export interface RoomView {
+  progress?: Record<string, number>;
   code: string;
   seq: number;
   profiles: [Profile, Profile | null];

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { JSX } from "preact";
+import Jump from "./Jump";
 import { differenceObjects } from "../../../shared/games/couple-content";
 import { useGame, typing, type GameProps } from "./common";
 import { Critter, TetheredPair } from "../art/ui";
@@ -455,125 +456,6 @@ function Ludo(p: GameProps) {
           </button>
         </div>
       )}
-    </section>
-  );
-}
-
-function Charge({
-  label,
-  send,
-  disabled,
-  colour,
-}: {
-  label: string;
-  send: (cmd: string) => Promise<boolean>;
-  disabled: boolean;
-  colour: number;
-}) {
-  const press = useRef<Promise<unknown> | null>(null),
-    held = useRef(false),
-    [active, setActive] = useState(false);
-  const down = (e: JSX.TargetedPointerEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    if (held.current) return;
-    held.current = true;
-    setActive(true);
-    e.currentTarget.setPointerCapture(e.pointerId);
-    press.current = send("press");
-  };
-  const up = () => {
-    if (!held.current) return;
-    held.current = false;
-    setActive(false);
-    void Promise.resolve(press.current).then(() => send("release"));
-  };
-  return (
-    <button
-      class={"charge-button player-" + colour}
-      disabled={disabled}
-      onPointerDown={down}
-      onPointerUp={up}
-      onPointerCancel={up}
-      onLostPointerCapture={up}
-    >
-      {active ? "蓄力中…" : label}
-    </button>
-  );
-}
-function Jump(p: GameProps) {
-  const d = p.view.data,
-    send = useGame(p);
-  return (
-    <section class="couple-new-stage jump-stage" data-testid="jump-stage">
-      <header class="couple-bar">
-        <b>🏆 默契连击 x{d.combo}</b>
-        <b>得分 {d.points}</b>
-      </header>
-      <div class="jump-scene">
-        <div class="jump-cloud">☁️　　　✨　　　 ☁️</div>
-        <div class="jump-box jump-next">🎁</div>
-        <div class="jump-dots">· · · · ·</div>
-        <div key={d.step} class={"jump-people " + (d.step ? "jump-air" : "")}>
-          <TetheredPair
-            left={p.room.profiles[0]}
-            right={p.room.profiles[1]}
-            size={55}
-          />
-        </div>
-        <div class="jump-box jump-start">🏠</div>
-      </div>
-      <p>
-        {d.mode === "sync"
-          ? "两人一起按住，尽量同时松开"
-          : "现在轮到玩家 " + ((d.step % 2) + 1) + " 蓄力"}
-      </p>
-      <p>目标力度约 {(d.target / 1000).toFixed(1)} 秒</p>
-      {d.last && (
-        <p aria-live="polite">
-          {d.last.perfect
-            ? "💖 心有灵犀！"
-            : d.last.center
-              ? "💖 完美落点！"
-              : d.last.landed
-                ? "稳稳落地"
-                : "哎呀，掉下去了"}
-        </p>
-      )}
-      <div class={p.local ? "local-charge" : ""}>
-        <Charge
-          colour={p.seat}
-          label={p.local ? "🟦 玩家一：按住蓄力" : "按住蓄力 · 松开起跳"}
-          disabled={
-            p.disabled ||
-            (d.mode === "relay" && p.seat !== d.step % 2) ||
-            d.released[p.seat]
-          }
-          send={(cmd) => send(cmd)}
-        />
-        {p.local && (
-          <Charge
-            colour={1}
-            label="🟥 玩家二：按住蓄力"
-            disabled={
-              p.disabled ||
-              (d.mode === "relay" && d.step % 2 !== 1) ||
-              d.released[1]
-            }
-            send={(cmd) =>
-              p.local!.send({
-                type: "game",
-                run: p.view.run,
-                command: cmd,
-                payload: {},
-              })
-            }
-          />
-        )}
-      </div>
-      <div class="charge-status">
-        🟦 {d.charging[0] ? "蓄力中" : d.released[0] ? "已松开" : "准备"}　🟥{" "}
-        {d.charging[1] ? "蓄力中" : d.released[1] ? "已松开" : "准备"}
-      </div>
     </section>
   );
 }

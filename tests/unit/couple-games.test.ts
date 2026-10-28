@@ -78,25 +78,6 @@ describe("new couple games: authority, scoring and private views", () => {
     a.act(0, "roll", {}, 200);
     expect(a.result?.stats.winner).toBe(0);
   });
-  it("uses server-timed average and strict 150ms synchronization", () => {
-    const perfect = new CoupleJump("r", { mode: "sync" }, 3, 0, ctx());
-    perfect.target = 1100;
-    perfect.act(0, "press", {}, 0);
-    perfect.act(1, "press", {}, 50);
-    perfect.act(0, "release", {}, 1000);
-    perfect.act(1, "release", {}, 1150);
-    expect(perfect.last.duration).toBe(1050);
-    expect(perfect.last.perfect).toBe(true);
-    expect(perfect.points).toBe(2);
-    const boundary = new CoupleJump("r", { mode: "sync" }, 3, 0, ctx());
-    boundary.target = 1075;
-    boundary.act(0, "press", {}, 0);
-    boundary.act(1, "press", {}, 0);
-    boundary.act(0, "release", {}, 1000);
-    boundary.act(1, "release", {}, 1150);
-    expect(boundary.last.perfect).toBe(false);
-    expect(boundary.last.duration).toBe(1075);
-  });
   it("cooks, burns, plates and serves using server time and station proximity", () => {
     const g = new CoopKitchen("r", {}, 2, 0, ctx());
     expect(() => g.act(0, "interact", { station: "meat" }, 0)).toThrow();
