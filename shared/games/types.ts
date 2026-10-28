@@ -61,7 +61,7 @@ export const defaults: Record<ExtraId, GameOptions> = {
   survival: { mode: "mixed", chapter: "1" },
   "spot-difference": { scene: 0, mode: "split" },
   "coop-kitchen": { level: "1" },
-  "couple-ludo": { mode: "pure" },
+  "couple-ludo": { mode: "pure", victory: "coop" },
   "hide-seek": { mode: "turn" },
   "couple-jump": { mode: "relay", level: "1" },
 };
@@ -137,7 +137,10 @@ export function validOptions(id: string, value: unknown): value is GameOptions {
     case "coop-kitchen":
       return ["1", "2", "3", "4", "5", "endless"].includes(String(o.level));
     case "couple-ludo":
-      return ["pure", "warm", "fun"].includes(String(o.mode));
+      return (
+        ["pure", "warm", "fun"].includes(String(o.mode)) &&
+        ["coop", "versus"].includes(String(o.victory))
+      );
     case "hide-seek":
       return ["turn", "realtime"].includes(String(o.mode));
     case "couple-jump":
@@ -150,6 +153,7 @@ export function validOptions(id: string, value: unknown): value is GameOptions {
   }
 }
 export interface EngineContext {
+  journal?: (question: string, text: string, seat: Seat) => void;
   custom: CustomItem[];
   seen: string[];
   pair: number;

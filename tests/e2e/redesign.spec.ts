@@ -162,22 +162,18 @@ test("P4 two browsers compare tutorial pictures, share finds, settle and rematch
     await expect(one.locator(".game-overlay")).toBeHidden();
     const top = one.locator(".spot-panel svg").nth(0),
       bottom = one.locator(".spot-panel svg").nth(1);
-    const candidates = await top
-      .locator("g[data-id]")
-      .evaluateAll((nodes) =>
-        nodes.map((n) => ({
-          id: n.getAttribute("data-id"),
-          html: n.innerHTML,
-        })),
-      );
-    const other = await bottom
-      .locator("g[data-id]")
-      .evaluateAll((nodes) =>
-        nodes.map((n) => ({
-          id: n.getAttribute("data-id"),
-          html: n.innerHTML,
-        })),
-      );
+    const candidates = await top.locator("g[data-id]").evaluateAll((nodes) =>
+      nodes.map((n) => ({
+        id: n.getAttribute("data-id"),
+        html: n.innerHTML,
+      })),
+    );
+    const other = await bottom.locator("g[data-id]").evaluateAll((nodes) =>
+      nodes.map((n) => ({
+        id: n.getAttribute("data-id"),
+        html: n.innerHTML,
+      })),
+    );
     const diffs = candidates.filter(
       (x) => other.find((y) => y.id === x.id)?.html !== x.html,
     );
@@ -197,6 +193,85 @@ test("P4 two browsers compare tutorial pictures, share finds, settle and rematch
     await one.getByRole("button", { name: "我准备好了", exact: true }).click();
     await two.getByRole("button", { name: "我准备好了", exact: true }).click();
     await expect(one.getByTestId("spot-stage")).toBeVisible({ timeout: 20000 });
+  } finally {
+    await a.close();
+    await b.close();
+  }
+});
+
+test("P5 two partners choose dice and complete the cooperative route before rematching", async ({
+  browser,
+}) => {
+  test.setTimeout(180000);
+  const { a, b, one, two } = await pair(browser);
+  try {
+    await start(one, two, "心动棋");
+    await expect(one.getByTestId("ludo-stage")).toBeVisible();
+    await expect(one.locator(".game-overlay")).toBeHidden();
+    for (let n = 0; n < 170; n++) {
+      if (await one.locator(".result-page").isVisible()) break;
+      const stage = one.getByTestId("ludo-stage");
+      const phase = await stage.getAttribute("data-phase"),
+        turn = Number(await stage.getAttribute("data-turn"));
+      const page = turn ? two : one,
+        other = turn ? one : two;
+      const before = await stage.getAttribute("data-state");
+      if (phase === "roll")
+        await page
+          .getByRole("button", { name: "🎲 投掷两颗骰子", exact: true })
+          .click();
+      else if (phase === "choose") {
+        const buttons = page.getByRole("button", { name: /^选 \d 点$/ });
+        const labels = await buttons.allTextContents();
+        const index =
+          Number(labels[0].match(/\d/)![0]) >= Number(labels[1].match(/\d/)![0])
+            ? 0
+            : 1;
+        await buttons.nth(index).click();
+      } else if (phase === "truth" || phase === "memory") {
+        await page
+          .getByLabel("写一句", { exact: true })
+          .fill("一起走过的路都很珍贵");
+        await page.getByRole("button", { name: "提交", exact: true }).click();
+      } else if (phase === "rate")
+        await other
+          .getByRole("button", { name: "❤️❤️❤️", exact: true })
+          .click();
+      else if (phase === "fork")
+        await page
+          .getByRole("button", { name: "远路 · 稳走一步", exact: true })
+          .click();
+      else if (phase === "challenge") {
+        const kind = await stage.getAttribute("data-task");
+        if (kind === "word") {
+          await one.getByLabel("写一句", { exact: true }).fill("心动");
+          await one.getByRole("button", { name: "提交", exact: true }).click();
+          await two.getByLabel("写一句", { exact: true }).fill("心动");
+          await two.getByRole("button", { name: "提交", exact: true }).click();
+        } else {
+          await one
+            .getByRole("button", { name: "玩家 1：一起完成了", exact: true })
+            .click();
+          await two
+            .getByRole("button", { name: "玩家 2：一起完成了", exact: true })
+            .click();
+        }
+      }
+      await expect
+        .poll(async () =>
+          (await one.locator(".result-page").isVisible())
+            ? "result"
+            : await stage.getAttribute("data-state"),
+        )
+        .not.toBe(before);
+    }
+    await expect(one.locator(".result-page")).toContainText("两个人都抵达承诺");
+    await expect(two.locator(".result-page")).toBeVisible();
+    await one.getByRole("button", { name: "再来一局", exact: true }).click();
+    await two.getByRole("button", { name: "再来一局", exact: true }).click();
+    await one.getByRole("button", { name: "我准备好了", exact: true }).click();
+    await two.getByRole("button", { name: "我准备好了", exact: true }).click();
+    await expect(one.getByTestId("ludo-stage")).toBeVisible({ timeout: 20000 });
   } finally {
     await a.close();
     await b.close();

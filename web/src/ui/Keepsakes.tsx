@@ -1,3 +1,9 @@
+import {
+  ludoBoard,
+  zoneColors,
+  cellIcons,
+  boardPoint,
+} from "../../../shared/games/couple-ludo/board";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Modal } from "./common";
 import { api } from "../api";
@@ -136,7 +142,70 @@ function Artwork({
       ctx.font = "32px sans-serif";
       ctx.fillText("把每一个不同，说给你听", 500, 735);
     }
-    if (!["drawing", "puzzle", "chain", "difference"].includes(item.kind)) {
+    if (item.kind === "ludo") {
+      const lines: string[] = item.data.lines || [];
+      c.height = Math.max(1050, 880 + lines.length * 150);
+      ctx.fillStyle = "#fff0e7";
+      ctx.fillRect(0, 0, 1000, c.height);
+      ctx.fillStyle = "#bb4966";
+      ctx.textAlign = "center";
+      ctx.font = '50px "DuoDisplay",sans-serif';
+      ctx.fillText(item.title, 500, 70);
+      ctx.strokeStyle = "#d59ab0";
+      ctx.lineWidth = 15;
+      ctx.beginPath();
+      ctx.arc(500, 410, 264, 0, Math.PI * 2);
+      ctx.stroke();
+      ludoBoard.forEach((cell, i) => {
+        const p = boardPoint(i),
+          x = 170 + p.x * 2.2,
+          y = 80 + p.y * 2.2;
+        ctx.fillStyle = zoneColors[cell.zone];
+        ctx.beginPath();
+        ctx.arc(x, y, 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#513d3d";
+        ctx.font = "20px sans-serif";
+        ctx.fillText(cellIcons[cell.kind], x, y + 6);
+      });
+      (item.data.positions || [35, 35]).forEach(
+        (position: number, i: number) => {
+          const p = boardPoint(position);
+          ctx.font = "38px sans-serif";
+          ctx.fillText(
+            i ? "🐻" : "🐰",
+            170 + p.x * 2.2 + (i ? 20 : -20),
+            60 + p.y * 2.2,
+          );
+        },
+      );
+      ctx.font = '36px "DuoDisplay",sans-serif';
+      ctx.fillStyle = "#b94568";
+      ctx.fillText(
+        "★".repeat(item.data.stars) + " · " + item.data.moves + " 回合",
+        500,
+        750,
+      );
+      let y = 840;
+      ctx.font = '30px "DuoDisplay",sans-serif';
+      ctx.fillStyle = "#654b46";
+      for (const line of lines) {
+        let row = "";
+        for (const ch of line) {
+          if (ctx.measureText(row + ch).width > 820) {
+            ctx.fillText(row, 500, y);
+            y += 42;
+            row = "";
+          }
+          row += ch;
+        }
+        ctx.fillText(row, 500, y);
+        y += 70;
+      }
+    }
+    if (
+      !["drawing", "puzzle", "chain", "difference", "ludo"].includes(item.kind)
+    ) {
       c.height = 1000;
       ctx.fillStyle = "#fff1de";
       ctx.fillRect(0, 0, 1000, 1000);

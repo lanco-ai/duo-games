@@ -14,7 +14,7 @@ const components = {
   survival: lazy(() => import("./Survival")),
   "spot-difference": lazy(() => import("./Difference")),
   "coop-kitchen": lazy(() => import("./Kitchen")),
-  "couple-ludo": lazy(() => import("./CoupleGames")),
+  "couple-ludo": lazy(() => import("./Ludo")),
   "hide-seek": lazy(() => import("./CoupleGames")),
   "couple-jump": lazy(() => import("./Jump")),
 };

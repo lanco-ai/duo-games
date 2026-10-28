@@ -24,22 +24,6 @@ const ctx = (): EngineContext => ({
   emit: vi.fn(),
 });
 describe("new couple games: authority, scoring and private views", () => {
-  it("enforces turns and deterministic dice in flying chess", () => {
-    const a = new CoupleLudo("a", { mode: "pure" }, 17, 0, ctx()),
-      b = new CoupleLudo("b", { mode: "pure" }, 17, 0, ctx());
-    expect(() => a.act(1, "roll", {}, 0)).toThrow();
-    a.act(0, "roll", {}, 0);
-    b.act(0, "roll", {}, 0);
-    expect(a.dice).toBe(b.dice);
-    expect(a.positions).toEqual(b.positions);
-    if (a.task) a.act(0, "continue", {}, 100);
-    expect(a.turn).toBe(1);
-    a.positions = [52, -1];
-    a.turn = 0;
-    a.task = "";
-    a.act(0, "roll", {}, 200);
-    expect(a.result?.stats.winner).toBe(0);
-  });
   it("does not reveal hiding spot or decoys to the seeker", () => {
     const g = new HideSeek("r", { mode: "turn" }, 12, 0, ctx());
     g.act(1, "hide", { id: 8, decoys: [1, 4] }, 5000);

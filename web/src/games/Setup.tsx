@@ -178,6 +178,11 @@ export default function Setup({
             [4, "海边"],
           ])}
         {id === "couple-ludo" &&
+          select("victory", "终点规则", [
+            ["coop", "一起到终点"],
+            ["versus", "先到者胜"],
+          ])}
+        {id === "couple-ludo" &&
           select("mode", "题库", [
             ["pure", "纯爱日常"],
             ["warm", "微醺升温"],

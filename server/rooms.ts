@@ -311,6 +311,19 @@ export class RoomManager {
         imageRatio,
         gallery: (kind, title, data) =>
           this.store.addGallery(r.data.code, kind, title, data),
+        journal: (question, text, seat) => {
+          const entry = {
+            id: randomUUID(),
+            cardId: "ludo-memory",
+            question,
+            text,
+            seat,
+            at: Date.now(),
+          };
+          this.store.addAnswer(r.data.code, entry);
+          r.view.journal = [entry, ...r.view.journal].slice(0, 2);
+          r.view.journalCount++;
+        },
         seenQuestion: (id) => {
           r.data.seenQuestions = [
             ...new Set([...(r.data.seenQuestions || []), id]),
