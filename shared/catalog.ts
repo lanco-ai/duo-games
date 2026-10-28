@@ -94,7 +94,9 @@ export const games: GameMeta[] = [
     emoji,
     tagline,
     intro: id === "survival" ? "需要两台设备。" + tagline : tagline,
-    devices: id === "survival" ? ("pair" as const) : ("both" as const),
+    devices: ["survival", "spot-difference"].includes(id)
+      ? ("pair" as const)
+      : ("both" as const),
     rules,
     tags: [tag],
     duration: "5–10 分钟",
@@ -104,6 +106,7 @@ export const games: GameMeta[] = [
   })),
   {
     id: "talk-cards",
+    devices: "both",
     name: "深夜聊天卡",
     emoji: "🌙",
     tagline: "抽一张卡，聊一个平时不会问的问题",
@@ -122,6 +125,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "draw-guess",
+    devices: "pair",
     name: "你画我猜",
     emoji: "🎨",
     tagline: "你画 TA 猜，画得越抽象笑得越大声",
@@ -140,6 +144,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "mind-meld",
+    devices: "pair",
     name: "心有灵犀",
     emoji: "🔮",
     tagline: "同时说一个词，直到你们说出同一个",
@@ -158,6 +163,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "know-me",
+    devices: "both",
     name: "你懂我吗",
     emoji: "💌",
     tagline: "TA 最爱吃什么？最怕什么？答错了要解释哦",
@@ -165,7 +171,7 @@ export const games: GameMeta[] = [
     rules: [
       "轮流当主角，回答自己的情况",
       "另一半猜，双方都交了再揭晓",
-      "看看你们的默契指数",
+      "看看默契指数与五维雷达；一台设备请选择背靠背模式",
     ],
     tags: ["默契"],
     duration: "8 分钟",
@@ -175,6 +181,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "gomoku",
+    devices: "pair",
     name: "爱心五子棋",
     emoji: "♟️",
     tagline: "五子连珠，输的人请奶茶",
@@ -182,7 +189,7 @@ export const games: GameMeta[] = [
     rules: [
       "轮流在棋盘上落子",
       "横、竖、斜五子连成线就赢",
-      "悔棋和求和都需要 TA 同意",
+      "可选黑棋三三/四四禁手；悔棋、求和需 TA 同意",
     ],
     tags: ["较量"],
     duration: "10 分钟",
@@ -192,6 +199,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "red-thread",
+    devices: "pair",
     name: "一线牵",
     emoji: "🧶",
     tagline: "一根红线绑住你们，一个掉下去，另一个得拉住",
@@ -210,6 +218,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "my-eyes",
+    devices: "pair",
     name: "你是我的眼",
     emoji: "🔦",
     tagline: "一个看得见地图，一个走在迷雾里",
@@ -217,7 +226,7 @@ export const games: GameMeta[] = [
     rules: [
       "引路人看全图，行者看附近",
       "靠信号和语音配合，拿钥匙找出口",
-      "每一关交换身份",
+      "每关可画一次路线，TA 能看两秒；过关交换身份",
     ],
     tags: ["合作"],
     duration: "10 分钟",
@@ -227,6 +236,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "heart-bounce",
+    devices: "pair",
     name: "颠颠爱心",
     emoji: "💗",
     tagline: "轮流把爱心颠起来，别让它落地",
@@ -234,7 +244,7 @@ export const games: GameMeta[] = [
     rules: [
       "爱心亮谁的颜色，就轮到谁接",
       "移动小托盘，轮流把爱心颠起来",
-      "落地三次结束，看看最高连击",
+      "每 15 连击可吃星星加宽托盘；10/25/50 连击评星",
     ],
     tags: ["合作", "动作"],
     duration: "5 分钟",
@@ -244,6 +254,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "puzzle-us",
+    devices: "pair",
     name: "拼出我们",
     emoji: "🧩",
     tagline: "用你们的合照做拼图，一起拼回来",
@@ -261,6 +272,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "heartbeat",
+    devices: "pair",
     name: "心跳节拍",
     emoji: "🎶",
     tagline: "跟着节拍一起点，你们的心跳同步了吗",
@@ -278,3 +290,13 @@ export const games: GameMeta[] = [
     milestone: "M4",
   },
 ];
+
+export const gameGroups = ["聊天", "合作", "较量", "动作"] as const;
+export function gameGroup(game: GameMeta) {
+  if (["talk-cards", "mind-meld", "know-me", "survival"].includes(game.id))
+    return "聊天";
+  if (["heartbeat", "couple-jump", "heart-bounce"].includes(game.id))
+    return "动作";
+  if (["gomoku", "couple-ludo", "hide-seek"].includes(game.id)) return "较量";
+  return "合作";
+}

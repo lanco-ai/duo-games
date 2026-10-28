@@ -1,5 +1,10 @@
 import { useState } from "preact/hooks";
-import { games, type GameMeta } from "../../../shared/catalog";
+import {
+  games,
+  gameGroups,
+  gameGroup,
+  type GameMeta,
+} from "../../../shared/catalog";
 import { Modal } from "./common";
 import { GameIcon } from "../art/ui";
 export function Catalog({
@@ -18,7 +23,7 @@ export function Catalog({
         <h2 class="wood-sign">挑个游戏，一起玩</h2>
       </div>
       <div class="filters" aria-label="游戏分类">
-        {["全部", "默契", "合作", "动作", "较量"].map((f) => (
+        {["全部", ...gameGroups].map((f) => (
           <button
             aria-pressed={filter === f}
             class={f === filter ? "chip active" : "chip"}
@@ -28,42 +33,52 @@ export function Catalog({
           </button>
         ))}
       </div>
-      <div class="game-grid">
-        {games
-          .filter((g) => filter === "全部" || g.tags.includes(filter))
-          .map((g) => (
-            <button
-              class="game-card"
-              onClick={() => pick(g)}
-              aria-label={"了解" + g.name}
-            >
-              <GameIcon id={g.id} />
-              {wanted === g.id && <span class="want-badge">TA 想玩</span>}
-              <span class="game-name">{g.name}</span>
-              <span class="game-tagline">{g.tagline}</span>
-              <span class="game-meta">
-                {g.tags.join(" · ")} · {g.duration}
-              </span>
-              <span
-                class={
-                  "network-tag " +
-                  (g.net === "需稳定网络"
-                    ? pair !== undefined && pair <= 250
-                      ? ""
-                      : "amber"
-                    : "")
-                }
-              >
-                <i />
-                {pair !== undefined
-                  ? g.net === "需稳定网络" && pair > 250
-                    ? "可能会卡"
-                    : "网络 ✓"
-                  : g.net}
-              </span>
-            </button>
-          ))}
-      </div>
+      {gameGroups
+        .filter((group) => filter === "全部" || filter === group)
+        .map((group) => (
+          <section class="catalog-group" aria-label={group + "游戏"}>
+            <h3 class="catalog-group-title">{group}</h3>
+            <div class="game-grid">
+              {games
+                .filter((g) => gameGroup(g) === group)
+                .map((g) => (
+                  <button
+                    class="game-card"
+                    onClick={() => pick(g)}
+                    aria-label={"了解" + g.name}
+                  >
+                    <GameIcon id={g.id} />
+                    {wanted === g.id && <span class="want-badge">TA 想玩</span>}
+                    <span class="game-name">{g.name}</span>
+                    <span class="game-tagline">{g.tagline}</span>
+                    <span class="device-tag">
+                      {g.devices === "both" ? "一台设备也能玩" : "两台设备"}
+                    </span>
+                    <span class="game-meta">
+                      {g.tags.join(" · ")} · {g.duration}
+                    </span>
+                    <span
+                      class={
+                        "network-tag " +
+                        (g.net === "需稳定网络"
+                          ? pair !== undefined && pair <= 250
+                            ? ""
+                            : "amber"
+                          : "")
+                      }
+                    >
+                      <i />
+                      {pair !== undefined
+                        ? g.net === "需稳定网络" && pair > 250
+                          ? "可能会卡"
+                          : "网络 ✓"
+                        : g.net}
+                    </span>
+                  </button>
+                ))}
+            </div>
+          </section>
+        ))}
     </section>
   );
 }
@@ -94,7 +109,10 @@ export function GameInfo({
           <li>{rule}</li>
         ))}
       </ol>
-      <p class="muted center">网络：{game.net}</p>
+      <p class="muted center">
+        {game.devices === "both" ? "一台设备也能玩" : "两台设备"} · 网络：
+        {game.net}
+      </p>
       <button class="go big wide" onClick={start}>
         一起玩这个 ❤
       </button>
