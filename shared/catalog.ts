@@ -217,6 +217,24 @@ export const games: GameMeta[] = [
     milestone: "M3",
   },
   {
+    id: "puck-sling",
+    name: "桌上弹射冰球",
+    emoji: "🏒",
+    tagline: "把冰球弹过中间的小门，先清空自己半场的人赢",
+    intro:
+      "一张木头小球桌，中间一道矮墙只留一个小门。两个人同时开弹，不分回合：你弹过去，TA 弹回来，手快更要手准。",
+    rules: [
+      "按住自己半场的冰球，往后拉再松手",
+      "冰球穿过中间小门，就到了 TA 的半场",
+      "先清空自己半场获胜；时间到时剩得少的赢",
+    ],
+    tags: ["较量", "动作"],
+    duration: "3 分钟",
+    net: "一般网络即可",
+    gradient: "#F3D29B,#B97A43",
+    milestone: "M6",
+  },
+  {
     id: "puzzle-us",
     name: "拼出我们",
     emoji: "🧩",

@@ -18,6 +18,7 @@ import {
   CoupleJump,
 } from "./couple-puzzles";
 import { CoopKitchen, HideSeek } from "./couple-action";
+import { PuckSling } from "./puck-sling";
 export function createGame(
   id: ExtraId,
   run: string,
@@ -42,6 +43,7 @@ export function createGame(
     "couple-ludo": CoupleLudo,
     "hide-seek": HideSeek,
     "couple-jump": CoupleJump,
+    "puck-sling": PuckSling,
   }[id];
   return new constructor(run, options, seed, at, ctx);
 }

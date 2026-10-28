@@ -850,3 +850,83 @@ test("heartbeat — two seats complete and rematch with 200ms delay", async ({
     await b.close();
   }
 });
+test("puck-sling — sling pucks through the gap with real drags and reach a result", async ({
+  browser,
+}) => {
+  test.setTimeout(240000);
+  const sling = await import("../../shared/games/puck-sling/sim");
+  const a = await browser.newContext({ viewport: { width: 360, height: 740 } }),
+    b = await browser.newContext({ viewport: { width: 360, height: 740 } });
+  await instrument(a);
+  await instrument(b);
+  const one = await a.newPage(),
+    two = await b.newPage(),
+    errors: string[] = [];
+  one.on("pageerror", (e) => errors.push(e.message));
+  two.on("pageerror", (e) => errors.push(e.message));
+  try {
+    await one.goto("/?lag=120&jitter=30");
+    await one.getByRole("button", { name: /创建房间，邀请/ }).click();
+    await one.getByLabel("你的昵称").fill("游戏验收甲");
+    await one.getByRole("button", { name: "创建我们的房间 ❤" }).click();
+    await expect(one).toHaveURL(/\/r\//);
+    await two.goto(one.url());
+    await two.getByLabel("你的昵称").fill("游戏验收乙");
+    await two.getByRole("button", { name: "进入房间 ❤" }).click();
+    await expect(one.locator(".couple-names")).toContainText("游戏验收乙");
+    await start(one, two, "puck-sling", "桌上弹射冰球", { minutes: 2 });
+    const label = "弹射冰球球桌：按住自己半场的冰球往后拉，松手弹出";
+    await expect(one.getByLabel(label)).toBeVisible();
+    // Each seat slings the free puck nearest the gap, by dragging on its own (flipped) view.
+    async function shoot(page: Page, seat: 0 | 1) {
+      const d = await data(page),
+        s = sling.advance(d.base, d.shots, d.base.tick + 2000),
+        mid = (q: any) => Math.hypot(q.x / 256 - 180, q.y / 256 - sling.MID),
+        id = s.pucks
+          .map((_: any, i: number) => i)
+          .filter((i: number) => sling.grabbable(s.pucks[i], seat))
+          .sort((x: number, y: number) => mid(s.pucks[x]) - mid(s.pucks[y]))[0];
+      if (id === undefined) return;
+      const q = s.pucks[id],
+        x = q.x / 256,
+        y = q.y / 256,
+        l = mid(q),
+        pull = 80 / l,
+        box = (await page.getByLabel(label).boundingBox())!,
+        screen = (bx: number, by: number) =>
+          seat
+            ? [box.x + (1 - bx / 360) * box.width, box.y + (1 - by / 640) * box.height]
+            : [box.x + (bx / 360) * box.width, box.y + (by / 640) * box.height];
+      const [sx, sy] = screen(x, y),
+        [ex, ey] = screen(x - (180 - x) * pull, y - (sling.MID - y) * pull);
+      await page.mouse.move(sx, sy);
+      await page.mouse.down();
+      await page.mouse.move(ex, ey, { steps: 6 });
+      await page.mouse.up();
+    }
+    let shots = 0;
+    for (let i = 0; i < 30; i++) {
+      if (await one.locator(".result-page").isVisible()) break;
+      await shoot(one, 0);
+      if (i === 2) await shoot(two, 1);
+      if (i === 1 && process.env.SLING_SHOTS) {
+        await one.waitForTimeout(500);
+        await one.screenshot({ path: process.env.SLING_SHOTS + "/seat0.png" });
+        await two.screenshot({ path: process.env.SLING_SHOTS + "/seat1.png" });
+      }
+      await one.waitForTimeout(2600);
+      shots = (await data(one))?.fired?.[0] ?? shots;
+    }
+    expect(shots).toBeGreaterThan(3);
+    await result(one, two);
+    expect(
+      await one.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    expect(errors).toEqual([]);
+  } finally {
+    await a.close();
+    await b.close();
+  }
+});

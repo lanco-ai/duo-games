@@ -67,7 +67,9 @@ export function transition(
       break;
     case "ready":
       if (
-        ["red-thread", "heart-bounce"].includes(r.proposal?.gameId || "") &&
+        ["red-thread", "heart-bounce", "puck-sling"].includes(
+          r.proposal?.gameId || "",
+        ) &&
         r.away.some(Boolean)
       )
         return { room, error: "INVALID" };

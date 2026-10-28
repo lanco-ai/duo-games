@@ -164,6 +164,7 @@ try {
     ["heart-bounce", "颠颠爱心", ".bounce-game canvas"],
     ["puzzle-us", "拼出我们", ".puzzle-game canvas"],
     ["heartbeat", "心跳节拍", ".rhythm-field canvas"],
+    ["puck-sling", "桌上弹射冰球", ".sling-game canvas"],
   ]) {
     await one.getByRole("button", { name: "了解" + name, exact: true }).click();
     await one

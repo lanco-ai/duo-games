@@ -255,6 +255,7 @@ export const TILE_COLORS: Record<string, [string, string]> = {
   "heart-bounce": ["#FFE47A", "#FFB21E"],
   "puzzle-us": ["#A9CCFF", "#5B8DEF"],
   heartbeat: ["#FFA3E3", "#C45BFF"],
+  "puck-sling": ["#F3D29B", "#C98B4E"],
 };
 const S = { stroke: INK, "stroke-width": 2.6, "stroke-linejoin": "round", "stroke-linecap": "round" } as const;
 const HEART = (x: number, y: number, r: number) =>
@@ -370,6 +371,18 @@ export function GameIcon({ id }: { id: string }) {
         <ellipse cx="16" cy="46" rx="8" ry="6.5" fill="#FFFFFF" {...S} transform="rotate(-20 16 46)" />
         <ellipse cx="42" cy="40" rx="8" ry="6.5" fill="#FFFFFF" {...S} transform="rotate(-20 42 40)" />
         <path d={HEART(50, 53, 7)} fill="#FF4D6A" {...S} stroke-width="2" />
+      </>
+    );
+  else if (id === "puck-sling")
+    body = (
+      <>
+        <rect x="8" y="6" width="48" height="52" rx="7" fill="#F4D7A6" {...S} />
+        <path d="M8,32H25M39,32H56" {...S} stroke="#8B5A33" stroke-width="5" />
+        <ellipse cx="32" cy="46" rx="8" ry="6" fill="#3A2E29" {...S} />
+        <circle cx="32" cy="45" r="2.6" fill="#FF6B6B" />
+        <ellipse cx="22" cy="18" rx="7" ry="5" fill="#3A2E29" {...S} />
+        <circle cx="22" cy="17" r="2.2" fill="#4D9DFF" />
+        <path d="M32,38V27" fill="none" {...S} stroke="#FFFFFF" stroke-width="3" stroke-dasharray="1 5" />
       </>
     );
   if (!body) {

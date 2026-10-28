@@ -150,6 +150,12 @@ export default function Setup({
             ["turn", "回合盲选"],
             ["realtime", "实时躲藏"],
           ])}
+        {id === "puck-sling" &&
+          select("minutes", "对局时长", [
+            [2, "2 分钟"],
+            [3, "3 分钟"],
+            [5, "5 分钟"],
+          ])}
         {id === "couple-jump" &&
           select("mode", "玩法", [
             ["relay", "轮流接力"],

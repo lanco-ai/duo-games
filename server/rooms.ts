@@ -571,7 +571,10 @@ export class RoomManager {
   }
   visibility(r: LiveRoom, seat: Seat, hidden: boolean) {
     r.view.away[seat] = hidden;
-    if (r.extra && ["red-thread", "heart-bounce"].includes(r.extra.id)) {
+    if (
+      r.extra &&
+      ["red-thread", "heart-bounce", "puck-sling"].includes(r.extra.id)
+    ) {
       if (hidden) this.pause(r);
     }
     if (!hidden) this.resume(r);
