@@ -22,6 +22,8 @@ import {
   bindDevice,
   profile,
   remember,
+  rememberAppearances,
+  roomAppearances,
   roomLink,
   roomStorageKey,
 } from "./api";
@@ -34,6 +36,7 @@ import { drawCritter, kindOf } from "./art/critter";
 import { chunkyText, cloud, rope, sky as paintSky } from "./art/paint";
 const ExtraStage = lazy(() => import("./games/ExtraStage"));
 const Setup = lazy(() => import("./games/Setup"));
+const ResultDetails = lazy(() => import("./ui/ResultDetails"));
 const Keepsakes = lazy(() => import("./ui/Keepsakes"));
 const Talk = lazy(() => import("./games/Talk"));
 type PublicRoom = {
@@ -88,6 +91,12 @@ export function Room({ code }: { code: string }) {
   const transferSecret = useRef(
     new URLSearchParams(location.hash.slice(1)).get("rebind"),
   );
+  useEffect(() => {
+    if (!room) return;
+    rememberAppearances(code, room.profiles);
+    const me = room.profiles[seat];
+    if (me) localStore.setItem("duo.profile", JSON.stringify(me));
+  }, [code, room?.profiles, seat]);
   useEffect(() => {
     let cancelled = false;
     async function begin() {
@@ -480,12 +489,25 @@ export function Room({ code }: { code: string }) {
     c.fillText(new Date().toLocaleDateString("zh-CN"), 360, 870);
     setResultImage(canvas.toDataURL("image/png"));
   }
+  const appearances =
+      room?.profiles || (token ? roomAppearances(code) : [null, null]),
+    statusLeft =
+      appearances[0] ||
+      (publicRoom
+        ? {
+            avatar: publicRoom.host.avatar,
+            color:
+              COLORS.find((c) => !publicRoom.availableColors.includes(c)) ||
+              COLORS[0],
+          }
+        : null),
+    statusRight = appearances[1];
   if (fatal)
     return (
       <div class="status-page">
         <Scene ground />
         <div class="panel status-panel">
-          <Couple mood="sad" size={84} />
+          <Couple left={statusLeft} right={statusRight} mood="sad" size={84} />
           <h1>{fatal}</h1>
           <p>属于你们的快乐，随时可以重新开始。</p>
           <a class="go big" href={BASE}>
@@ -506,12 +528,12 @@ export function Room({ code }: { code: string }) {
         <main class="join-main">
           {!publicRoom ? (
             <div class="panel status-panel">
-              <Couple size={72} />
+              <Couple left={statusLeft} right={statusRight} size={72} />
               <p>正在打开邀请…</p>
             </div>
           ) : publicRoom.full ? (
             <div class="panel status-panel">
-              <Couple size={84} />
+              <Couple left={statusLeft} right={statusRight} size={84} />
               <h1>这个房间已经有两个人啦</h1>
               <a class="go big" href={BASE}>
                 自己建一个
@@ -571,7 +593,7 @@ export function Room({ code }: { code: string }) {
       <div class="status-page">
         <Scene ground />
         <div class="panel status-panel">
-          <Couple size={72} />
+          <Couple left={statusLeft} right={statusRight} size={72} />
           <h2>{status}</h2>
           <a class="text-button" href={BASE}>
             回首页
@@ -929,6 +951,11 @@ export function Room({ code }: { code: string }) {
             <h1>{room.result.primary.value}</h1>
             {activeGame.id === "talk-cards" && (
               <p>收藏了 {room.result.stats.favorites || 0} 张卡片</p>
+            )}
+            {["gomoku", "know-me", "mind-meld"].includes(activeGame.id) && (
+              <Suspense fallback={null}>
+                <ResultDetails game={activeGame.id} stats={room.result.stats} />
+              </Suspense>
             )}
             <div class="result-highlight">
               {room.result.highlights.map((h) => (

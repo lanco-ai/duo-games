@@ -10,6 +10,7 @@ import {
 import { normalize, text, integer } from "../../shared/text";
 import { shuffled } from "../../shared/rng";
 import { questions, type Question } from "../../shared/content/questions";
+import { radarStats } from "../../shared/games/radar";
 export class MindMeld extends BaseEngine {
   pending = commitment<string>();
   history: [string, string][] = [];
@@ -28,6 +29,7 @@ export class MindMeld extends BaseEngine {
   view(seat: Seat) {
     return {
       round: this.history.length,
+      topic: this.options.topic || "自由联想",
       history: this.history,
       ...committedView(this.pending, seat),
       agrees: this.agrees,
@@ -79,6 +81,19 @@ export class MindMeld extends BaseEngine {
     }
     throw new Error("INVALID");
   }
+  radar(success = false) {
+    return radarStats(
+      this.history.map((pair, i) => ({
+        tag: String(this.options.topic || "自由联想"),
+        points:
+          normalize(pair[0]) === normalize(pair[1]) ||
+          (success && i === this.history.length - 1)
+            ? 1
+            : 0,
+        max: 1,
+      })),
+    );
+  }
   complete(success: boolean) {
     this.done(
       success ? "心有灵犀" : "差一点点，但聊得很开心",
@@ -88,7 +103,11 @@ export class MindMeld extends BaseEngine {
           ? "两个不同的念头，终于走到了一起。"
           : "每一步联想，都是靠近彼此的路。",
       ],
-      { rounds: this.history.length, success: success ? 1 : 0 },
+      {
+        rounds: this.history.length,
+        success: success ? 1 : 0,
+        ...this.radar(success),
+      },
     );
     this.ctx.gallery("chain", "我们的灵犀链", {
       history: this.history,
@@ -115,7 +134,7 @@ export class MindMeld extends BaseEngine {
         "这一轮先歇一歇",
         this.history.length + " 轮",
         ["没有在限时内写完，换个词再来一次吧。"],
-        { rounds: this.history.length, success: 0 },
+        { rounds: this.history.length, success: 0, ...this.radar() },
       );
       return true;
     }
@@ -268,7 +287,18 @@ export class KnowMe extends BaseEngine {
           surprises.length
             ? surprises.map((x) => x.question.text + " · " + x.score + "/10")
             : ["每一道都猜中了，今天也很懂彼此。"],
-          { points: this.points, total: this.order.length, percent },
+          {
+            points: this.points,
+            total: this.order.length,
+            percent,
+            ...radarStats(
+              this.history.map((h) => ({
+                tag: h.question.cat,
+                points: h.score,
+                max: 10,
+              })),
+            ),
+          },
         );
       } else {
         this.idx++;

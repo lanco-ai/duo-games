@@ -453,3 +453,52 @@
     opacity: 1;
   }
 }
+
+.hide-apartment button.chosen,
+.survival-objects button.chosen {
+  outline: 3px solid #ed6f99;
+  background: #ffe3ec;
+}
+.survival-objects {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.survival-objects button {
+  min-width: 50px;
+  min-height: 56px;
+}
+.survival-objects small {
+  display: block;
+}
+.kitchen-tickets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.kitchen-tickets > div {
+  padding: 6px;
+  background: #fff6dc;
+  border: 1px solid #c99a6d;
+  border-radius: 8px;
+}
+.kitchen-tickets small {
+  display: block;
+  font-size: 12px;
+}
+.kitchen-controls {
+  display: grid;
+  gap: 5px;
+  margin-top: 8px;
+}
+.kitchen-controls button {
+  touch-action: none;
+}
+.spot-waves {
+  animation: spot-wave 2s ease-in-out infinite alternate;
+}
+@keyframes spot-wave {
+  to {
+    transform: translateY(3px);
+  }
+}

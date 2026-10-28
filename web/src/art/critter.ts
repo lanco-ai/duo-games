@@ -251,26 +251,33 @@ export function layers(
       { d: "M63,86C79,89 87,77 81,66", stroke: f.fur, width: 4.2 },
     );
   out.push(...e.back);
-  out.push({ d: ellipse(50, 78, 17, 15.5), fill: f.fur, stroke: INK });
+  const foot = f.foot || f.fur;
+  // Arms start at the shoulders and legs tuck under the torso. Draw their
+  // roots behind the body so the joints stay connected in both poses.
+  const arm = pose === "up"
+    ? "M36,68C29,65 23,59 22,52C21,48 16,48 16,53C17,64 24,72 34,76Z"
+    : kind === "penguin"
+      ? "M36,67C28,69 22,76 23,83C28,84 34,79 37,73Z"
+      : "M36,67C30,68 26,72 24,77C22,82 26,85 29,81L37,73Z";
+  out.push(
+    { d: arm, fill: f.fur, stroke: INK },
+    { d: mirror(arm), fill: f.fur, stroke: INK },
+    { d: "M37,84L46,84L46,94L37,94Z", fill: foot, stroke: INK },
+    { d: "M54,84L63,84L63,94L54,94Z", fill: foot, stroke: INK },
+    { d: ellipse(50, 76, 17, 13), fill: f.fur, stroke: INK },
+  );
   if (kind !== "bunny")
     out.push({
       d:
         kind === "penguin"
-          ? ellipse(50, 80, 11, 11.5)
-          : ellipse(50, 81.5, 10, 8.5),
+          ? ellipse(50, 77, 11, 10)
+          : ellipse(50, 78, 10, 8),
       fill: f.light,
     });
-  const foot = f.foot || f.fur;
   out.push(
-    { d: ellipse(41, 93, 7.5, 4.2), fill: foot, stroke: INK },
-    { d: ellipse(59, 93, 7.5, 4.2), fill: foot, stroke: INK },
+    { d: ellipse(40.5, 94, 7, 3.5), fill: foot, stroke: INK },
+    { d: ellipse(59.5, 94, 7, 3.5), fill: foot, stroke: INK },
   );
-  const arm = (cx: number, cy: number, rot: number): Layer => ({
-    d: ellipse(cx, cy, kind === "penguin" ? 4.6 : 5, kind === "penguin" ? 10 : 8, rot),
-    fill: f.fur,
-    stroke: INK,
-  });
-  if (pose === "stand") out.push(arm(33.5, 77, 18), arm(66.5, 77, -18));
   out.push(
     {
       d: "M31,60.5C40,67.5 60,67.5 69,60.5L69.5,67C60,74 40,74 30.5,67Z",
@@ -286,7 +293,6 @@ export function layers(
   out.push({ d: ellipse(50, 41, 29, 25.5), fill: f.fur, stroke: INK });
   out.push(...e.front);
   out.push(...face(kind, mood));
-  if (pose === "up") out.push(arm(21.5, 57, 35), arm(78.5, 57, -35));
   cache.set(key, out);
   return out;
 }

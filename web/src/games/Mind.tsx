@@ -29,6 +29,11 @@ export default function Mind(p: GameProps) {
     <section class="extra-stage mind-stage" data-testid="mind-stage">
       <span class="game-eyebrow">把两个念头，慢慢变成一个</span>
       <h2 class="ribbon round-ribbon">第 {Math.min(d.round + 1, 10)} 轮</h2>
+      {d.topic && d.topic !== "自由联想" && (
+        <p class="muted">
+          本局主题：{d.topic} · 围绕这个主题联想，再寻找共同的词
+        </p>
+      )}
       <div class="mind-duo">
         {seats.map((seat, i) => {
           const prof = p.room.profiles[seat as 0 | 1];
@@ -45,9 +50,7 @@ export default function Mind(p: GameProps) {
               <Critter
                 avatar={prof?.avatar}
                 color={prof?.color || "#FF6B6B"}
-                mood={
-                  revealed ? "wow" : d.submitted[seat] ? "joy" : "normal"
-                }
+                mood={revealed ? "wow" : d.submitted[seat] ? "joy" : "normal"}
                 size={78}
                 class={d.submitted[seat] ? "" : "hop" + (i ? " late" : "")}
               />

@@ -3609,3 +3609,6 @@ dialog[open] .sheet {
 @media (prefers-reduced-motion: reduce) {
   .match-spinner { animation: none; }
 }
+
+.catalog-group-title { margin: 24px 4px 12px; font-size: 20px; }
+.device-tag { color: #64537e; font-size: 12px; font-weight: 600; }

@@ -9,6 +9,7 @@ import {
   normalizeRoomCode,
   profile,
   remember,
+  roomAppearances,
   roomLink,
   roomStorageKey,
 } from "./api";
@@ -38,7 +39,8 @@ export function Home({ online }: { online: number | null }) {
       cachedLast && localStore.getItem(roomStorageKey("token." + cachedLast)),
     last = (cachedToken ? cachedLast : null) || deviceLast,
     back = !!last,
-    me = profile();
+    me = profile(),
+    appearances = roomAppearances(last);
   useEffect(() => {
     let active = true;
     void (async () => {
@@ -304,11 +306,8 @@ export function Home({ online }: { online: number | null }) {
         <div class="hero-couple" aria-hidden="true">
           <TetheredPair
             size={84}
-            left={{ avatar: me?.avatar || "🐰", color: me?.color || "#FF6B6B" }}
-            right={{
-              avatar: me?.avatar === "🐻" ? "🐰" : "🐻",
-              color: me?.color === "#4D9DFF" ? "#FF6B6B" : "#4D9DFF",
-            }}
+            left={appearances[0] || me || null}
+            right={appearances[1]}
           />
         </div>
       </section>

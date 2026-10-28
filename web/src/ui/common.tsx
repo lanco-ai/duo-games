@@ -129,12 +129,12 @@ export function ProfileForm({
 }
 /** Two critters tied by the red thread, used on status pages. */
 export function Couple({
-  left = { avatar: "🐰", color: "#FF6B6B" },
-  right = { avatar: "🐻", color: "#4D9DFF" },
+  left = null,
+  right = null,
   mood = "joy",
   size = 96,
 }: {
-  left?: { avatar: string; color: string };
+  left?: { avatar: string; color: string } | null;
   right?: { avatar: string; color: string } | null;
   mood?: Mood;
   size?: number;

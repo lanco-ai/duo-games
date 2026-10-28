@@ -1,6 +1,6 @@
 import { localStore } from "./storage";
 import type { Profile } from "../../shared/protocol";
-import { ALPHABET } from "../../shared/protocol";
+import { ALPHABET, AVATARS, COLORS } from "../../shared/protocol";
 export const BASE = import.meta.env.BASE_URL;
 export const IS_PREVIEW = BASE === "/duo-preview/";
 export const roomStorageKey = (suffix: string) =>
@@ -39,6 +39,34 @@ export function remember(data: { code: string; token: string }, p?: Profile) {
   localStore.setItem(roomStorageKey("token." + data.code), data.token);
   localStore.setItem(roomStorageKey("lastRoom"), data.code);
   if (p) localStore.setItem("duo.profile", JSON.stringify(p));
+}
+type Appearance = Pick<Profile, "avatar" | "color">;
+export function roomAppearances(
+  code: string | null,
+): [Appearance | null, Appearance | null] {
+  try {
+    const saved = JSON.parse(
+      localStore.getItem(roomStorageKey("appearances." + code)) || "null",
+    );
+    const valid = (p: any): Appearance | null =>
+      p && AVATARS.includes(p.avatar) && COLORS.includes(p.color)
+        ? { avatar: p.avatar, color: p.color }
+        : null;
+    return [valid(saved?.[0]), valid(saved?.[1])];
+  } catch {
+    return [null, null];
+  }
+}
+export function rememberAppearances(
+  code: string,
+  profiles: [Profile | null, Profile | null],
+) {
+  localStore.setItem(
+    roomStorageKey("appearances." + code),
+    JSON.stringify(
+      profiles.map((p) => p && { avatar: p.avatar, color: p.color }),
+    ),
+  );
 }
 export function roomLink(code: string) {
   return BASE + "r/" + code + location.search;

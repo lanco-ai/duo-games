@@ -55,7 +55,31 @@ export default function Setup({
         }
       >
         {values.map(([value, label]) => (
-          <option value={value}>{label}</option>
+          <option
+            value={value}
+            disabled={
+              (key === "map" ||
+                key === "chapter" ||
+                key === "level" ||
+                (key === "scene" && id === "spot-difference")) &&
+              [
+                "couple-jump",
+                "coop-kitchen",
+                "survival",
+                "spot-difference",
+                "hide-seek",
+              ].includes(id) &&
+              (value === "endless"
+                ? id === "couple-jump"
+                  ? 5
+                  : 6
+                : key === "scene"
+                  ? Number(value) + 1
+                  : Number(value)) > (room.progress?.[id] || 1)
+            }
+          >
+            {label}
+          </option>
         ))}
       </select>
     </label>
@@ -125,11 +149,27 @@ export default function Setup({
   return (
     <div class="game-setup">
       <fieldset disabled={room.proposal?.by !== seat || uploading}>
+        {id === "coop-kitchen" &&
+          select("level", "厨房关卡", [
+            ["1", "第一次约会便当"],
+            ["2", "中间的吧台"],
+            ["3", "火锅夜"],
+            ["4", "移动餐车"],
+            ["5", "纪念日蛋糕"],
+            ["endless", "无尽厨房"],
+          ])}
         {id === "survival" &&
-          select("mode", "玩法", [
-            ["mixed", "混合挑战"],
-            ["quiz", "送命题问答"],
-            ["search", "抓包寻物"],
+          select("chapter", "恋爱章节", [
+            ["1", "暧昧期"],
+            ["2", "热恋期"],
+            ["3", "磨合期"],
+            ["4", "见家长"],
+            ["5", "纪念日"],
+          ])}
+        {id === "spot-difference" &&
+          select("mode", "图片模式", [
+            ["split", "各看一半"],
+            ["easy", "同屏简单模式"],
           ])}
         {id === "spot-difference" &&
           select("scene", "场景", [
@@ -140,15 +180,29 @@ export default function Setup({
             [4, "海边"],
           ])}
         {id === "couple-ludo" &&
+          select("victory", "终点规则", [
+            ["coop", "一起到终点"],
+            ["versus", "先到者胜"],
+          ])}
+        {id === "couple-ludo" &&
           select("mode", "题库", [
             ["pure", "纯爱日常"],
             ["warm", "微醺升温"],
             ["fun", "趣味惩罚"],
           ])}
         {id === "hide-seek" &&
-          select("mode", "玩法", [
-            ["turn", "回合盲选"],
-            ["realtime", "实时躲藏"],
+          select("map", "藏在哪一张地图", [
+            ["1", "小公寓"],
+            ["2", "森林木屋"],
+            ["3", "游乐园鬼屋"],
+          ])}
+        {id === "couple-jump" &&
+          select("level", "旅程", [
+            ["1", "草地"],
+            ["2", "雪山"],
+            ["3", "云端"],
+            ["4", "星河"],
+            ["endless", "无尽模式"],
           ])}
         {id === "puck-sling" &&
           select("minutes", "对局时长", [
@@ -176,12 +230,26 @@ export default function Setup({
             {checks("libraries", "词库", ["日常", "恋爱", "我们的回忆"])}
           </>
         )}
-        {id === "mind-meld" &&
-          select("seconds", "每轮限时", [
-            [0, "不限时"],
-            [30, "30 秒"],
-            [60, "60 秒"],
-          ])}
+        {id === "mind-meld" && (
+          <>
+            {select("seconds", "每轮限时", [
+              [0, "不限时"],
+              [30, "30 秒"],
+              [60, "60 秒"],
+            ])}
+            {select(
+              "topic",
+              "联想主题",
+              ["自由联想", "饮食", "性格", "回忆", "未来", "喜好"].map((x) => [
+                x,
+                x,
+              ]),
+            )}
+            <p class="muted">
+              选一个主题，结算时记录这个主题的合拍率；自由联想不计入雷达维度。
+            </p>
+          </>
+        )}
         {id === "know-me" && (
           <>
             {select("mode", "玩法", [
@@ -215,6 +283,16 @@ export default function Setup({
         )}
         {id === "gomoku" && (
           <>
+            <label class="check">
+              <input
+                type="checkbox"
+                checked={!!opts.forbidden}
+                onChange={(e) =>
+                  void update({ forbidden: e.currentTarget.checked })
+                }
+              />
+              黑棋禁手（三三 / 四四）
+            </label>
             {select("first", "谁先下", [
               ["随机", "随机"],
               ["房主", "房主"],
@@ -297,10 +375,16 @@ export default function Setup({
           </>
         )}
         {id === "heartbeat" &&
+          select("difficulty", "谱面难度", [
+            ["easy", "简单"],
+            ["normal", "普通"],
+            ["hard", "困难"],
+          ])}
+        {id === "heartbeat" &&
           select("track", "选择曲目", [
-            ["meet", "初见 · 90 BPM · 简单"],
-            ["date", "约会 · 110 BPM · 普通"],
-            ["heart", "心动 · 128 BPM · 困难"],
+            ["meet", "初见 · 90 BPM"],
+            ["date", "约会 · 110 BPM"],
+            ["heart", "心动 · 128 BPM"],
           ])}
       </fieldset>
       {["draw-guess", "know-me"].includes(id) && (

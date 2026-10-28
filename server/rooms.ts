@@ -1,3 +1,4 @@
+import { levelProgress } from "../shared/games/progress";
 import { createGame } from "./games/index";
 import {
   isExtra,
@@ -145,6 +146,8 @@ export class RoomManager {
     const old = r.peers[seat];
     r.peers[seat] = p;
     if (old) {
+      // A new socket can arrive before the old close event during refresh.
+      this.pause(r);
       old.send({ t: "err", code: "REPLACED", msg: errors.REPLACED });
       old.close(4001);
     }
@@ -211,6 +214,7 @@ export class RoomManager {
   snapshot(r: LiveRoom): RoomView {
     const view = {
       ...r.view,
+      progress: levelProgress(r.data.seenQuestions || []),
       journal: [...r.view.journal],
       chat: r.view.chat.slice(-10),
     };
@@ -230,7 +234,7 @@ export class RoomManager {
       ? {
           kind: r.extra.id,
           run: r.extra.run,
-          data: r.extra.view(seat, Date.now()),
+          data: r.extra.view(seat, r.pausedAt ?? Date.now()),
         }
       : r.game
         ? talk.view(r.game)
@@ -244,11 +248,7 @@ export class RoomManager {
     }
   }
   pause(r: LiveRoom) {
-    if (
-      !["playing", "countdown"].includes(r.view.phase) ||
-      r.extra?.id === "heartbeat"
-    )
-      return;
+    if (!["playing", "countdown"].includes(r.view.phase)) return;
     clearTimeout(r.timer);
     r.pausedAt = Date.now();
     r.extra?.pause?.(r.pausedAt);
@@ -309,6 +309,19 @@ export class RoomManager {
         imageRatio,
         gallery: (kind, title, data) =>
           this.store.addGallery(r.data.code, kind, title, data),
+        journal: (question, text, seat) => {
+          const entry = {
+            id: randomUUID(),
+            cardId: "ludo-memory",
+            question,
+            text,
+            seat,
+            at: Date.now(),
+          };
+          this.store.addAnswer(r.data.code, entry);
+          r.view.journal = [entry, ...r.view.journal].slice(0, 2);
+          r.view.journalCount++;
+        },
         seenQuestion: (id) => {
           r.data.seenQuestions = [
             ...new Set([...(r.data.seenQuestions || []), id]),

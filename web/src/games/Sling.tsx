@@ -1,7 +1,6 @@
 import { useRef, useState } from "preact/hooks";
 import * as sim from "../../../shared/games/puck-sling/sim";
 import { useFrame, useGame, nickname, type GameProps } from "./common";
-import { drawCritter, kindOf } from "../art/critter";
 import { INK, chunkyText, fitCanvas, heart } from "../art/paint";
 interface Drag {
   id: number;
@@ -118,24 +117,6 @@ export default function Sling(p: GameProps) {
       g.rotate(Math.PI);
     }
     drawTable(g);
-    // Partner peeks over the far rail, you sit at the near one.
-    const far = flip ? 0 : 1,
-      near = mySeat;
-    for (const seat of [far, near]) {
-      const prof = p.room.profiles[seat as 0 | 1],
-        top = seat === 1;
-      g.save();
-      if (top) {
-        g.translate(W / 2, 8);
-        g.rotate(Math.PI);
-      } else g.translate(W / 2, H - 8);
-      drawCritter(g, kindOf(prof?.avatar), color(seat), 0, 22, 54, {
-        mood: "joy",
-        pose: "up",
-        alpha: 0.9,
-      });
-      g.restore();
-    }
     if (shown.current.length !== s.pucks.length)
       shown.current = s.pucks.map((q) => ({ x: q.x / sim.Q, y: q.y / sim.Q }));
     // Paint from the far rail to the near one so nearer pucks overlap.
@@ -151,7 +132,7 @@ export default function Sling(p: GameProps) {
       const k = Math.hypot(tx - r.x, ty - r.y) > 40 ? 1 : 0.55;
       r.x += (tx - r.x) * k;
       r.y += (ty - r.y) * k;
-      drawPuck(g, r.x, r.y, color(sim.sideOf(q)), flip, drag.current?.id === i);
+      drawPuck(g, r.x, r.y, color(sim.sideOf(q)), drag.current?.id === i);
     }
     const dr = drag.current;
     if (dr) {
@@ -308,20 +289,8 @@ function drawPuck(
   x: number,
   y: number,
   tint: string,
-  flip: boolean,
   held: boolean,
 ) {
-  // Thickness always points down on screen, so flip it with the board.
-  const t = flip ? -5 : 5;
-  g.fillStyle = "rgba(60,35,15,.25)";
-  g.beginPath();
-  g.ellipse(x + 2, y + t * 1.2, R + 1, R, 0, 0, Math.PI * 2);
-  g.fill();
-  g.fillStyle = "#2E2420";
-  g.beginPath();
-  g.arc(x, y + t, R, 0, Math.PI * 2);
-  g.fill();
-  g.fillRect(x - R, Math.min(y, y + t), R * 2, Math.abs(t));
   g.fillStyle = held ? "#4A3A34" : "#3A2E29";
   g.strokeStyle = INK;
   g.lineWidth = 2;
@@ -332,10 +301,6 @@ function drawPuck(
   g.fillStyle = tint;
   g.beginPath();
   g.arc(x, y, R * 0.45, 0, Math.PI * 2);
-  g.fill();
-  g.fillStyle = "rgba(255,255,255,.35)";
-  g.beginPath();
-  g.arc(x - R * 0.35, y - R * 0.35 * (flip ? -1 : 1), R * 0.22, 0, Math.PI * 2);
   g.fill();
   if (held) {
     g.strokeStyle = "#FFE066";

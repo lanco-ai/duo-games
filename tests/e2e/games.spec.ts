@@ -155,7 +155,8 @@ async function result(one: Page, two: Page) {
     one.getByRole("button", { name: "我准备好了", exact: true }),
   ).toBeVisible();
   await one.getByRole("button", { name: "关闭", exact: true }).click();
-  await expect(one.locator(".game-grid")).toBeVisible();
+  await expect(one.locator(".catalog")).toBeVisible();
+  await expect(one.locator(".catalog-group")).toHaveCount(4);
 }
 function route(m: any) {
   const queue = [m.pos],
@@ -201,7 +202,10 @@ test("mind-meld — two seats complete and rematch with 200ms delay", async ({
     await two.getByLabel("你的昵称").fill("游戏验收乙");
     await two.getByRole("button", { name: "进入房间 ❤" }).click();
     await expect(one.locator(".couple-names")).toContainText("游戏验收乙");
-    await start(one, two, "mind-meld", "心有灵犀");
+    await start(one, two, "mind-meld", "心有灵犀", {
+      seconds: 0,
+      topic: "饮食",
+    });
     await one.getByLabel("你的联想词").fill("咖啡");
     await one.getByRole("button", { name: "写好了，一起揭晓" }).click();
     await expect(two.getByLabel("你的联想词")).toBeEnabled();
@@ -210,6 +214,13 @@ test("mind-meld — two seats complete and rematch with 200ms delay", async ({
     );
     await two.getByLabel("你的联想词").fill("咖啡");
     await two.getByRole("button", { name: "写好了，一起揭晓" }).click();
+    await expect(one.locator(".compatibility-radar")).toContainText(
+      "饮食：100%（1题/轮）",
+    );
+    await expect(two.locator(".compatibility-radar")).toContainText(
+      "性格：未覆盖",
+    );
+    await expect(one.locator(".compatibility-radar svg circle")).toHaveCount(1);
     await result(one, two);
     await one.getByRole("button", { name: /画廊/ }).click();
     await expect(one.locator(".gallery-list button")).toHaveCount(1);
@@ -253,6 +264,7 @@ test("gomoku — two seats complete and rematch with 200ms delay", async ({
     await expect(one.locator(".couple-names")).toContainText("游戏验收乙");
     await start(one, two, "gomoku", "爱心五子棋", {
       first: "房主",
+      forbidden: true,
       seconds: 0,
       wager: "请喝奶茶",
     });
@@ -261,8 +273,27 @@ test("gomoku — two seats complete and rematch with 200ms delay", async ({
     await one.getByRole("button", { name: "悔一步", exact: true }).click();
     await two.getByRole("button", { name: "让 TA ❤", exact: true }).click();
     await expect(one.locator('[data-cell="112"]')).not.toContainText("♥");
-    await one.getByRole("button", { name: "认输", exact: true }).click();
-    await one.getByRole("button", { name: "确认认输", exact: true }).click();
+    for (let n = 0; n < 5; n++) {
+      const stone = one.locator('[data-cell="' + (112 + n) + '"]');
+      await expect(stone).toBeEnabled();
+      await stone.click();
+      if (n < 4) {
+        const reply = two.locator('[data-cell="' + n * 15 + '"]');
+        await expect(reply).toBeEnabled();
+        await reply.click();
+      }
+    }
+    const line = one.getByRole("img", {
+      name: "获胜的五枚棋子连线",
+      exact: true,
+    });
+    await expect(line).toBeVisible();
+    await expect(line.locator("circle")).toHaveCount(5);
+    await expect(
+      two.getByRole("img", { name: "获胜的五枚棋子连线", exact: true }),
+    ).toBeVisible();
+    const points = await line.locator("polyline").getAttribute("points");
+    expect(points!.trim().split(/\s+/)).toHaveLength(5);
     await result(one, two);
     expect(
       await one.evaluate(
@@ -453,6 +484,14 @@ test("know-me — two seats complete and rematch with 200ms delay", async ({
         .click();
     }
     await expect(one.locator(".result-page h1")).toHaveText("100%");
+    await expect(
+      one.getByRole("img", {
+        name: "本局五维默契统计；未覆盖维度留空",
+        exact: true,
+      }),
+    ).toBeVisible();
+    for (const label of ["饮食", "性格", "回忆", "未来", "喜好"])
+      await expect(one.locator(".radar-values")).toContainText(label + "：");
     await result(one, two);
     expect(
       await one.evaluate(
@@ -509,6 +548,42 @@ test("my-eyes — two seats complete and rematch with 200ms delay", async ({
       const m = await data(guide);
       expect((await data(walker)).grid).toBeUndefined();
       const path = route(m);
+      if (round === 0) {
+        await guide
+          .getByRole("button", { name: "画一条路线（显示 2 秒）", exact: true })
+          .click();
+        const board = guide.locator(".maze-board");
+        await board.scrollIntoViewIfNeeded();
+        const box = (await board.boundingBox())!;
+        const point = (cell: number) => ({
+          x: box.x + (((cell % m.w) + 0.5) * box.width) / m.w,
+          y: box.y + ((Math.floor(cell / m.w) + 0.5) * box.height) / m.h,
+        });
+        const first = point(path[0]);
+        await guide.mouse.move(first.x, first.y);
+        await guide.mouse.down();
+        for (const cell of path.slice(1, 4)) {
+          const next = point(cell);
+          await guide.mouse.move(next.x, next.y, { steps: 6 });
+        }
+        await guide.mouse.up();
+        await expect(
+          walker.getByLabel("引路人画的路线", { exact: true }),
+        ).toBeVisible();
+        await expect(
+          guide.getByRole("button", { name: "本关路线已画过", exact: true }),
+        ).toBeDisabled();
+        await expect(
+          walker.getByLabel("引路人画的路线", { exact: true }),
+        ).toBeHidden({ timeout: 4000 });
+        await guide
+          .getByRole("button", { name: "迷宫格" + path[1], exact: true })
+          .click();
+        await expect.poll(async () => (await data(guide)).lights).toBe(2);
+        await expect(
+          walker.getByRole("button", { name: "迷宫格" + path[1], exact: true }),
+        ).toHaveClass(/lit/);
+      }
       let last = m.pos;
       for (const [n, cell] of path.slice(1).entries()) {
         const delta = cell - last,
@@ -836,8 +911,13 @@ test("heartbeat — two seats complete and rematch with 200ms delay", async ({
     });
     await b.setOffline(true);
     await one.waitForTimeout(15000);
-    await expect(one.locator(".game-overlay")).toBeHidden();
+    await expect(one.locator(".game-overlay")).toContainText("这一局已暂停");
+    const paused = await data(one);
     await b.setOffline(false);
+    await expect(one.locator(".game-overlay")).toBeHidden({ timeout: 20000 });
+    await expect
+      .poll(async () => (await data(one)).startAt)
+      .toBeGreaterThan(paused.startAt);
     await result(one, two);
     expect(
       await one.evaluate(

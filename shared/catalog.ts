@@ -1,4 +1,5 @@
 export interface GameMeta {
+  devices?: "pair" | "both";
   id: string;
   name: string;
   emoji: string;
@@ -16,50 +17,74 @@ export const games: GameMeta[] = [
     [
       [
         "survival",
-        "情侣求生欲",
+        "求生欲·双人版",
         "💌",
-        "和 TA 一起破解甜蜜小危机",
-        ["读懂场景里的线索", "选一个贴心的回答", "守住三颗心，完成挑战"],
+        "秘密选好最想听的话，猜猜 TA 的心意",
+        [
+          "需两台设备，轮流提问和猜心意",
+          "双方秘密提交后揭晓，猜错由提问者回应",
+          "五题一章，留下 TA 最想听的三句话",
+        ],
         "默契",
       ],
       [
         "spot-difference",
-        "情侣找茬",
+        "各看一半",
         "🔍",
-        "一起找出画中的五处不同",
-        ["仔细观察上下两幅图", "发现不同就点一下", "点错会扣三秒"],
+        "你看原图，TA 看修改图，把发现说给对方听",
+        [
+          "第一关同屏教学，之后各看一张图",
+          "描述物品的位置和样子，一起点出不同",
+          "五个独立场景，点错扣三秒，按剩余时间评星",
+        ],
         "合作",
       ],
       [
         "coop-kitchen",
         "双人厨房",
         "🍳",
-        "两个人一起完成今天的订单",
-        ["搬运、切菜和煎肉", "按照订单装盘", "把美食送到出菜口"],
+        "五间厨房，分工传菜与同步做蛋糕",
+        [
+          "按住方向连续移动，面向工作台按住操作",
+          "两人分工传菜、洗盘，完成双人蛋糕",
+          "按得分获得星级，解锁五个厨房关卡",
+        ],
         "合作",
       ],
       [
         "couple-ludo",
-        "情侣飞行棋",
+        "心动棋",
         "🎲",
-        "投骰子，一路完成甜蜜任务",
-        ["轮流投掷骰子", "完成停靠格的小任务", "先到终点就获胜"],
+        "选一颗骰子，或让一步，和 TA 一起走到承诺",
+        [
+          "投两颗选一颗，也可把点数让给 TA",
+          "回答、评分、合作挑战、记回忆，再选择岔路",
+          "默认两人都到终点通关，也可选择较量",
+        ],
         "较量",
       ],
       [
         "hide-seek",
-        "双人躲猫猫",
+        "房间里的秘密",
         "🔦",
-        "藏好自己，等 TA 来找",
-        ["选择盲选或实时躲藏", "寻找掩体或收集钥匙", "交换身份再玩一局"],
+        "听一声吱呀，在小房子里和 TA 斗智",
+        [
+          "选藏身点并布置干扰，寻找者有六次搜查",
+          "躲藏者可换位两次、装死一次，注意房间声音",
+          "三轮交换身份，解锁三张地图；同屏交接遮挡",
+        ],
         "较量",
       ],
       [
         "couple-jump",
         "双人跳一跳",
         "🧊",
-        "掌握力度，一起跳向下一块",
-        ["按住蓄力，松开跳跃", "可以轮流跳或同步蓄力", "跳到中心获得默契加分"],
+        "看平台距离蓄力，牵手走过四段旅程",
+        [
+          "按住蓄力，松开跳跃",
+          "接力轮流跳，同步模式各自瞄准平台一起松手",
+          "三条命闯关，正中加分，通关解锁下一段旅程",
+        ],
         "动作",
       ],
     ] as [string, string, string, string, string[], string][]
@@ -68,7 +93,10 @@ export const games: GameMeta[] = [
     name,
     emoji,
     tagline,
-    intro: tagline,
+    intro: id === "survival" ? "需要两台设备。" + tagline : tagline,
+    devices: ["survival", "spot-difference"].includes(id)
+      ? ("pair" as const)
+      : ("both" as const),
     rules,
     tags: [tag],
     duration: "5–10 分钟",
@@ -78,6 +106,7 @@ export const games: GameMeta[] = [
   })),
   {
     id: "talk-cards",
+    devices: "both",
     name: "深夜聊天卡",
     emoji: "🌙",
     tagline: "抽一张卡，聊一个平时不会问的问题",
@@ -96,6 +125,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "draw-guess",
+    devices: "pair",
     name: "你画我猜",
     emoji: "🎨",
     tagline: "你画 TA 猜，画得越抽象笑得越大声",
@@ -114,6 +144,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "mind-meld",
+    devices: "pair",
     name: "心有灵犀",
     emoji: "🔮",
     tagline: "同时说一个词，直到你们说出同一个",
@@ -132,6 +163,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "know-me",
+    devices: "both",
     name: "你懂我吗",
     emoji: "💌",
     tagline: "TA 最爱吃什么？最怕什么？答错了要解释哦",
@@ -139,7 +171,7 @@ export const games: GameMeta[] = [
     rules: [
       "轮流当主角，回答自己的情况",
       "另一半猜，双方都交了再揭晓",
-      "看看你们的默契指数",
+      "看看默契指数与五维雷达；一台设备请选择背靠背模式",
     ],
     tags: ["默契"],
     duration: "8 分钟",
@@ -149,6 +181,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "gomoku",
+    devices: "pair",
     name: "爱心五子棋",
     emoji: "♟️",
     tagline: "五子连珠，输的人请奶茶",
@@ -156,7 +189,7 @@ export const games: GameMeta[] = [
     rules: [
       "轮流在棋盘上落子",
       "横、竖、斜五子连成线就赢",
-      "悔棋和求和都需要 TA 同意",
+      "可选黑棋三三/四四禁手；悔棋、求和需 TA 同意",
     ],
     tags: ["较量"],
     duration: "10 分钟",
@@ -166,6 +199,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "red-thread",
+    devices: "pair",
     name: "一线牵",
     emoji: "🧶",
     tagline: "一根红线绑住你们，一个掉下去，另一个得拉住",
@@ -184,6 +218,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "my-eyes",
+    devices: "pair",
     name: "你是我的眼",
     emoji: "🔦",
     tagline: "一个看得见地图，一个走在迷雾里",
@@ -191,7 +226,7 @@ export const games: GameMeta[] = [
     rules: [
       "引路人看全图，行者看附近",
       "靠信号和语音配合，拿钥匙找出口",
-      "每一关交换身份",
+      "每关可画一次路线，TA 能看两秒；过关交换身份",
     ],
     tags: ["合作"],
     duration: "10 分钟",
@@ -201,6 +236,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "heart-bounce",
+    devices: "pair",
     name: "颠颠爱心",
     emoji: "💗",
     tagline: "轮流把爱心颠起来，别让它落地",
@@ -208,7 +244,7 @@ export const games: GameMeta[] = [
     rules: [
       "爱心亮谁的颜色，就轮到谁接",
       "移动小托盘，轮流把爱心颠起来",
-      "落地三次结束，看看最高连击",
+      "每 15 连击可吃星星加宽托盘；10/25/50 连击评星",
     ],
     tags: ["合作", "动作"],
     duration: "5 分钟",
@@ -236,6 +272,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "puzzle-us",
+    devices: "pair",
     name: "拼出我们",
     emoji: "🧩",
     tagline: "用你们的合照做拼图，一起拼回来",
@@ -253,6 +290,7 @@ export const games: GameMeta[] = [
   },
   {
     id: "heartbeat",
+    devices: "pair",
     name: "心跳节拍",
     emoji: "🎶",
     tagline: "跟着节拍一起点，你们的心跳同步了吗",
@@ -260,8 +298,8 @@ export const games: GameMeta[] = [
       "在各自的节奏里，寻找一起合拍的瞬间。坐在一起时，记得只开一台的声音。",
     rules: [
       "先做一次简单的节拍校准",
-      "跟着音乐，点击左右两条轨道",
-      "一起点中爱心，看看同步率",
+      "跟着音乐点击双轨，金色尾巴按住到结束",
+      "箭头接力交给 TA，副歌一起点亮爱心",
     ],
     tags: ["默契", "动作"],
     duration: "3 分钟",
@@ -270,3 +308,13 @@ export const games: GameMeta[] = [
     milestone: "M4",
   },
 ];
+
+export const gameGroups = ["聊天", "合作", "较量", "动作"] as const;
+export function gameGroup(game: GameMeta) {
+  if (["talk-cards", "mind-meld", "know-me", "survival"].includes(game.id))
+    return "聊天";
+  if (["heartbeat", "couple-jump", "heart-bounce"].includes(game.id))
+    return "动作";
+  if (["gomoku", "couple-ludo", "hide-seek"].includes(game.id)) return "较量";
+  return "合作";
+}

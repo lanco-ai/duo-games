@@ -284,7 +284,12 @@ describe("all nine games enforce rules, protect private views and reach a result
     const g = new Heartbeat("r", defaults.heartbeat, 1, 0, ctx());
     for (const note of g.song.notes)
       for (const seat of note.seats)
-        g.act(seat as Seat, "results", { entries: [[note.id, 3]] }, note.ms);
+        g.act(
+          seat as Seat,
+          "results",
+          { entries: [[note.id, 3]] },
+          note.ms + (note.duration || 0),
+        );
     g.tick(g.song.duration + 5000);
     expect(g.result?.stats.sync).toBe(100);
     expect(g.result?.stats.accuracy0).toBe(100);
@@ -451,9 +456,9 @@ describe("shared platform with all games", () => {
     expect(r.view.phase).toBe("playing");
     m.close();
   });
-  it("does not launch realtime games when a ready player has gone to background; heartbeat keeps playing offline", () => {
+  it("does not launch realtime games in background and pauses the rhythm epoch on disconnect", () => {
     vi.useFakeTimers();
-    const { m, r } = platform();
+    const { m, r, peer } = platform();
     m.act(r, 0, "propose-x1", { type: "propose", gameId: "red-thread" });
     m.act(r, 1, "accept-xx1", { type: "accept" });
     m.act(r, 0, "ready-xxx0", { type: "ready" });
@@ -467,7 +472,13 @@ describe("shared platform with all games", () => {
     m.act(r, 0, "ready-xxx2", { type: "ready" });
     m.act(r, 1, "ready-xxx3", { type: "ready" });
     vi.advanceTimersByTime(3500);
+    const before = (m.gameView(r, 0) as any).data.startAt;
     m.disconnect(r, 1, r.peers[1]!);
+    expect(r.view.phase).toBe("paused");
+    vi.advanceTimersByTime(2000);
+    m.connect(r, 1, peer([]));
+    expect((m.gameView(r, 0) as any).data.startAt).toBe(before + 5500);
+    vi.advanceTimersByTime(3500);
     expect(r.view.phase).toBe("playing");
     m.close();
   });
@@ -521,4 +532,25 @@ it("an out-of-order partial message cannot change its advertised total or accumu
   expect(() =>
     a.accept({ t: "part", id: "5", index: 0, total: 2, text: "{" }, 4),
   ).toThrow();
+});
+it("replacing a live socket fences an interrupted jump even before the old close event", () => {
+  vi.useFakeTimers();
+  const { m, r, peer } = platform();
+  m.act(r, 0, "jump-propose", { type: "propose", gameId: "couple-jump" });
+  m.act(r, 1, "jump-accept", { type: "accept" });
+  m.act(r, 0, "jump-ready0", { type: "ready" });
+  m.act(r, 1, "jump-ready1", { type: "ready" });
+  vi.advanceTimersByTime(3500);
+  const g = r.extra!;
+  g.act(0, "press", { n: 9 }, Date.now());
+  const old = r.peers[0]!;
+  m.connect(r, 0, peer());
+  expect(r.view.phase).toBe("countdown");
+  expect(g.view(0, Date.now()).charging).toEqual([false, false]);
+  m.disconnect(r, 0, old);
+  expect(r.view.online[0]).toBe(true);
+  vi.advanceTimersByTime(3500);
+  const n = g.view(0, Date.now()).inputN[0] + 1;
+  expect(() => g.act(0, "press", { n }, Date.now())).not.toThrow();
+  m.close();
 });

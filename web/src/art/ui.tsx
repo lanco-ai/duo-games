@@ -43,7 +43,7 @@ export function TetheredPair({
   leftOnline = true,
   rightOnline = true,
 }: {
-  left: { avatar?: string; color: string };
+  left?: { avatar?: string; color: string } | null;
   right?: { avatar?: string; color: string } | null;
   size?: number;
   mood?: Mood;
@@ -53,14 +53,15 @@ export function TetheredPair({
   return (
     <svg
       class={
-        "tethered-pair" + (right && leftOnline && rightOnline ? " hop" : "")
+        "tethered-pair" +
+        (left && right && leftOnline && rightOnline ? " hop" : "")
       }
       width={(size * 248) / 108}
       height={size}
       viewBox="-4 -8 248 108"
       aria-hidden="true"
     >
-      <g class="pair-thread" opacity={right ? 1 : 0.45}>
+      <g class="pair-thread" opacity={left && right ? 1 : 0.45}>
         <path
           d="M50,78 Q120,100 190,78"
           fill="none"
@@ -76,13 +77,19 @@ export function TetheredPair({
           stroke-linecap="round"
         />
       </g>
-      <g
-        data-pair-seat="0"
-        class={leftOnline ? "" : "offline"}
-        dangerouslySetInnerHTML={{
-          __html: critterSVG(kindOf(left.avatar), left.color, mood),
-        }}
-      />
+      {left ? (
+        <g
+          data-pair-seat="0"
+          class={leftOnline ? "" : "offline"}
+          dangerouslySetInnerHTML={{
+            __html: critterSVG(kindOf(left.avatar), left.color, mood),
+          }}
+        />
+      ) : (
+        <g data-pair-seat="0">
+          <WaitingCritter />
+        </g>
+      )}
       {right ? (
         <g
           data-pair-seat="1"
@@ -93,25 +100,32 @@ export function TetheredPair({
           }}
         />
       ) : (
-        <g transform="translate(140 0)">
-          <rect
-            x="23"
-            y="28"
-            width="54"
-            height="68"
-            rx="24"
-            fill="#FFF8E6"
-            fill-opacity=".6"
-            stroke={INK}
-            stroke-width="3"
-            stroke-dasharray="5 4"
-          />
-          <text x="50" y="76" text-anchor="middle" fill={INK} font-size="38">
-            ?
-          </text>
+        <g data-pair-seat="1" transform="translate(140 0)">
+          <WaitingCritter />
         </g>
       )}
     </svg>
+  );
+}
+function WaitingCritter() {
+  return (
+    <>
+      <rect
+        x="23"
+        y="28"
+        width="54"
+        height="68"
+        rx="24"
+        fill="#FFF8E6"
+        fill-opacity=".6"
+        stroke={INK}
+        stroke-width="3"
+        stroke-dasharray="5 4"
+      />
+      <text x="50" y="76" text-anchor="middle" fill={INK} font-size="38">
+        ?
+      </text>
+    </>
   );
 }
 const CLOUD =

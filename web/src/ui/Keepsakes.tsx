@@ -1,3 +1,9 @@
+import {
+  ludoBoard,
+  zoneColors,
+  cellIcons,
+  boardPoint,
+} from "../../../shared/games/couple-ludo/board";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Modal } from "./common";
 import { api } from "../api";
@@ -73,7 +79,8 @@ function Artwork({
           inset = Math.min(170, i * 26);
         [0, 1].forEach((k) => {
           const x = k ? 690 - inset : 310 + inset;
-          ctx.fillStyle = profiles[k as 0 | 1]?.color || (k ? "#4D9DFF" : "#FF6B6B");
+          ctx.fillStyle =
+            profiles[k as 0 | 1]?.color || (k ? "#4D9DFF" : "#FF6B6B");
           ctx.strokeStyle = "#3A2618";
           ctx.lineWidth = 5;
           ctx.beginPath();
@@ -88,6 +95,158 @@ function Artwork({
         ctx.font = "36px sans-serif";
         ctx.fillText("♥", 500, y + 2);
       });
+    }
+    if (item.kind === "difference") {
+      c.height = 780;
+      ctx.fillStyle = item.data.background;
+      ctx.fillRect(0, 0, 1000, 780);
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#603d52";
+      ctx.font = '42px "DuoDisplay",sans-serif';
+      ctx.fillText(item.title, 500, 70, 920);
+      (item.data.images as any[][]).forEach((objects, i) => {
+        const left = 20 + i * 500;
+        ctx.fillStyle = "#603d52";
+        ctx.font = "28px sans-serif";
+        ctx.fillText(i ? "修改图" : "原图", left + 220, 140);
+        objects.forEach((o) => {
+          const x = left + o.x * 4.5,
+            y = 180 + o.y * 4.5;
+          ctx.fillStyle = o.color;
+          ctx.fillRect(x - 22, y - 30, 44, 55);
+          ctx.font = o.size * 4.5 + "px sans-serif";
+          ctx.fillText(o.icon.repeat(o.count), x, y + 10);
+          ctx.fillStyle = "#422f46";
+          ctx.font = "13px sans-serif";
+          ctx.fillText(o.direction < 0 ? "◀" : "▶", x, y + 38);
+          if (o.pattern === "striped") {
+            ctx.strokeStyle = "#83378b";
+            ctx.lineWidth = 4;
+            for (let n = 0; n < 3; n++) {
+              ctx.beginPath();
+              ctx.moveTo(x - 16 + n * 15, y - 25);
+              ctx.lineTo(x - 16 + n * 15, y + 20);
+              ctx.stroke();
+            }
+          }
+        });
+        ctx.strokeStyle = "#e94477";
+        ctx.lineWidth = 4;
+        for (const f of item.data.found) {
+          ctx.beginPath();
+          ctx.arc(left + f.x * 4.5, 180 + f.y * 4.5, 30, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      });
+      ctx.fillStyle = "#bf4267";
+      ctx.font = "32px sans-serif";
+      ctx.fillText("把每一个不同，说给你听", 500, 735);
+    }
+    if (item.kind === "ludo") {
+      const lines: string[] = item.data.lines || [];
+      c.height = Math.max(1050, 880 + lines.length * 150);
+      ctx.fillStyle = "#fff0e7";
+      ctx.fillRect(0, 0, 1000, c.height);
+      ctx.fillStyle = "#bb4966";
+      ctx.textAlign = "center";
+      ctx.font = '50px "DuoDisplay",sans-serif';
+      ctx.fillText(item.title, 500, 70);
+      ctx.strokeStyle = "#d59ab0";
+      ctx.lineWidth = 15;
+      ctx.beginPath();
+      ctx.arc(500, 410, 264, 0, Math.PI * 2);
+      ctx.stroke();
+      ludoBoard.forEach((cell, i) => {
+        const p = boardPoint(i),
+          x = 170 + p.x * 2.2,
+          y = 80 + p.y * 2.2;
+        ctx.fillStyle = zoneColors[cell.zone];
+        ctx.beginPath();
+        ctx.arc(x, y, 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#513d3d";
+        ctx.font = "20px sans-serif";
+        ctx.fillText(cellIcons[cell.kind], x, y + 6);
+      });
+      (item.data.positions || [35, 35]).forEach(
+        (position: number, i: number) => {
+          const p = boardPoint(position);
+          ctx.font = "38px sans-serif";
+          ctx.fillText(
+            i ? "🐻" : "🐰",
+            170 + p.x * 2.2 + (i ? 20 : -20),
+            60 + p.y * 2.2,
+          );
+        },
+      );
+      ctx.font = '36px "DuoDisplay",sans-serif';
+      ctx.fillStyle = "#b94568";
+      ctx.fillText(
+        "★".repeat(item.data.stars) + " · " + item.data.moves + " 回合",
+        500,
+        750,
+      );
+      let y = 840;
+      ctx.font = '30px "DuoDisplay",sans-serif';
+      ctx.fillStyle = "#654b46";
+      for (const line of lines) {
+        let row = "";
+        for (const ch of line) {
+          if (ctx.measureText(row + ch).width > 820) {
+            ctx.fillText(row, 500, y);
+            y += 42;
+            row = "";
+          }
+          row += ch;
+        }
+        ctx.fillText(row, 500, y);
+        y += 70;
+      }
+    }
+    if (
+      !["drawing", "puzzle", "chain", "difference", "ludo"].includes(item.kind)
+    ) {
+      c.height = 1000;
+      ctx.fillStyle = "#fff1de";
+      ctx.fillRect(0, 0, 1000, 1000);
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#bf4267";
+      ctx.font = 'bold 52px "DuoDisplay", sans-serif';
+      ctx.fillText(item.title, 500, 130, 900);
+      ctx.font = '34px "DuoDisplay", sans-serif';
+      ctx.fillStyle = "#63443d";
+      const lines: string[] = item.data?.lines || [
+        item.data?.stars ? "★".repeat(item.data.stars) : "一起留下的小回忆",
+        item.data?.score !== undefined ? `共同得分 ${item.data.score}` : "",
+        ...(item.data?.contributions || []).map(
+          (v: any, i: number) =>
+            `玩家${i + 1} 切菜${v.cuts} 出菜${v.served} 传菜${v.passed}`,
+        ),
+      ];
+      let y = 250;
+      for (const line of lines) {
+        let row = "";
+        for (const char of String(line)) {
+          if (ctx.measureText(row + char).width > 820) {
+            ctx.fillText(row, 500, y);
+            y += 58;
+            row = "";
+          }
+          row += char;
+        }
+        if (row) {
+          ctx.fillText(row, 500, y);
+          y += 70;
+        }
+      }
+      ctx.fillStyle = "#d65e79";
+      ctx.fillText(
+        profiles.map((v) => v?.nickname || "TA").join(" ♥ "),
+        500,
+        880,
+      );
+      ctx.font = "28px sans-serif";
+      ctx.fillText("原来最好的默契，是愿意听你说", 500, 940);
     }
     return () => cancelAnimationFrame(raf);
   }, [item, image, replay]);

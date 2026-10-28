@@ -11,12 +11,12 @@ const components = {
   "heart-bounce": lazy(() => import("./Bounce")),
   "puzzle-us": lazy(() => import("./Puzzle")),
   heartbeat: lazy(() => import("./Heartbeat")),
-  survival: lazy(() => import("./CoupleGames")),
-  "spot-difference": lazy(() => import("./CoupleGames")),
-  "coop-kitchen": lazy(() => import("./CoupleGames")),
-  "couple-ludo": lazy(() => import("./CoupleGames")),
-  "hide-seek": lazy(() => import("./CoupleGames")),
-  "couple-jump": lazy(() => import("./CoupleGames")),
+  survival: lazy(() => import("./Survival")),
+  "spot-difference": lazy(() => import("./Difference")),
+  "coop-kitchen": lazy(() => import("./Kitchen")),
+  "couple-ludo": lazy(() => import("./Ludo")),
+  "hide-seek": lazy(() => import("./HideSeek")),
+  "couple-jump": lazy(() => import("./Jump")),
   "puck-sling": lazy(() => import("./Sling")),
 };
 export default function ExtraStage(p: GameProps) {

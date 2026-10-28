@@ -46,25 +46,25 @@ export interface CustomItem {
 }
 export const defaults: Record<ExtraId, GameOptions> = {
   "draw-guess": { rounds: 6, seconds: 80, libraries: ["日常", "恋爱"] },
-  "mind-meld": { seconds: 0 },
+  "mind-meld": { seconds: 0, topic: "自由联想" },
   "know-me": {
     count: 10,
     categories: ["吃喝", "习惯", "回忆", "恋爱观", "假如", "未来"],
     unused: true,
     mode: "classic",
   },
-  gomoku: { first: "随机", seconds: 0, wager: "请喝奶茶" },
+  gomoku: { forbidden: false, first: "随机", seconds: 0, wager: "请喝奶茶" },
   "red-thread": { level: "1" },
   "my-eyes": {},
   "heart-bounce": {},
   "puzzle-us": { pieces: 24, image: "scene:sunset" },
-  heartbeat: { track: "meet" },
-  survival: { mode: "mixed" },
-  "spot-difference": { scene: 0 },
-  "coop-kitchen": {},
-  "couple-ludo": { mode: "pure" },
-  "hide-seek": { mode: "turn" },
-  "couple-jump": { mode: "relay" },
+  heartbeat: { track: "meet", difficulty: "easy" },
+  survival: { mode: "mixed", chapter: "1" },
+  "spot-difference": { scene: 0, mode: "split" },
+  "coop-kitchen": { level: "1" },
+  "couple-ludo": { mode: "pure", victory: "coop" },
+  "hide-seek": { mode: "turn", map: "1" },
+  "couple-jump": { mode: "relay", level: "1" },
   "puck-sling": { minutes: 3 },
 };
 export function isExtra(id: string): id is ExtraId {
@@ -99,7 +99,13 @@ export function validOptions(id: string, value: unknown): value is GameOptions {
         array("libraries", ["日常", "恋爱", "我们的回忆"])
       );
     case "mind-meld":
-      return [0, 30, 60].includes(Number(o.seconds));
+      return (
+        [0, 30, 60].includes(Number(o.seconds)) &&
+        (o.topic === undefined ||
+          ["自由联想", "饮食", "性格", "回忆", "未来", "喜好"].includes(
+            String(o.topic),
+          ))
+      );
     case "know-me":
       return (
         [10, 15, 20].includes(Number(o.count)) &&
@@ -110,6 +116,7 @@ export function validOptions(id: string, value: unknown): value is GameOptions {
     case "gomoku":
       return (
         ["随机", "房主", "TA"].includes(String(o.first)) &&
+        (o.forbidden === undefined || typeof o.forbidden === "boolean") &&
         [0, 30, 60].includes(Number(o.seconds)) &&
         typeof o.wager === "string" &&
         [...o.wager].length <= 20
@@ -125,19 +132,37 @@ export function validOptions(id: string, value: unknown): value is GameOptions {
         )
       );
     case "heartbeat":
-      return ["meet", "date", "heart"].includes(String(o.track));
+      return (
+        ["meet", "date", "heart"].includes(String(o.track)) &&
+        ["easy", "normal", "hard"].includes(String(o.difficulty))
+      );
     case "survival":
-      return ["mixed", "quiz", "search"].includes(String(o.mode));
+      return (
+        ["mixed", "quiz", "search"].includes(String(o.mode)) &&
+        ["1", "2", "3", "4", "5"].includes(String(o.chapter))
+      );
     case "spot-difference":
-      return [0, 1, 2, 3, 4].includes(Number(o.scene));
+      return (
+        [0, 1, 2, 3, 4].includes(Number(o.scene)) &&
+        ["easy", "split"].includes(String(o.mode))
+      );
     case "coop-kitchen":
-      return true;
+      return ["1", "2", "3", "4", "5", "endless"].includes(String(o.level));
     case "couple-ludo":
-      return ["pure", "warm", "fun"].includes(String(o.mode));
+      return (
+        ["pure", "warm", "fun"].includes(String(o.mode)) &&
+        ["coop", "versus"].includes(String(o.victory))
+      );
     case "hide-seek":
-      return ["turn", "realtime"].includes(String(o.mode));
+      return (
+        ["turn", "realtime"].includes(String(o.mode)) &&
+        ["1", "2", "3"].includes(String(o.map))
+      );
     case "couple-jump":
-      return ["relay", "sync"].includes(String(o.mode));
+      return (
+        ["relay", "sync"].includes(String(o.mode)) &&
+        ["1", "2", "3", "4", "endless"].includes(String(o.level))
+      );
     case "puck-sling":
       return [2, 3, 5].includes(Number(o.minutes));
     default:
@@ -145,6 +170,7 @@ export function validOptions(id: string, value: unknown): value is GameOptions {
   }
 }
 export interface EngineContext {
+  journal?: (question: string, text: string, seat: Seat) => void;
   custom: CustomItem[];
   seen: string[];
   pair: number;

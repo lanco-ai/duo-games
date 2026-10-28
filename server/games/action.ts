@@ -1,3 +1,4 @@
+import { mulberry32 } from "../../shared/rng";
 import { BaseEngine } from "./base";
 import type { Seat } from "../../shared/protocol";
 import type { GameOptions, EngineContext } from "../../shared/games/types";
@@ -178,6 +179,9 @@ export class HeartBounce extends BaseEngine {
   combo = 0;
   best = 0;
   score = 0;
+  star: { x: number; y: number } | null = null;
+  starTick = 0;
+  wideUntil = 0;
   counts = [0, 0];
   epoch = 0;
   fallAt: number;
@@ -200,9 +204,34 @@ export class HeartBounce extends BaseEngine {
   time(now: number) {
     return Math.max(0, Math.floor((now - this.startAt) * 0.06));
   }
+  paddleWidth(now: number) {
+    return now < this.wideUntil
+      ? Math.round(bounce.PADDLE_WIDTH * 1.6)
+      : bounce.PADDLE_WIDTH;
+  }
+  collectStar(now: number) {
+    if (!this.star || this.paused) return false;
+    const end = Math.min(this.time(now), this.fallAt);
+    for (let t = Math.max(this.starTick, this.hit.tick); t <= end; t++) {
+      const p = bounce.ballAt(this.hit, t);
+      if (Math.hypot(p.x / 256 - this.star.x, p.y / 256 - this.star.y) <= 24) {
+        this.star = null;
+        this.wideUntil = this.startAt + (t / 60) * 1000 + 10000;
+        return true;
+      }
+    }
+    this.starTick = end + 1;
+    return false;
+  }
+  shift(ms: number) {
+    super.shift(ms);
+    if (this.wideUntil) this.wideUntil += ms;
+  }
   view() {
     return {
       seed: this.seed,
+      star: this.star,
+      wideUntil: this.wideUntil,
       paused: this.paused,
       pausedTick: this.pausedTick,
       hit: this.hit,
@@ -226,6 +255,7 @@ export class HeartBounce extends BaseEngine {
     const owner = this.owner;
     this.lives--;
     this.combo = 0;
+    this.star = null;
     this.owner = (1 - owner) as Seat;
     this.hit = bounce.serve(this.hit.n + 1, tick);
     this.fallAt = bounce.fallbackTick(this.hit);
@@ -239,6 +269,8 @@ export class HeartBounce extends BaseEngine {
         ],
         {
           score: this.score,
+          stars:
+            this.best >= 50 ? 3 : this.best >= 25 ? 2 : this.best >= 10 ? 1 : 0,
           best: this.best,
           player0: this.counts[0],
           player1: this.counts[1],
@@ -259,13 +291,30 @@ export class HeartBounce extends BaseEngine {
     if (cmd === "hit") {
       const x = Number(p.x);
       if (!Number.isFinite(x) || x < 0 || x > 360) throw new Error("INVALID");
-      const next = bounce.makeHit(this.hit, tick, x, this.combo + 1, this.seed);
+      const next = bounce.makeHit(
+        this.hit,
+        tick,
+        x,
+        this.combo + 1,
+        this.seed,
+        this.paddleWidth(this.startAt + (tick / 60) * 1000),
+      );
       if (!next) throw new Error("INVALID");
       this.combo++;
       this.best = Math.max(this.best, this.combo);
       this.score += this.combo;
       this.counts[seat]++;
       this.hit = next;
+      if (this.combo % 15 === 0) {
+        const rand = mulberry32(this.seed ^ next.n);
+        const contact = bounce.paddleTick(next),
+          starAt =
+            next.tick +
+            Math.floor((contact - next.tick) * (0.35 + rand() * 0.3)),
+          point = bounce.ballAt(next, starAt);
+        this.star = { x: point.x / 256, y: point.y / 256 };
+        this.starTick = next.tick;
+      }
       this.owner = (1 - seat) as Seat;
       this.fallAt = bounce.fallbackTick(next);
       this.record("hit", seat);
@@ -282,7 +331,7 @@ export class HeartBounce extends BaseEngine {
     if (kind !== "cur" || p?.epoch !== this.epoch || this.paused) return;
     const x = Number(p.x);
     if (!Number.isFinite(x)) throw new Error("INVALID");
-    this.paddles[seat] = bounce.paddleX(x);
+    this.paddles[seat] = bounce.paddleX(x, this.paddleWidth(now));
     this.ctx.emit("paddle", { seat, x: this.paddles[seat] }, undefined, true);
   }
   tick(now: number) {
@@ -296,11 +345,12 @@ export class HeartBounce extends BaseEngine {
       }
       return false;
     }
+    const collected = this.collectStar(now);
     if (this.time(now) >= this.fallAt) {
       this.miss(this.time(now));
       return true;
     }
-    return false;
+    return collected;
   }
   pause(now: number) {
     this.paused = true;

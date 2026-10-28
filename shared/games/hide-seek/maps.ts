@@ -1,0 +1,471 @@
+export const hideMaps: {
+  name: string;
+  rooms: { name: string; adjacent: number[] }[];
+  spots: { id: number; room: number; name: string; neighbors: number[] }[];
+}[] = [
+  {
+    name: "小公寓",
+    rooms: [
+      {
+        name: "客厅",
+        adjacent: [1, 2],
+      },
+      {
+        name: "卧室",
+        adjacent: [0, 3],
+      },
+      {
+        name: "厨房",
+        adjacent: [0, 3],
+      },
+      {
+        name: "阳台",
+        adjacent: [1, 2],
+      },
+    ],
+    spots: [
+      {
+        id: 0,
+        room: 0,
+        name: "沙发下",
+        neighbors: [1, 3],
+      },
+      {
+        id: 1,
+        room: 0,
+        name: "窗帘后",
+        neighbors: [0, 2, 4],
+      },
+      {
+        id: 2,
+        room: 0,
+        name: "茶几边",
+        neighbors: [1, 5],
+      },
+      {
+        id: 3,
+        room: 0,
+        name: "书柜旁",
+        neighbors: [0, 4],
+      },
+      {
+        id: 4,
+        room: 0,
+        name: "玄关柜",
+        neighbors: [1, 3, 5],
+      },
+      {
+        id: 5,
+        room: 0,
+        name: "地毯下",
+        neighbors: [2, 4],
+      },
+      {
+        id: 6,
+        room: 1,
+        name: "衣柜里",
+        neighbors: [7, 9],
+      },
+      {
+        id: 7,
+        room: 1,
+        name: "床底下",
+        neighbors: [6, 8, 10],
+      },
+      {
+        id: 8,
+        room: 1,
+        name: "窗帘后",
+        neighbors: [7, 11],
+      },
+      {
+        id: 9,
+        room: 1,
+        name: "行李箱",
+        neighbors: [6, 10],
+      },
+      {
+        id: 10,
+        room: 1,
+        name: "床头柜",
+        neighbors: [7, 9, 11],
+      },
+      {
+        id: 11,
+        room: 1,
+        name: "门后面",
+        neighbors: [8, 10],
+      },
+      {
+        id: 12,
+        room: 2,
+        name: "冰箱旁",
+        neighbors: [13, 15],
+      },
+      {
+        id: 13,
+        room: 2,
+        name: "橱柜里",
+        neighbors: [12, 14, 16],
+      },
+      {
+        id: 14,
+        room: 2,
+        name: "餐桌下",
+        neighbors: [13],
+      },
+      {
+        id: 15,
+        room: 2,
+        name: "储物柜",
+        neighbors: [12, 16],
+      },
+      {
+        id: 16,
+        room: 2,
+        name: "料理台",
+        neighbors: [13, 15],
+      },
+      {
+        id: 17,
+        room: 3,
+        name: "花架后",
+        neighbors: [18, 20],
+      },
+      {
+        id: 18,
+        room: 3,
+        name: "躺椅下",
+        neighbors: [17, 19, 21],
+      },
+      {
+        id: 19,
+        room: 3,
+        name: "洗衣机",
+        neighbors: [18],
+      },
+      {
+        id: 20,
+        room: 3,
+        name: "窗台边",
+        neighbors: [17, 21],
+      },
+      {
+        id: 21,
+        room: 3,
+        name: "杂物箱",
+        neighbors: [18, 20],
+      },
+    ],
+  },
+  {
+    name: "森林木屋",
+    rooms: [
+      {
+        name: "门廊",
+        adjacent: [1, 2],
+      },
+      {
+        name: "阁楼",
+        adjacent: [0, 3],
+      },
+      {
+        name: "餐厅",
+        adjacent: [0, 3],
+      },
+      {
+        name: "工具间",
+        adjacent: [1, 2],
+      },
+    ],
+    spots: [
+      {
+        id: 0,
+        room: 0,
+        name: "木椅下",
+        neighbors: [1, 3],
+      },
+      {
+        id: 1,
+        room: 0,
+        name: "门帘后",
+        neighbors: [0, 2, 4],
+      },
+      {
+        id: 2,
+        room: 0,
+        name: "雨靴旁",
+        neighbors: [1, 5],
+      },
+      {
+        id: 3,
+        room: 0,
+        name: "柴火堆",
+        neighbors: [0, 4],
+      },
+      {
+        id: 4,
+        room: 0,
+        name: "长凳下",
+        neighbors: [1, 3, 5],
+      },
+      {
+        id: 5,
+        room: 0,
+        name: "小木箱",
+        neighbors: [2, 4],
+      },
+      {
+        id: 6,
+        room: 1,
+        name: "旧衣柜",
+        neighbors: [7, 9],
+      },
+      {
+        id: 7,
+        room: 1,
+        name: "睡袋里",
+        neighbors: [6, 8, 10],
+      },
+      {
+        id: 8,
+        room: 1,
+        name: "书箱旁",
+        neighbors: [7, 11],
+      },
+      {
+        id: 9,
+        room: 1,
+        name: "梁柱后",
+        neighbors: [6, 10],
+      },
+      {
+        id: 10,
+        room: 1,
+        name: "地毯下",
+        neighbors: [7, 9, 11],
+      },
+      {
+        id: 11,
+        room: 1,
+        name: "窗边柜",
+        neighbors: [8, 10],
+      },
+      {
+        id: 12,
+        room: 2,
+        name: "餐桌下",
+        neighbors: [13, 15],
+      },
+      {
+        id: 13,
+        room: 2,
+        name: "茶柜旁",
+        neighbors: [12, 14, 16],
+      },
+      {
+        id: 14,
+        room: 2,
+        name: "篮子后",
+        neighbors: [13],
+      },
+      {
+        id: 15,
+        room: 2,
+        name: "灶台边",
+        neighbors: [12, 16],
+      },
+      {
+        id: 16,
+        room: 2,
+        name: "食材架",
+        neighbors: [13, 15],
+      },
+      {
+        id: 17,
+        room: 3,
+        name: "工具架",
+        neighbors: [18, 20],
+      },
+      {
+        id: 18,
+        room: 3,
+        name: "帆布后",
+        neighbors: [17, 19, 21],
+      },
+      {
+        id: 19,
+        room: 3,
+        name: "手推车",
+        neighbors: [18],
+      },
+      {
+        id: 20,
+        room: 3,
+        name: "梯子后",
+        neighbors: [17, 21],
+      },
+      {
+        id: 21,
+        room: 3,
+        name: "木桶旁",
+        neighbors: [18, 20],
+      },
+    ],
+  },
+  {
+    name: "游乐园鬼屋",
+    rooms: [
+      {
+        name: "门厅",
+        adjacent: [1, 2],
+      },
+      {
+        name: "镜子屋",
+        adjacent: [0, 3],
+      },
+      {
+        name: "舞台",
+        adjacent: [0, 3],
+      },
+      {
+        name: "道具间",
+        adjacent: [1, 2],
+      },
+    ],
+    spots: [
+      {
+        id: 0,
+        room: 0,
+        name: "售票柜",
+        neighbors: [1, 3],
+      },
+      {
+        id: 1,
+        room: 0,
+        name: "斗篷后",
+        neighbors: [0, 2, 4],
+      },
+      {
+        id: 2,
+        room: 0,
+        name: "长椅下",
+        neighbors: [1, 5],
+      },
+      {
+        id: 3,
+        room: 0,
+        name: "影子墙",
+        neighbors: [0, 4],
+      },
+      {
+        id: 4,
+        room: 0,
+        name: "海报后",
+        neighbors: [1, 3, 5],
+      },
+      {
+        id: 5,
+        room: 0,
+        name: "门柱边",
+        neighbors: [2, 4],
+      },
+      {
+        id: 6,
+        room: 1,
+        name: "穿衣镜",
+        neighbors: [7, 9],
+      },
+      {
+        id: 7,
+        room: 1,
+        name: "幕布后",
+        neighbors: [6, 8, 10],
+      },
+      {
+        id: 8,
+        room: 1,
+        name: "旧木箱",
+        neighbors: [7, 11],
+      },
+      {
+        id: 9,
+        room: 1,
+        name: "衣架旁",
+        neighbors: [6, 10],
+      },
+      {
+        id: 10,
+        room: 1,
+        name: "屏风后",
+        neighbors: [7, 9, 11],
+      },
+      {
+        id: 11,
+        room: 1,
+        name: "小隔间",
+        neighbors: [8, 10],
+      },
+      {
+        id: 12,
+        room: 2,
+        name: "钢琴下",
+        neighbors: [13, 15],
+      },
+      {
+        id: 13,
+        room: 2,
+        name: "帷幕后",
+        neighbors: [12, 14, 16],
+      },
+      {
+        id: 14,
+        room: 2,
+        name: "座椅下",
+        neighbors: [13],
+      },
+      {
+        id: 15,
+        room: 2,
+        name: "鼓箱旁",
+        neighbors: [12, 16],
+      },
+      {
+        id: 16,
+        room: 2,
+        name: "后台门",
+        neighbors: [13, 15],
+      },
+      {
+        id: 17,
+        room: 3,
+        name: "玩偶柜",
+        neighbors: [18, 20],
+      },
+      {
+        id: 18,
+        room: 3,
+        name: "宝箱后",
+        neighbors: [17, 19, 21],
+      },
+      {
+        id: 19,
+        room: 3,
+        name: "面具架",
+        neighbors: [18],
+      },
+      {
+        id: 20,
+        room: 3,
+        name: "布景后",
+        neighbors: [17, 21],
+      },
+      {
+        id: 21,
+        room: 3,
+        name: "魔术箱",
+        neighbors: [18, 20],
+      },
+    ],
+  },
+];

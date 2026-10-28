@@ -68,14 +68,15 @@ export function simulate(hit: Hit, ticks: number): Ball {
 export function ballAt(hit: Hit, tick: number): Ball {
   return simulate(hit, tick - hit.tick);
 }
-export function paddleX(value: number) {
-  return Math.max(PADDLE_WIDTH / 2, Math.min(WIDTH - PADDLE_WIDTH / 2, value));
+export function paddleX(value: number, width = PADDLE_WIDTH) {
+  return Math.max(width / 2, Math.min(WIDTH - width / 2, value));
 }
 /** Checks the descending sweep, so fast balls cannot tunnel through a paddle. */
 export function canHit(
   hit: Hit,
   tick: number,
   paddleCentrePixels: number,
+  width = PADDLE_WIDTH,
 ): boolean {
   if (tick <= hit.tick) return false;
   const previous = ballAt(hit, tick - 1),
@@ -85,8 +86,8 @@ export function canHit(
     current.vy > 0 &&
     previous.y <= line &&
     current.y >= line &&
-    Math.abs(current.x - paddleX(paddleCentrePixels) * Q) <=
-      (PADDLE_WIDTH / 2 + RADIUS) * Q
+    Math.abs(current.x - paddleX(paddleCentrePixels, width) * Q) <=
+      (width / 2 + RADIUS) * Q
   );
 }
 export function launchSpeed(combo: number) {
@@ -100,10 +101,11 @@ export function makeHit(
   centrePixels: number,
   combo: number,
   seed = 1,
+  width = PADDLE_WIDTH,
 ): Hit | null {
-  if (!canHit(previous, tick, centrePixels)) return null;
+  if (!canHit(previous, tick, centrePixels, width)) return null;
   const ball = ballAt(previous, tick),
-    offset = ball.x - paddleX(centrePixels) * Q;
+    offset = ball.x - paddleX(centrePixels, width) * Q;
   return {
     n: previous.n + 1,
     tick,
