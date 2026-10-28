@@ -58,8 +58,8 @@ export default function Setup({
           <option
             value={value}
             disabled={
-              key === "level" &&
-              ["couple-jump", "coop-kitchen"].includes(id) &&
+              (key === "chapter" || key === "level") &&
+              ["couple-jump", "coop-kitchen", "survival"].includes(id) &&
               (value === "endless"
                 ? id === "couple-jump"
                   ? 5
@@ -148,10 +148,12 @@ export default function Setup({
             ["endless", "无尽厨房"],
           ])}
         {id === "survival" &&
-          select("mode", "玩法", [
-            ["mixed", "混合挑战"],
-            ["quiz", "送命题问答"],
-            ["search", "抓包寻物"],
+          select("chapter", "恋爱章节", [
+            ["1", "暧昧期"],
+            ["2", "热恋期"],
+            ["3", "磨合期"],
+            ["4", "见家长"],
+            ["5", "纪念日"],
           ])}
         {id === "spot-difference" &&
           select("scene", "场景", [

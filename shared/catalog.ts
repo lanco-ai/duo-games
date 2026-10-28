@@ -1,4 +1,5 @@
 export interface GameMeta {
+  devices?: "pair" | "both";
   id: string;
   name: string;
   emoji: string;
@@ -16,10 +17,14 @@ export const games: GameMeta[] = [
     [
       [
         "survival",
-        "情侣求生欲",
+        "求生欲·双人版",
         "💌",
-        "和 TA 一起破解甜蜜小危机",
-        ["读懂场景里的线索", "选一个贴心的回答", "守住三颗心，完成挑战"],
+        "秘密选好最想听的话，猜猜 TA 的心意",
+        [
+          "需两台设备，轮流提问和猜心意",
+          "双方秘密提交后揭晓，猜错由提问者回应",
+          "五题一章，留下 TA 最想听的三句话",
+        ],
         "默契",
       ],
       [
@@ -34,8 +39,12 @@ export const games: GameMeta[] = [
         "coop-kitchen",
         "双人厨房",
         "🍳",
-        "两个人一起完成今天的订单",
-        ["搬运、切菜和煎肉", "按照订单装盘", "把美食送到出菜口"],
+        "五间厨房，分工传菜与同步做蛋糕",
+        [
+          "按住方向连续移动，面向工作台按住操作",
+          "两人分工传菜、洗盘，完成双人蛋糕",
+          "按得分获得星级，解锁五个厨房关卡",
+        ],
         "合作",
       ],
       [
@@ -58,11 +67,11 @@ export const games: GameMeta[] = [
         "couple-jump",
         "双人跳一跳",
         "🧊",
-        "掌握力度，一起跳向下一块",
+        "看平台距离蓄力，牵手走过四段旅程",
         [
           "按住蓄力，松开跳跃",
           "接力轮流跳，同步模式各自瞄准平台一起松手",
-          "跳到中心获得默契加分",
+          "三条命闯关，正中加分，通关解锁下一段旅程",
         ],
         "动作",
       ],
@@ -72,7 +81,8 @@ export const games: GameMeta[] = [
     name,
     emoji,
     tagline,
-    intro: tagline,
+    intro: id === "survival" ? "需要两台设备。" + tagline : tagline,
+    devices: id === "survival" ? ("pair" as const) : ("both" as const),
     rules,
     tags: [tag],
     duration: "5–10 分钟",

@@ -24,31 +24,6 @@ const ctx = (): EngineContext => ({
   emit: vi.fn(),
 });
 describe("new couple games: authority, scoring and private views", () => {
-  it("includes 15 distinct scenarios and enforces clue, score and lives", () => {
-    expect(survivalLevels).toHaveLength(15);
-    expect(new Set(survivalLevels.map((x) => x.prompt)).size).toBe(15);
-    const g = new Survival("r", { mode: "search" }, 2, 1000, ctx());
-    const q = survivalLevels[g.order[0]];
-    expect(() => g.act(0, "answer", { idx: 0, choice: 0 }, 1000)).toThrow();
-    g.act(0, "clue", { id: (q.clue + 1) % 4 }, 1000);
-    expect(g.clueFound).toBe(false);
-    g.act(1, "clue", { id: q.clue }, 1100);
-    g.act(0, "answer", { idx: 0, choice: q.scores.indexOf(-10) }, 1200);
-    expect(g.lives).toBe(2);
-    g.act(1, "answer", { idx: 0, choice: q.scores.indexOf(10) }, 1300);
-    expect(g.idx).toBe(1);
-    expect(g.points).toBe(0);
-    expect(JSON.stringify(g.view())).not.toContain("scores");
-    const death = new Survival("r", { mode: "quiz" }, 7, 0, ctx());
-    const bad = survivalLevels[death.order[0]].scores.indexOf(-10);
-    for (let i = 0; i < 3; i++)
-      death.act(0, "answer", { idx: 0, choice: bad }, 1000 + i);
-    expect(death.result).toBeNull();
-    expect(() => death.act(0, "hint", {}, 1100)).toThrow();
-    expect(death.tick(2001)).toBe(false);
-    expect(death.tick(2002)).toBe(true);
-    expect(death.result?.primary.label).toBe("求生欲告急");
-  });
   it("shares unique find progress, penalizes misses and shifts the timer", () => {
     const g = new SpotDifference("r", { scene: 3 }, 3, 1000, ctx());
     expect(new Set(g.selected).size).toBe(5);

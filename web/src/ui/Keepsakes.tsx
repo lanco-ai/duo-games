@@ -73,7 +73,8 @@ function Artwork({
           inset = Math.min(170, i * 26);
         [0, 1].forEach((k) => {
           const x = k ? 690 - inset : 310 + inset;
-          ctx.fillStyle = profiles[k as 0 | 1]?.color || (k ? "#4D9DFF" : "#FF6B6B");
+          ctx.fillStyle =
+            profiles[k as 0 | 1]?.color || (k ? "#4D9DFF" : "#FF6B6B");
           ctx.strokeStyle = "#3A2618";
           ctx.lineWidth = 5;
           ctx.beginPath();
@@ -88,6 +89,49 @@ function Artwork({
         ctx.font = "36px sans-serif";
         ctx.fillText("♥", 500, y + 2);
       });
+    }
+    if (!["drawing", "puzzle", "chain"].includes(item.kind)) {
+      c.height = 1000;
+      ctx.fillStyle = "#fff1de";
+      ctx.fillRect(0, 0, 1000, 1000);
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#bf4267";
+      ctx.font = 'bold 52px "DuoDisplay", sans-serif';
+      ctx.fillText(item.title, 500, 130, 900);
+      ctx.font = '34px "DuoDisplay", sans-serif';
+      ctx.fillStyle = "#63443d";
+      const lines: string[] = item.data?.lines || [
+        item.data?.stars ? "★".repeat(item.data.stars) : "一起留下的小回忆",
+        item.data?.score !== undefined ? `共同得分 ${item.data.score}` : "",
+        ...(item.data?.contributions || []).map(
+          (v: any, i: number) =>
+            `玩家${i + 1} 切菜${v.cuts} 出菜${v.served} 传菜${v.passed}`,
+        ),
+      ];
+      let y = 250;
+      for (const line of lines) {
+        let row = "";
+        for (const char of String(line)) {
+          if (ctx.measureText(row + char).width > 820) {
+            ctx.fillText(row, 500, y);
+            y += 58;
+            row = "";
+          }
+          row += char;
+        }
+        if (row) {
+          ctx.fillText(row, 500, y);
+          y += 70;
+        }
+      }
+      ctx.fillStyle = "#d65e79";
+      ctx.fillText(
+        profiles.map((v) => v?.nickname || "TA").join(" ♥ "),
+        500,
+        880,
+      );
+      ctx.font = "28px sans-serif";
+      ctx.fillText("原来最好的默契，是愿意听你说", 500, 940);
     }
     return () => cancelAnimationFrame(raf);
   }, [item, image, replay]);

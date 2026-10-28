@@ -1,3 +1,4 @@
+import Survival from "./Survival";
 import Kitchen from "./Kitchen";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { JSX } from "preact";
@@ -5,69 +6,6 @@ import Jump from "./Jump";
 import { differenceObjects } from "../../../shared/games/couple-content";
 import { useGame, typing, type GameProps } from "./common";
 import { Critter, TetheredPair } from "../art/ui";
-
-function Survival(p: GameProps) {
-  const d = p.view.data,
-    send = useGame(p);
-  return (
-    <section
-      class="couple-new-stage survival-stage"
-      data-testid="survival-stage"
-    >
-      <header class="couple-bar">
-        <b>❤️ {d.lives}</b>
-        <b>
-          第 {d.idx + 1} / {d.total} 关
-        </b>
-        <button onClick={() => void send("hint")}>💡 提示</button>
-      </header>
-      <div
-        class={
-          "survival-scene " +
-          (d.dangerAt && p.now - d.dangerAt < 1000 ? "survival-upset" : "")
-        }
-      >
-        <div class="scene-window">☁️ 🌤️ ☁️</div>
-        <span class="scene-caption">{d.scene} · 一起发现小秘密</span>
-        <div class="scene-furniture">🪟　🛋️　🪴　🖼️</div>
-        <div class="scene-characters">
-          <TetheredPair
-            left={p.room.profiles[0]}
-            right={p.room.profiles[1]}
-            size={58}
-          />
-        </div>
-        {d.searching && (
-          <div class="hotspots">
-            {["💄", "📱", "📦", "📝"].map((x, i) => (
-              <button
-                aria-label={"调查" + ["口红", "手机", "礼物盒", "纸条"][i]}
-                onClick={() => void send("clue", { id: i })}
-              >
-                {x}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-      <div class="dialogue">💬 {d.prompt}</div>
-      {d.hint && <p class="couple-hint">💡 {d.hint}</p>}
-      {d.feedback && <p aria-live="polite">{d.feedback}</p>}
-      <div class="answer-options">
-        {d.options.map((x: string, i: number) => (
-          <button
-            disabled={p.disabled || d.ending || (d.searching && !d.clueFound)}
-            onClick={() => void send("answer", { idx: d.idx, choice: i })}
-          >
-            <b>{"ABC"[i]}</b>
-            {x}
-          </button>
-        ))}
-      </div>
-      {d.searching && !d.clueFound && <p>先点场景里的物品，找到线索。</p>}
-    </section>
-  );
-}
 
 function Spot(p: GameProps) {
   const d = p.view.data,

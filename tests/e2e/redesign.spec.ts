@@ -116,3 +116,38 @@ test("P2 two cooks move without action round trips, interact, settle and rematch
     await b.close();
   }
 });
+
+test("P3 both seats privately choose five answers, settle and rematch", async ({
+  browser,
+}) => {
+  const { a, b, one, two } = await pair(browser);
+  try {
+    await start(one, two, "求生欲·双人版");
+    await expect(one.getByTestId("survival-stage")).toBeVisible();
+    await expect(one.locator(".game-overlay")).toBeHidden();
+    for (let idx = 0; idx < 5; idx++) {
+      await one.locator(".answer-options button").nth(0).click();
+      await expect(two.locator(".answer-pair")).toHaveCount(0);
+      await two.locator(".answer-options button").nth(0).click();
+      await expect(one.locator(".answer-pair")).toBeVisible();
+      await one.getByRole("button", { name: "下一题", exact: true }).click();
+    }
+    await expect(one.locator(".result-page")).toContainText("我们的求生指数");
+    await expect(two.locator(".result-page")).toContainText("100%");
+    await one.getByRole("button", { name: "再来一局", exact: true }).click();
+    await two.getByRole("button", { name: "再来一局", exact: true }).click();
+    await one.getByRole("button", { name: "我准备好了", exact: true }).click();
+    await two.getByRole("button", { name: "我准备好了", exact: true }).click();
+    await expect(one.getByTestId("survival-stage")).toBeVisible({
+      timeout: 20000,
+    });
+    expect(
+      await one.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  } finally {
+    await a.close();
+    await b.close();
+  }
+});
