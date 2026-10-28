@@ -232,7 +232,7 @@ export class RoomManager {
       ? {
           kind: r.extra.id,
           run: r.extra.run,
-          data: r.extra.view(seat, Date.now()),
+          data: r.extra.view(seat, r.pausedAt ?? Date.now()),
         }
       : r.game
         ? talk.view(r.game)

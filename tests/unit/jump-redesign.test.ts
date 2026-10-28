@@ -84,3 +84,16 @@ describe("P1 server-authoritative platform journeys", () => {
     expect(() => g.act(0, "press", { n: 7 }, 2200)).toThrow();
   });
 });
+it("cancels interrupted holds and exposes the next sequence after reload without costing a life", () => {
+  const g = make("relay");
+  g.act(0, "press", { n: 7 }, 1000);
+  g.pause();
+  g.shift(5000);
+  expect(g.started).toEqual([null, null]);
+  expect(g.lives).toBe(3);
+  const n = g.view(0, 6000).inputN[0] + 1;
+  g.act(0, "press", { n }, 6000);
+  expect(() => g.act(0, "release", { n: 7 }, 6100)).toThrow("INVALID");
+  g.act(0, "release", { n }, 6000 + platformX(g.platforms[0], 0) * 4);
+  expect(g.step).toBe(1);
+});

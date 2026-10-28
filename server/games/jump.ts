@@ -73,6 +73,7 @@ export class CoupleJump extends BaseEngine {
         baseX: p.x,
         x: p.x + Math.sin((now - this.startAt) / 1300 + p.phase) * p.amplitude,
       })),
+      inputN: [...this.inputN],
       charging: this.started.map((x) => x !== null),
       released: this.charges.map((x) => x !== null),
       last: this.last,
@@ -192,6 +193,14 @@ export class CoupleJump extends BaseEngine {
       return true;
     }
     return false;
+  }
+  pause() {
+    // A physical hold cannot survive a page replacement. Fence delayed releases too.
+    this.started = [null, null];
+    this.charges = [null, null];
+    this.releasedAt = [null, null];
+    this.inputN = this.inputN.map((n) => n + 1);
+    this.attempt++;
   }
   shift(ms: number) {
     super.shift(ms);

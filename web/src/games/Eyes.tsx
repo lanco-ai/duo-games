@@ -193,6 +193,9 @@ export default function Eyes(p: GameProps) {
         onPointerUp={(e) => {
           if (drawing) {
             eatenClick.current = true;
+            setTimeout(() => {
+              eatenClick.current = false;
+            }, 0);
             if (path.current.length > 1)
               void send("route", { round: d.round, cells: path.current });
             setDrawing(false);

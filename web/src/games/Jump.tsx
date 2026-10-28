@@ -5,11 +5,15 @@ import { jumpLevels } from "../../../shared/games/couple-jump/levels";
 function Charge({
   label,
   disabled,
+  sequence,
+  attempt,
   send,
   onPreview,
 }: {
   label: string;
   disabled: boolean;
+  sequence: number;
+  attempt: number;
   send: (c: string, p: any) => Promise<boolean>;
   onPreview: (ms: number) => void;
 }) {
@@ -22,12 +26,18 @@ function Charge({
     if (!held.current) return;
     held.current = false;
     setActive(false);
+    if (disabled) return;
+    const sequence = n.current;
     const heldMs = performance.now() - at.current;
     onPreview(heldMs);
     void Promise.resolve(press.current).then(
-      (ok) => ok && send("release", { n: n.current, heldMs }),
+      (ok) => ok && send("release", { n: sequence, heldMs }),
     );
   };
+  useEffect(() => {
+    held.current = false;
+    setActive(false);
+  }, [disabled, attempt]);
   useEffect(
     () => () => {
       held.current = false;
@@ -44,7 +54,7 @@ function Charge({
         e.currentTarget.setPointerCapture(e.pointerId);
         held.current = true;
         at.current = performance.now();
-        n.current++;
+        n.current = Math.max(n.current + 1, sequence + 1);
         setActive(true);
         press.current = send("press", { n: n.current });
       }}
@@ -62,7 +72,9 @@ export default function Jump(p: GameProps) {
     [preview, setPreview] = useState<{ distance: number; at: number } | null>(
       null,
     ),
-    [frame, setFrame] = useState(0);
+    [frame, setFrame] = useState(0),
+    clock = useRef(p.transport.now());
+  if (!p.disabled) clock.current = p.transport.now();
   useEffect(() => {
     let id: number;
     const draw = () => {
@@ -111,7 +123,7 @@ export default function Jump(p: GameProps) {
             ...t,
             x:
               t.baseX +
-              Math.sin((p.transport.now() - d.startAt) / 1300 + t.phase) *
+              Math.sin((clock.current - d.startAt) / 1300 + t.phase) *
                 t.amplitude,
           }))
           .slice(0, d.mode === "sync" ? 2 : 1)
@@ -161,6 +173,8 @@ export default function Jump(p: GameProps) {
       {[p.seat, ...(p.local ? [p.local.seat] : [])].map((s) => (
         <Charge
           key={s}
+          sequence={d.inputN?.[s] ?? -1}
+          attempt={d.attempt}
           label={
             p.local
               ? s

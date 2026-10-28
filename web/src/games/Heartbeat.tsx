@@ -48,16 +48,22 @@ export default function Heartbeat(p: GameProps) {
     const ctx = audioContext();
     return ctx?.state === "running" && anchor.current !== null
       ? (ctx.currentTime - anchor.current) * 1000
-      : latest.current.transport.now() - d.startAt;
+      : latest.current.transport.now() - latest.current.view.data.startAt;
   };
   useEffect(() => {
     const ctx = audioContext();
     if (ctx) {
-      anchor.current = ctx.currentTime + (d.startAt - p.transport.now()) / 1000;
+      anchor.current =
+        ctx.currentTime +
+        (latest.current.view.data.startAt - latest.current.transport.now()) /
+          1000;
       const align = () => {
         if (ctx.state === "running")
           anchor.current =
-            ctx.currentTime + (d.startAt - p.transport.now()) / 1000;
+            ctx.currentTime +
+            (latest.current.view.data.startAt -
+              latest.current.transport.now()) /
+              1000;
       };
       ctx.addEventListener("statechange", align);
       return () => ctx.removeEventListener("statechange", align);
@@ -114,8 +120,12 @@ export default function Heartbeat(p: GameProps) {
   }
   function release(lane: number, eventTime = performance.now()) {
     const holding = held.current.get(lane);
-    if (!holding || latest.current.disabled) return;
+    if (!holding) return;
     held.current.delete(lane);
+    if (latest.current.disabled) {
+      judge(holding.id, 0);
+      return;
+    }
     const n = song.notes[holding.id],
       time = elapsed() - (Number(localStore.getItem("duo.inputOffset")) || 0);
     judge(
@@ -133,7 +143,9 @@ export default function Heartbeat(p: GameProps) {
       unlockMusic();
       if (ctx)
         anchor.current =
-          ctx.currentTime + (d.startAt - p.transport.now()) / 1000;
+          ctx.currentTime +
+          (latest.current.view.data.startAt - latest.current.transport.now()) /
+            1000;
       return;
     }
     const offset = Number(localStore.getItem("duo.inputOffset")) || 0,
@@ -162,6 +174,12 @@ export default function Heartbeat(p: GameProps) {
       pops.current.push({ lane, text: label, at: performance.now() });
     } else setFeedback("Miss");
   }
+  useEffect(() => {
+    if (!p.disabled) return;
+    for (const holding of held.current.values()) judge(holding.id, 0);
+    held.current.clear();
+    pointers.current.clear();
+  }, [p.disabled]);
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (typing(e.target) || e.repeat) return;
@@ -424,7 +442,10 @@ export default function Heartbeat(p: GameProps) {
           onClick={() => {
             const ctx = unlockMusic();
             anchor.current =
-              ctx.currentTime + (d.startAt - p.transport.now()) / 1000;
+              ctx.currentTime +
+              (latest.current.view.data.startAt -
+                latest.current.transport.now()) /
+                1000;
           }}
         >
           点一下开启声音

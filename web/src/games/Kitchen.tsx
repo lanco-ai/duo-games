@@ -27,6 +27,7 @@ export default function Kitchen(p: GameProps) {
     ]),
     last = useRef(0),
     sent = useRef(0),
+    moving = useRef([false, false]),
     [, render] = useState(0);
   const localSeats = p.local ? [p.seat, p.local.seat] : [p.seat];
   useEffect(() => {
@@ -45,10 +46,28 @@ export default function Kitchen(p: GameProps) {
         positions.current[seat] = { x, y };
     }
   });
-  const act = (seat: number, c: string, payload: any = {}) =>
-    seat === p.seat
+  const flush = (seat: number) => {
+    const cur = latest.current;
+    if (cur.disabled) return;
+    const transport = seat === cur.seat ? cur.transport : cur.local!.transport;
+    transport.send({
+      t: "stream",
+      run: cur.view.run,
+      kind: "cur",
+      data: { ...positions.current[seat] },
+    });
+  };
+  const act = (seat: number, c: string, payload: any = {}) => {
+    if (latest.current.disabled) return Promise.resolve(false);
+    // Ordered on the same socket: interaction uses the final visible position.
+    if (c === "interact") {
+      flush(seat);
+      moving.current[seat] = false;
+    }
+    return seat === p.seat
       ? send(c, payload)
       : p.local!.send({ type: "game", run: p.view.run, command: c, payload });
+  };
   const nearest = (seat: number) => {
     const pos = positions.current[seat],
       [fx, fy] = facing.current[seat];
@@ -117,6 +136,10 @@ export default function Kitchen(p: GameProps) {
         [0, 0],
         [0, 0],
       ];
+      for (const seat of localSeats) {
+        flush(seat);
+        void act(seat, "cancel");
+      }
     };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
@@ -146,6 +169,8 @@ export default function Kitchen(p: GameProps) {
         pos.x = x;
         pos.y = y;
       }
+      if (moving.current[seat] && !dx && !dy) flush(seat);
+      moving.current[seat] = !!(dx || dy);
       if (time - sent.current >= 66 && (dx || dy)) {
         const transport = seat === p.seat ? p.transport : p.local!.transport;
         transport.send({

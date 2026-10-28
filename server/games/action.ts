@@ -297,7 +297,7 @@ export class HeartBounce extends BaseEngine {
         x,
         this.combo + 1,
         this.seed,
-        this.paddleWidth(now),
+        this.paddleWidth(this.startAt + (tick / 60) * 1000),
       );
       if (!next) throw new Error("INVALID");
       this.combo++;
@@ -307,7 +307,12 @@ export class HeartBounce extends BaseEngine {
       this.hit = next;
       if (this.combo % 15 === 0) {
         const rand = mulberry32(this.seed ^ next.n);
-        this.star = { x: 50 + rand() * 260, y: 150 + rand() * 230 };
+        const contact = bounce.paddleTick(next),
+          starAt =
+            next.tick +
+            Math.floor((contact - next.tick) * (0.35 + rand() * 0.3)),
+          point = bounce.ballAt(next, starAt);
+        this.star = { x: point.x / 256, y: point.y / 256 };
         this.starTick = next.tick;
       }
       this.owner = (1 - seat) as Seat;

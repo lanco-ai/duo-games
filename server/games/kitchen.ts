@@ -104,7 +104,9 @@ export class CoopKitchen extends BaseEngine {
       endless: this.endless,
       combo: this.combo,
       cakeStep: this.cakeStep,
-      cakeLabel: cakeSteps[this.cakeStep],
+      cakeLabel: kitchenLevels[this.level].cake
+        ? cakeSteps[this.cakeStep]
+        : null,
       cakeDone: this.cakeDone,
       now,
       contributions: this.contributions,
@@ -144,7 +146,7 @@ export class CoopKitchen extends BaseEngine {
     this.credits[seat] -= distance;
     player.x = x;
     player.y = y;
-    this.jobs[seat] = null;
+    if (distance > 0.000001) this.jobs[seat] = null;
     return true;
   }
   stream(seat: Seat, kind: string, p: any, now: number) {
@@ -442,6 +444,9 @@ export class CoopKitchen extends BaseEngine {
       return true;
     }
     return changed;
+  }
+  pause() {
+    this.jobs = [null, null];
   }
   shift(ms: number) {
     super.shift(ms);

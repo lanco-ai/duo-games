@@ -45,3 +45,36 @@ it("collects a swept star, widens collision by ten seconds and preserves buff du
   expect(sim.canHit(g.hit, crossing, 240)).toBe(false);
   expect(sim.canHit(g.hit, crossing, 240, 122)).toBe(true);
 });
+it("places the first earned star on a reachable flight and actually collects it", () => {
+  const g = make();
+  for (let i = 0; i < 15; i++) {
+    const tick = sim.paddleTick(g.hit),
+      x = sim.ballAt(g.hit, tick).x / 256;
+    g.act(
+      g.owner,
+      "hit",
+      { epoch: g.epoch, n: g.hit.n, tick, x },
+      (tick / 60) * 1000,
+    );
+  }
+  expect(g.star).not.toBeNull();
+  const end = sim.paddleTick(g.hit);
+  expect(g.tick((end / 60) * 1000)).toBe(true);
+  expect(g.star).toBeNull();
+  expect(g.wideUntil).toBeGreaterThan((end / 60) * 1000);
+});
+it("accepts an extended paddle contact even when its message arrives after the buff ends", () => {
+  const g = make(),
+    tick = sim.paddleTick(g.hit),
+    contact = (tick / 60) * 1000;
+  g.wideUntil = contact + 25;
+  expect(() =>
+    g.act(
+      g.owner,
+      "hit",
+      { epoch: g.epoch, n: g.hit.n, tick, x: 240 },
+      contact + 100,
+    ),
+  ).not.toThrow();
+  expect(g.combo).toBe(1);
+});

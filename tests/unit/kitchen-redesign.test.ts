@@ -130,3 +130,14 @@ describe("P2 cooperative kitchen levels", () => {
     expect(g.view(0)).toEqual(g.view(1));
   });
 });
+it("shows cake work only where cake stations exist and cancels physical jobs on disconnect", () => {
+  const g = make();
+  expect(g.view(0).cakeLabel).toBeNull();
+  const cake = make("5");
+  expect(cake.view(0).cakeLabel).toBeTruthy();
+  g.jobs[0] = { station: "board0", at: 1000 };
+  g.move(0, 1, 3, 1001);
+  expect(g.jobs[0]).not.toBeNull();
+  g.pause();
+  expect(g.jobs).toEqual([null, null]);
+});
