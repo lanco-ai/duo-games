@@ -4,6 +4,7 @@ import {
   chart,
   grade,
   type TrackId,
+  type RhythmDifficulty,
 } from "../../../shared/games/heartbeat/chart";
 import {
   useGame,
@@ -22,7 +23,10 @@ const LANE_COLORS = [
 ];
 export default function Heartbeat(p: GameProps) {
   const d = p.view.data,
-    song = useMemo(() => chart(d.track as TrackId), [d.track]),
+    song = useMemo(
+      () => chart(d.track as TrackId, d.difficulty as RhythmDifficulty),
+      [d.track, d.difficulty],
+    ),
     send = useGame(p),
     latest = useLatest(p),
     canvas = useRef<HTMLCanvasElement>(null),
@@ -30,6 +34,8 @@ export default function Heartbeat(p: GameProps) {
     pops = useRef<{ lane: number; text: string; at: number }[]>([]),
     judged = useRef(new Map<number, number>(d.own)),
     pending = useRef<[number, number][]>([]),
+    held = useRef(new Map<number, { id: number; grade: number }>()),
+    pointers = useRef(new Map<number, number>()),
     anchor = useRef<number | null>(null),
     nextSound = useRef(0),
     [feedback, setFeedback] = useState(""),
@@ -59,6 +65,7 @@ export default function Heartbeat(p: GameProps) {
   }, [d.startAt]);
   useEffect(() => {
     const interval = setInterval(() => {
+      if (latest.current.disabled) return;
       const ctx = audioContext();
       if (ctx?.state === "running") {
         const now = elapsed(),
@@ -105,7 +112,21 @@ export default function Heartbeat(p: GameProps) {
     pending.current.push([id, g]);
     setScore((v) => v + g);
   }
+  function release(lane: number, eventTime = performance.now()) {
+    const holding = held.current.get(lane);
+    if (!holding || latest.current.disabled) return;
+    held.current.delete(lane);
+    const n = song.notes[holding.id],
+      time = elapsed() - (Number(localStore.getItem("duo.inputOffset")) || 0);
+    judge(
+      n.id,
+      time >= n.ms + (n.duration || 0) - 135
+        ? Math.min(holding.grade, grade(time - n.ms - (n.duration || 0)))
+        : 0,
+    );
+  }
   function hit(lane: number, eventTime = performance.now()) {
+    if (held.current.has(lane)) return;
     if (latest.current.disabled || document.hidden) return;
     const ctx = audioContext();
     if (!ctx || ctx.state !== "running") {
@@ -133,7 +154,9 @@ export default function Heartbeat(p: GameProps) {
     flashes.current[lane] = performance.now();
     if (candidate) {
       const g = grade(time - candidate.ms);
-      judge(candidate.id, g);
+      if (candidate.kind === "hold")
+        held.current.set(lane, { id: candidate.id, grade: g });
+      else judge(candidate.id, g);
       const label = ["Miss", "Good", "Great", "Perfect"][g];
       setFeedback(label);
       pops.current.push({ lane, text: label, at: performance.now() });
@@ -147,17 +170,34 @@ export default function Heartbeat(p: GameProps) {
         hit(e.key.toLowerCase() === "f" ? 0 : 1, e.timeStamp);
       }
     };
+    const up = (e: KeyboardEvent) => {
+      if (["f", "F", "j", "J"].includes(e.key))
+        release(e.key.toLowerCase() === "f" ? 0 : 1, e.timeStamp);
+    };
     window.addEventListener("keydown", key);
-    return () => window.removeEventListener("keydown", key);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", key);
+      window.removeEventListener("keyup", up);
+    };
   }, [p.view.run]);
   useFrame(() => {
     const ctx = canvas.current?.getContext("2d");
     if (!ctx) return;
+    if (latest.current.disabled) return;
     const time = elapsed();
+    for (const [lane, h] of held.current) {
+      const n = song.notes[h.id];
+      if (time >= n.ms + (n.duration || 0)) {
+        judge(n.id, h.grade);
+        held.current.delete(lane);
+      }
+    }
     for (const n of song.notes)
       if (
         n.seats.includes(p.seat) &&
         !judged.current.has(n.id) &&
+        ![...held.current.values()].some((h) => h.id === n.id) &&
         time - (Number(localStore.getItem("duo.inputOffset")) || 0) > n.ms + 135
       )
         judge(n.id, 0);
@@ -223,10 +263,26 @@ export default function Heartbeat(p: GameProps) {
     });
     for (const note of song.notes) {
       if (!note.seats.includes(p.seat) || judged.current.has(note.id)) continue;
-      const y = line - (note.ms - time) * 0.16;
+      const y =
+        held.current.get(note.lane)?.id === note.id
+          ? line
+          : line - (note.ms - time) * 0.16;
       if (y < -30 || y > h) continue;
       const k = Math.max(0.55, Math.min(1, 0.55 + (y / line) * 0.45)),
         x = note.lane * 180 + 90;
+      if (note.kind === "hold") {
+        g.strokeStyle = "#fbd777";
+        g.lineWidth = 16 * k;
+        g.beginPath();
+        g.moveTo(x, y);
+        g.lineTo(x, line - (note.ms + (note.duration || 0) - time) * 0.16);
+        g.stroke();
+      }
+      if (note.kind.startsWith("relay")) {
+        g.fillStyle = "#99ffdd";
+        g.font = "22px sans-serif";
+        g.fillText(note.kind === "relay-head" ? "↗" : "↘", x, y - 18);
+      }
       if (note.sync) {
         heart(g, x, y, 17 * k, "#FF4D6A", INK);
       } else {
@@ -306,7 +362,15 @@ export default function Heartbeat(p: GameProps) {
     <section class="extra-stage heartbeat-stage" data-testid="heartbeat-stage">
       <div class="stage-score">
         <span>
-          {song.name} · {song.bpm} BPM
+          {song.name} · {song.bpm} BPM ·{" "}
+          {
+            (
+              { easy: "简单", normal: "普通", hard: "困难" } as Record<
+                string,
+                string
+              >
+            )[d.difficulty]
+          }
         </span>
         <b>{score} 分</b>
       </div>
@@ -318,8 +382,21 @@ export default function Heartbeat(p: GameProps) {
           aria-label="心跳节拍双轨道"
           onPointerDown={(e) => {
             e.preventDefault();
-            const rect = e.currentTarget.getBoundingClientRect();
-            hit(e.clientX - rect.left < rect.width / 2 ? 0 : 1, e.timeStamp);
+            const rect = e.currentTarget.getBoundingClientRect(),
+              lane = e.clientX - rect.left < rect.width / 2 ? 0 : 1;
+            pointers.current.set(e.pointerId, lane);
+            e.currentTarget.setPointerCapture(e.pointerId);
+            hit(lane, e.timeStamp);
+          }}
+          onPointerUp={(e) => {
+            const lane = pointers.current.get(e.pointerId);
+            if (lane !== undefined) release(lane, e.timeStamp);
+            pointers.current.delete(e.pointerId);
+          }}
+          onPointerCancel={(e) => {
+            const lane = pointers.current.get(e.pointerId);
+            if (lane !== undefined) release(lane, e.timeStamp);
+            pointers.current.delete(e.pointerId);
           }}
         />
         <div class="rhythm-feedback sr-only" aria-live="polite">
@@ -329,7 +406,7 @@ export default function Heartbeat(p: GameProps) {
       <p class="game-status">
         {p.now >= d.startAt + song.duration
           ? "曲子结束啦，正在汇总两个人的节拍…"
-          : "点左半边 / 右半边，或按 F / J。"}
+          : "点左右轨道；金色尾巴按住到结束，箭头音符交给 TA 接力。"}
       </p>
       <button
         class="text-button light"

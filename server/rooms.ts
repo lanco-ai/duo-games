@@ -246,11 +246,7 @@ export class RoomManager {
     }
   }
   pause(r: LiveRoom) {
-    if (
-      !["playing", "countdown"].includes(r.view.phase) ||
-      r.extra?.id === "heartbeat"
-    )
-      return;
+    if (!["playing", "countdown"].includes(r.view.phase)) return;
     clearTimeout(r.timer);
     r.pausedAt = Date.now();
     r.extra?.pause?.(r.pausedAt);

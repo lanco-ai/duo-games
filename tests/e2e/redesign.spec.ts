@@ -338,3 +338,38 @@ test("P6 two browsers hide, search and exchange roles over three rounds then rem
     await b.close();
   }
 });
+
+test("P7 rhythm partners settle a song and return for another chart", async ({
+  browser,
+  request,
+}) => {
+  const { a, b, one, two } = await pair(browser);
+  try {
+    // The calibration UI has its own browser regression; use a measured zero-offset device fixture here.
+    await one.evaluate(() => localStorage.setItem("duo.inputOffset", "0"));
+    await two.evaluate(() => localStorage.setItem("duo.inputOffset", "0"));
+    await start(one, two, "心跳节拍");
+    await expect(one.getByTestId("heartbeat-stage")).toBeVisible();
+    await expect(two.getByTestId("heartbeat-stage")).toBeVisible();
+    await expect(one.locator(".game-overlay")).toBeHidden();
+    await one.waitForTimeout(2600);
+    await one.keyboard.press("f");
+    await two.keyboard.press("j");
+    const result = await request.post("http://127.0.0.1:8792/advance", {
+      data: { ms: 75000 },
+    });
+    expect(result.ok()).toBe(true);
+    await expect(one.locator(".result-page")).toContainText("我们的心跳同步率");
+    await expect(two.locator(".result-page")).toContainText("副歌连打");
+    await one.getByRole("button", { name: "再来一局", exact: true }).click();
+    await two.getByRole("button", { name: "再来一局", exact: true }).click();
+    await one.getByRole("button", { name: "我准备好了", exact: true }).click();
+    await two.getByRole("button", { name: "我准备好了", exact: true }).click();
+    await expect(one.getByTestId("heartbeat-stage")).toBeVisible({
+      timeout: 20000,
+    });
+  } finally {
+    await a.close();
+    await b.close();
+  }
+});

@@ -57,7 +57,7 @@ export const defaults: Record<ExtraId, GameOptions> = {
   "my-eyes": {},
   "heart-bounce": {},
   "puzzle-us": { pieces: 24, image: "scene:sunset" },
-  heartbeat: { track: "meet" },
+  heartbeat: { track: "meet", difficulty: "easy" },
   survival: { mode: "mixed", chapter: "1" },
   "spot-difference": { scene: 0, mode: "split" },
   "coop-kitchen": { level: "1" },
@@ -123,7 +123,10 @@ export function validOptions(id: string, value: unknown): value is GameOptions {
         )
       );
     case "heartbeat":
-      return ["meet", "date", "heart"].includes(String(o.track));
+      return (
+        ["meet", "date", "heart"].includes(String(o.track)) &&
+        ["easy", "normal", "hard"].includes(String(o.difficulty))
+      );
     case "survival":
       return (
         ["mixed", "quiz", "search"].includes(String(o.mode)) &&

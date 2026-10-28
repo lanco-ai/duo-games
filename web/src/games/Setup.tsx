@@ -345,10 +345,16 @@ export default function Setup({
           </>
         )}
         {id === "heartbeat" &&
+          select("difficulty", "谱面难度", [
+            ["easy", "简单"],
+            ["normal", "普通"],
+            ["hard", "困难"],
+          ])}
+        {id === "heartbeat" &&
           select("track", "选择曲目", [
-            ["meet", "初见 · 90 BPM · 简单"],
-            ["date", "约会 · 110 BPM · 普通"],
-            ["heart", "心动 · 128 BPM · 困难"],
+            ["meet", "初见 · 90 BPM"],
+            ["date", "约会 · 110 BPM"],
+            ["heart", "心动 · 128 BPM"],
           ])}
       </fieldset>
       {["draw-guess", "know-me"].includes(id) && (
