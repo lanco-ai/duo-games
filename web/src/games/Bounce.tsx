@@ -46,7 +46,7 @@ export default function Bounce(p: GameProps) {
       0,
       Math.floor((p.transport.now() - d.startAt) * 0.06) - 1,
     );
-  }, [d.hit.n, d.epoch, d.startAt]);
+  }, [d.hit.n, d.epoch, d.startAt, d.wideUntil, d.star?.x, d.star?.y]);
   useEvents(p, (e) => {
     if (e.kind === "flight") {
       f.current = e.data;
@@ -83,6 +83,11 @@ export default function Bounce(p: GameProps) {
       window.removeEventListener("blur", blur);
     };
   }, []);
+  const paddleWidth = () =>
+    (d.paused ? d.startAt + (d.pausedTick / 60) * 1000 : p.transport.now()) <
+    (f.current.wideUntil || 0)
+      ? Math.round(sim.PADDLE_WIDTH * 1.6)
+      : sim.PADDLE_WIDTH;
   useFrame((time) => {
     const c = canvas.current,
       ctx = c?.getContext("2d");
@@ -97,6 +102,7 @@ export default function Bounce(p: GameProps) {
       local.current = sim.paddleX(
         local.current +
           ((keys.current & 2 ? 1 : 0) - (keys.current & 1 ? 1 : 0)) * 5,
+        paddleWidth(),
       );
       if (time - lastSend.current > 50) {
         p.transport.send({
@@ -112,7 +118,7 @@ export default function Bounce(p: GameProps) {
         if (
           crossing > previous.current &&
           crossing <= tick &&
-          sim.canHit(v.hit, crossing, local.current)
+          sim.canHit(v.hit, crossing, local.current, paddleWidth())
         ) {
           pending.current = v.hit.n;
           const next = sim.makeHit(
@@ -121,6 +127,7 @@ export default function Bounce(p: GameProps) {
             local.current,
             v.combo + 1,
             v.seed,
+            paddleWidth(),
           )!;
           f.current = {
             ...v,
@@ -219,15 +226,22 @@ export default function Bounce(p: GameProps) {
       g.strokeStyle = INK;
       g.lineWidth = 3;
       g.beginPath();
-      g.roundRect(x - sim.PADDLE_WIDTH / 2, sim.PADDLE_Y, sim.PADDLE_WIDTH, 12, 6);
+      g.roundRect(x - paddleWidth() / 2, sim.PADDLE_Y, paddleWidth(), 12, 6);
       g.fill();
       g.stroke();
       g.fillStyle = "rgba(255,255,255,.6)";
       g.beginPath();
-      g.roundRect(x - sim.PADDLE_WIDTH / 2 + 6, sim.PADDLE_Y + 2.5, sim.PADDLE_WIDTH - 12, 3, 1.5);
+      g.roundRect(
+        x - paddleWidth() / 2 + 6,
+        sim.PADDLE_Y + 2.5,
+        paddleWidth() - 12,
+        3,
+        1.5,
+      );
       g.fill();
       g.restore();
     });
+    if (v.star) star(g, v.star.x, v.star.y, 18);
     const b = sim.ballAt(f.current.hit, tick),
       target = { x: b.x / 256, y: b.y / 256 };
     if (
@@ -299,7 +313,10 @@ export default function Bounce(p: GameProps) {
   function move(e: PointerEvent) {
     if (p.disabled) return;
     const r = canvas.current!.getBoundingClientRect();
-    local.current = sim.paddleX(((e.clientX - r.left) / r.width) * 360);
+    local.current = sim.paddleX(
+      ((e.clientX - r.left) / r.width) * 360,
+      paddleWidth(),
+    );
   }
   return (
     <section class="action-game bounce-game">
@@ -308,9 +325,23 @@ export default function Bounce(p: GameProps) {
           {"♥".repeat(flight.lives)}
           {"♡".repeat(3 - flight.lives)}
         </span>
-        <strong>{flight.combo} 连击</strong>
+        <strong>
+          {flight.combo} 连击 ·{" "}
+          {"★".repeat(
+            flight.best >= 50
+              ? 3
+              : flight.best >= 25
+                ? 2
+                : flight.best >= 10
+                  ? 1
+                  : 0,
+          )}
+        </strong>
         <span>{flight.score} 分</span>
       </div>
+      <p class="muted">
+        目标 10 / 25 / 50 连击；每 15 连击出现星星，碰到后托盘变宽 10 秒。
+      </p>
       <div class="bounce-stage">
         <canvas
           ref={canvas}
