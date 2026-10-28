@@ -931,7 +931,7 @@ export function Room({ code }: { code: string }) {
             {activeGame.id === "talk-cards" && (
               <p>收藏了 {room.result.stats.favorites || 0} 张卡片</p>
             )}
-            {activeGame.id === "gomoku" && (
+            {["gomoku", "know-me", "mind-meld"].includes(activeGame.id) && (
               <Suspense fallback={null}>
                 <ResultDetails game={activeGame.id} stats={room.result.stats} />
               </Suspense>

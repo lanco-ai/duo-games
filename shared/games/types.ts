@@ -45,7 +45,7 @@ export interface CustomItem {
 }
 export const defaults: Record<ExtraId, GameOptions> = {
   "draw-guess": { rounds: 6, seconds: 80, libraries: ["日常", "恋爱"] },
-  "mind-meld": { seconds: 0 },
+  "mind-meld": { seconds: 0, topic: "自由联想" },
   "know-me": {
     count: 10,
     categories: ["吃喝", "习惯", "回忆", "恋爱观", "假如", "未来"],
@@ -97,7 +97,13 @@ export function validOptions(id: string, value: unknown): value is GameOptions {
         array("libraries", ["日常", "恋爱", "我们的回忆"])
       );
     case "mind-meld":
-      return [0, 30, 60].includes(Number(o.seconds));
+      return (
+        [0, 30, 60].includes(Number(o.seconds)) &&
+        (o.topic === undefined ||
+          ["自由联想", "饮食", "性格", "回忆", "未来", "喜好"].includes(
+            String(o.topic),
+          ))
+      );
     case "know-me":
       return (
         [10, 15, 20].includes(Number(o.count)) &&
