@@ -57,3 +57,62 @@ test("P1 two browser contexts finish the grass journey and rematch", async ({
     await b.close();
   }
 });
+
+test("P2 two cooks move without action round trips, interact, settle and rematch", async ({
+  browser,
+  request,
+}) => {
+  test.setTimeout(120000);
+  const { a, b, one, two } = await pair(browser);
+  try {
+    await start(one, two, "双人厨房");
+    await expect(one.getByTestId("kitchen-stage")).toBeVisible();
+    await expect(one.locator(".game-overlay")).toBeHidden();
+    const chef = one.locator(".chef.player-0");
+    const before = Number(await chef.getAttribute("data-y"));
+    await one.keyboard.down("w");
+    await one.waitForTimeout(500);
+    await one.keyboard.up("w");
+    await expect
+      .poll(async () => Number(await chef.getAttribute("data-y")))
+      .toBeLessThan(before - 1);
+    await one.keyboard.down("w");
+    await one.waitForTimeout(350);
+    await one.keyboard.up("w");
+    await one.keyboard.down("a");
+    await one.waitForTimeout(100);
+    await one.keyboard.up("a");
+    await one.getByRole("button", { name: "操作🍅", exact: true }).click();
+    await expect(one.getByTestId("kitchen-stage")).toContainText("待处理");
+    await two.keyboard.down("a");
+    await two.waitForTimeout(300);
+    await two.keyboard.up("a");
+    await expect
+      .poll(async () =>
+        Number(await two.locator(".chef.player-1").getAttribute("data-x")),
+      )
+      .toBeLessThan(6);
+    await expect(one.locator(".kitchen-tickets > div")).toHaveCount(2);
+    const advanced = await request.post("http://127.0.0.1:8792/advance", {
+      data: { ms: 121000 },
+    });
+    expect(advanced.ok()).toBe(true);
+    await expect(one.locator(".result-page")).toContainText("厨房打烊");
+    await expect(two.locator(".result-page")).toContainText("厨房打烊");
+    await one.getByRole("button", { name: "再来一局", exact: true }).click();
+    await two.getByRole("button", { name: "再来一局", exact: true }).click();
+    await one.getByRole("button", { name: "我准备好了", exact: true }).click();
+    await two.getByRole("button", { name: "我准备好了", exact: true }).click();
+    await expect(one.getByTestId("kitchen-stage")).toBeVisible({
+      timeout: 20000,
+    });
+    expect(
+      await one.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  } finally {
+    await a.close();
+    await b.close();
+  }
+});

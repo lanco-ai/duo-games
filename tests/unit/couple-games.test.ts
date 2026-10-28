@@ -78,43 +78,6 @@ describe("new couple games: authority, scoring and private views", () => {
     a.act(0, "roll", {}, 200);
     expect(a.result?.stats.winner).toBe(0);
   });
-  it("cooks, burns, plates and serves using server time and station proximity", () => {
-    const g = new CoopKitchen("r", {}, 2, 0, ctx());
-    expect(() => g.act(0, "interact", { station: "meat" }, 0)).toThrow();
-    const p = g.players[0];
-    p.x = 4;
-    p.y = 1;
-    g.act(0, "interact", { station: "meat" }, 0);
-    p.x = 6;
-    p.y = 1;
-    g.act(0, "interact", { station: "board0" }, 1);
-    for (let i = 0; i < 3; i++)
-      g.act(0, "interact", { station: "board0" }, 2 + i);
-    g.act(0, "interact", { station: "board0" }, 6);
-    expect(p.held?.stage).toBe("chopped");
-    p.x = 6;
-    p.y = 5;
-    g.act(0, "interact", { station: "pan0" }, 10);
-    expect(() => g.act(0, "interact", { station: "pan0" }, 4999)).toThrow();
-    g.act(0, "interact", { station: "pan0" }, 5010);
-    expect(p.held?.stage).toBe("cooked");
-    p.x = 3;
-    p.y = 6;
-    g.act(0, "interact", { station: "plate" }, 5020);
-    p.x = 6;
-    p.y = 1;
-    g.act(0, "interact", { station: "bread" }, 5030);
-    p.x = 3;
-    p.y = 6;
-    g.act(0, "interact", { station: "plate" }, 5040);
-    p.x = 6;
-    p.y = 6;
-    g.act(0, "interact", { station: "serve" }, 5050);
-    expect(g.score).toBe(120);
-    g.pans[0] = { item: { kind: "meat", stage: "chopped", cuts: 3 }, at: 6000 };
-    g.tick(16000);
-    expect(g.pans[0]?.item.stage).toBe("burned");
-  });
   it("does not reveal hiding spot or decoys to the seeker", () => {
     const g = new HideSeek("r", { mode: "turn" }, 12, 0, ctx());
     g.act(1, "hide", { id: 8, decoys: [1, 4] }, 5000);

@@ -138,6 +138,15 @@ export default function Setup({
   return (
     <div class="game-setup">
       <fieldset disabled={room.proposal?.by !== seat || uploading}>
+        {id === "coop-kitchen" &&
+          select("level", "厨房关卡", [
+            ["1", "第一次约会便当"],
+            ["2", "中间的吧台"],
+            ["3", "火锅夜"],
+            ["4", "移动餐车"],
+            ["5", "纪念日蛋糕"],
+            ["endless", "无尽厨房"],
+          ])}
         {id === "survival" &&
           select("mode", "玩法", [
             ["mixed", "混合挑战"],

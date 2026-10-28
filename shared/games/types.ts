@@ -60,7 +60,7 @@ export const defaults: Record<ExtraId, GameOptions> = {
   heartbeat: { track: "meet" },
   survival: { mode: "mixed" },
   "spot-difference": { scene: 0 },
-  "coop-kitchen": {},
+  "coop-kitchen": { level: "1" },
   "couple-ludo": { mode: "pure" },
   "hide-seek": { mode: "turn" },
   "couple-jump": { mode: "relay", level: "1" },
@@ -129,7 +129,7 @@ export function validOptions(id: string, value: unknown): value is GameOptions {
     case "spot-difference":
       return [0, 1, 2, 3, 4].includes(Number(o.scene));
     case "coop-kitchen":
-      return true;
+      return ["1", "2", "3", "4", "5", "endless"].includes(String(o.level));
     case "couple-ludo":
       return ["pure", "warm", "fun"].includes(String(o.mode));
     case "hide-seek":
