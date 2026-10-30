@@ -8,6 +8,16 @@ import {
   type GameProps,
 } from "./common";
 import { Critter } from "../art/ui";
+import { sfx } from "./sfx";
+const sweet = [
+  "第一步，从相信 TA 开始。",
+  "萤火虫说：你们走得好默契。",
+  "再甜的迷宫，也甜不过你们。",
+  "星星记住了你们牵手的方向。",
+  "月光下，TA 一直是你的眼。",
+  "鹊桥搭好了，一起回家吧。",
+];
+const replies = ["收到！", "你确定？", "我怕怕", "再说一遍", "爱你哟", "冲鸭"];
 export default function Eyes(p: GameProps) {
   const d = p.view.data,
     send = useGame(p),
@@ -22,7 +32,18 @@ export default function Eyes(p: GameProps) {
     [drawing, setDrawing] = useState(false),
     [draft, setDraft] = useState<number[]>([]),
     path = useRef<number[]>([]),
-    eatenClick = useRef(false);
+    eatenClick = useRef(false),
+    [pops, setPops] = useState<{ id: number; text: string; tone: string }[]>(
+      [],
+    ),
+    popId = useRef(0),
+    [reply, setReply] = useState(""),
+    [spooked, setSpooked] = useState(false);
+  function pop(text: string, tone = "") {
+    const id = ++popId.current;
+    setPops((list) => [...list.slice(-3), { id, text, tone }]);
+    setTimeout(() => setPops((list) => list.filter((x) => x.id !== id)), 1300);
+  }
   const clock = useRef(p.now);
   if (p.room.phase !== "paused") clock.current = p.now;
   const now = clock.current;
@@ -64,6 +85,7 @@ export default function Eyes(p: GameProps) {
     setOptimistic(d.pos);
     setDrawing(false);
     setDraft([]);
+    setPops([]);
     path.current = [];
   }, [d.round, p.view.run]);
   useEffect(() => {
@@ -80,11 +102,44 @@ export default function Eyes(p: GameProps) {
       if (e.data.bump) {
         setBump(true);
         setTimeout(() => setBump(false), 250);
+        sfx.bump();
+        pop("咚！撞墙了", "bad");
+      } else if (e.data.trap) {
+        sfx.fall();
+        pop("掉进坑里，回到起点…", "bad");
+      } else if (!e.data.scared) sfx.step();
+      if (e.data.key) {
+        sfx.key();
+        pop("拿到钥匙 🔑", "good");
       }
+      if (e.data.heart) {
+        sfx.heart();
+        pop("+1 💗", "love");
+      }
+      if (!e.data.bump && [5, 10, 15, 20, 30].includes(e.data.streak))
+        pop("默契连走 ×" + e.data.streak + " 🔥", "good");
+    }
+    if (e.kind === "scared" && e.data.round === d.round) {
+      inFlight.current.clear();
+      setOptimistic(e.data.pos);
+      next.current = Math.max(
+        next.current,
+        latest.current.view.data.lastMove + 1,
+      );
+      sfx.spooky();
+      setSpooked(true);
+      setTimeout(() => setSpooked(false), 600);
+      pop(walker ? "👻 哇！被吓退三步" : "👻 TA 被幽灵吓跑了", "bad");
     }
     if (e.kind === "signal") {
       setSignal(e.data.text);
+      sfx.ping();
       setTimeout(() => setSignal(""), 2800);
+    }
+    if (e.kind === "reply") {
+      setReply(e.data.text);
+      sfx.ping();
+      setTimeout(() => setReply(""), 2800);
     }
   });
   async function move(dir: number) {
@@ -115,6 +170,9 @@ export default function Eyes(p: GameProps) {
       setOptimistic(latest.current.view.data.pos);
     }
   }
+  useEffect(() => {
+    if (d.stage === "complete") sfx.win();
+  }, [d.stage, d.round]);
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (typing(e.target)) return;
@@ -147,6 +205,7 @@ export default function Eyes(p: GameProps) {
       if (d.grid[i]) return "wall";
       if (d.traps.includes(i)) return "trap";
       if (d.key === i && !d.hasKey) return "key";
+      if (d.hearts.includes(i) && !d.got.includes(i)) return "heart";
       if (d.door === i && !d.hasKey) return "door";
       if (d.exit === i) return "exit";
       return "floor";
@@ -154,6 +213,7 @@ export default function Eyes(p: GameProps) {
     if (d.triggered.includes(i)) return "trap";
     if (d.walls.includes(i)) return d.door === i ? "door" : "wall";
     if (d.exit === i) return "exit";
+    if (d.nearHearts.includes(i)) return "heart";
     if (d.seen.includes(i)) return "floor";
     if (d.light?.cell === i && p.now < d.light.until)
       return d.light.wall ? "wall" : "floor";
@@ -163,17 +223,27 @@ export default function Eyes(p: GameProps) {
     <section class="extra-stage eyes-stage" data-testid="eyes-stage">
       <div class="stage-score">
         <span>
-          第 {d.round + 1}/6 关 · {walker ? "你是行者" : "你是引路人"}
+          第 {d.round + 1}/6 关 · {d.scene} ·{" "}
+          {walker ? "你是行者" : "你是引路人"}
         </span>
-        <b>★ {d.stars}</b>
+        <b>
+          ★ {d.stars} · 💗 {d.got.length}/{d.heartGoal}
+        </b>
       </div>
       <p class="muted">
         {walker
-          ? "听 TA 的指挥，走过的路会亮起来。"
-          : "点击一个格子可点亮 3 秒；每关有 3 次。"}
+          ? "听 TA 指挥，身边有 💗 会闪光，感到寒意要小心 👻"
+          : d.round >= 2
+            ? "幽灵在岔路巡逻，💗 藏在死胡同里，要不要冒险去拿？"
+            : "带 TA 找出口，顺路捡起 💗；点格子可点亮 3 秒。"}
       </p>
       <div
-        class={"maze-board " + (bump ? "bump" : "")}
+        class={
+          "maze-board scene-" +
+          d.round +
+          (bump ? " bump" : "") +
+          (spooked ? " spooked" : "")
+        }
         style={{ aspectRatio: `${d.w}/${d.h}`, "--ratio": d.w / d.h }}
         onPointerDown={(e) => {
           start.current = [e.clientX, e.clientY];
@@ -244,10 +314,13 @@ export default function Eyes(p: GameProps) {
                 }}
               >
                 {(
-                  { trap: "✦", key: "⚿", exit: "♡", door: "▥" } as Record<
-                    string,
-                    string
-                  >
+                  {
+                    trap: "✦",
+                    key: "⚿",
+                    exit: "♡",
+                    door: "▥",
+                    heart: "♥",
+                  } as Record<string, string>
                 )[kind] || ""}
                 {d.seen.includes(i) && kind === "floor" ? <i /> : null}
               </button>
@@ -303,15 +376,46 @@ export default function Eyes(p: GameProps) {
             size={40}
           />
         </div>
+        {(walker ? d.nearGhosts : d.ghosts).map((cell: number, i: number) => (
+          <div
+            key={"ghost" + i}
+            class="maze-ghost"
+            aria-label="幽灵"
+            style={{
+              left: ((cell % d.w) / d.w) * 100 + "%",
+              top: (Math.floor(cell / d.w) / d.h) * 100 + "%",
+              width: 100 / d.w + "%",
+              height: 100 / d.h + "%",
+            }}
+          >
+            👻
+          </div>
+        ))}
         {signal && walker && (
           <div class="maze-signal" role="status">
             {signal}
           </div>
         )}
+        {reply && !walker && (
+          <div class="maze-signal reply" role="status">
+            {reply}
+          </div>
+        )}
+        <div class="maze-pops" aria-live="polite">
+          {pops.map((x) => (
+            <span key={x.id} class={"maze-pop " + x.tone}>
+              {x.text}
+            </span>
+          ))}
+        </div>
+        {d.streak >= 5 && d.stage === "walking" && (
+          <div class="maze-combo">默契 ×{d.streak}</div>
+        )}
       </div>
       <div class="stage-score">
         <small>
           撞墙 {d.bumps} · 陷阱 {d.falls}
+          {d.round >= 2 ? " · 惊吓 " + d.scares : ""}
         </small>
         <small>
           {d.hasKey
@@ -322,8 +426,19 @@ export default function Eyes(p: GameProps) {
         </small>
       </div>
       {d.stage === "complete" ? (
-        <div class="agreement">
+        <div class="agreement maze-win">
+          <div class="maze-confetti" aria-hidden="true">
+            {Array.from({ length: 14 }, (_, i) => (
+              <i style={{ "--i": i }}>{i % 3 ? "💗" : "✨"}</i>
+            ))}
+          </div>
           <h3>找到出口啦！{"★".repeat(d.history.at(-1)?.stars || 0)}</h3>
+          <p class="maze-sweet">{sweet[d.round]}</p>
+          <p class="muted">
+            用时 {d.history.at(-1)?.time.toFixed(1)} 秒 · 💗{" "}
+            {d.history.at(-1)?.hearts}/{d.heartGoal} · 最长连走 {d.bestStreak}{" "}
+            步
+          </p>
           <button
             class="primary"
             onClick={() => void send("next", { round: d.round })}
@@ -332,23 +447,36 @@ export default function Eyes(p: GameProps) {
           </button>
         </div>
       ) : walker ? (
-        <div class="dpad">
-          {[
-            ["↑", 0],
-            ["←", 3],
-            ["↓", 2],
-            ["→", 1],
-          ].map(([label, dir]) => (
-            <button
-              class={"direction pad-button move dir-" + dir}
-              aria-label={["向上", "向右", "向下", "向左"][Number(dir)]}
-              disabled={p.disabled}
-              onClick={() => void move(Number(dir))}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <>
+          <div class="dpad">
+            {[
+              ["↑", 0],
+              ["←", 3],
+              ["↓", 2],
+              ["→", 1],
+            ].map(([label, dir]) => (
+              <button
+                class={"direction pad-button move dir-" + dir}
+                aria-label={["向上", "向右", "向下", "向左"][Number(dir)]}
+                disabled={p.disabled}
+                onClick={() => void move(Number(dir))}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div class="game-actions maze-replies">
+            {replies.map((text) => (
+              <button
+                class="chip"
+                disabled={p.disabled}
+                onClick={() => void send("reply", { round: d.round, text })}
+              >
+                {text}
+              </button>
+            ))}
+          </div>
+        </>
       ) : (
         <div class="guide-controls">
           <button
@@ -381,16 +509,23 @@ export default function Eyes(p: GameProps) {
             ))}
           </div>
           <div class="game-actions">
-            {["往前走两步", "回头", "左边有坑", "对对对", "别动"].map(
-              (text) => (
-                <button
-                  class="chip"
-                  onClick={() => void send("signal", { round: d.round, text })}
-                >
-                  {text}
-                </button>
-              ),
-            )}
+            {[
+              "往前走两步",
+              "回头",
+              "左边有坑",
+              "对对对",
+              "别动",
+              "那边有💗",
+              ...(d.round >= 2 ? ["有幽灵，快跑！"] : []),
+              "相信我",
+            ].map((text) => (
+              <button
+                class="chip"
+                onClick={() => void send("signal", { round: d.round, text })}
+              >
+                {text}
+              </button>
+            ))}
           </div>
           <p class="muted">还可以点亮 {d.lights} 次</p>
         </div>

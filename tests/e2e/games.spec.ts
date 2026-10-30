@@ -1010,3 +1010,127 @@ test("puck-sling — sling pucks through the gap with real drags and reach a res
     await b.close();
   }
 });
+test("love-slots — two seats pull, stop, confirm fate cards and finish", async ({
+  browser,
+}) => {
+  test.setTimeout(180000);
+  const a = await browser.newContext({ viewport: { width: 360, height: 740 } }),
+    b = await browser.newContext({ viewport: { width: 360, height: 740 } });
+  await instrument(a);
+  await instrument(b);
+  const one = await a.newPage(),
+    two = await b.newPage(),
+    errors: string[] = [];
+  one.on("pageerror", (e) => errors.push(e.message));
+  two.on("pageerror", (e) => errors.push(e.message));
+  try {
+    await one.goto("/?lag=120&jitter=30");
+    await one.getByRole("button", { name: /创建房间，邀请/ }).click();
+    await one.getByLabel("你的昵称").fill("拉杆甲");
+    await one.getByRole("button", { name: "创建我们的房间 ❤" }).click();
+    await expect(one).toHaveURL(/\/r\//);
+    await two.goto(one.url());
+    await two.getByLabel("你的昵称").fill("喊停乙");
+    await two.getByRole("button", { name: "进入房间 ❤" }).click();
+    await expect(one.locator(".couple-names")).toContainText("喊停乙");
+    await start(one, two, "love-slots", "心动老虎机", { pulls: 6 });
+    const pages = [one, two];
+    for (let pull = 0; pull < 6; pull++) {
+      const d = await data(one),
+        puller = pages[d.turn],
+        partner = pages[1 - d.turn];
+      await expect(
+        partner.getByRole("button", { name: "拉下拉杆 🎰" }),
+      ).toHaveCount(0);
+      await puller.getByRole("button", { name: "押 2", exact: true }).click();
+      await puller.getByRole("button", { name: "拉下拉杆 🎰" }).click();
+      const stop = partner.getByRole("button", { name: "停！", exact: true });
+      await expect(stop).toBeEnabled({ timeout: 5000 });
+      if (pull === 0) {
+        await partner.screenshot({ path: "test-results/slots-spinning.png" });
+      }
+      await stop.click();
+      await expect(puller.locator(".fate-card")).toBeVisible();
+      if (pull === 0)
+        await puller.screenshot({ path: "test-results/slots-result.png" });
+      const after = await data(puller),
+        target = after.outcome.card.target,
+        verifier =
+          target === "both" ? puller : target === "puller" ? partner : puller;
+      await verifier.getByRole("button", { name: /做到/ }).click();
+      if (after.coins + 1 <= 0) break;
+      if (pull < 5)
+        await one.waitForFunction(
+          (n) => (window as any).observed.game?.data.pull === n,
+          pull + 1,
+        );
+    }
+    await result(one, two);
+    expect(errors).toEqual([]);
+  } finally {
+    await a.close();
+    await b.close();
+  }
+});
+test("my-eyes — guide sees hearts and patrolling ghosts from round three", async ({
+  browser,
+}) => {
+  test.setTimeout(180000);
+  const a = await browser.newContext({ viewport: { width: 390, height: 844 } }),
+    b = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await instrument(a);
+  await instrument(b);
+  const one = await a.newPage(),
+    two = await b.newPage(),
+    errors: string[] = [];
+  one.on("pageerror", (e) => errors.push(e.message));
+  two.on("pageerror", (e) => errors.push(e.message));
+  try {
+    await one.goto("/");
+    await one.getByRole("button", { name: /创建房间，邀请/ }).click();
+    await one.getByLabel("你的昵称").fill("看图甲");
+    await one.getByRole("button", { name: "创建我们的房间 ❤" }).click();
+    await expect(one).toHaveURL(/\/r\//);
+    await two.goto(one.url());
+    await two.getByLabel("你的昵称").fill("走路乙");
+    await two.getByRole("button", { name: "进入房间 ❤" }).click();
+    await expect(one.locator(".couple-names")).toContainText("走路乙");
+    await start(one, two, "my-eyes", "你是我的眼");
+    for (let round = 0; round < 3; round++) {
+      const walker = round % 2 ? two : one,
+        guide = round % 2 ? one : two,
+        m = await data(guide);
+      expect(m.hearts.length).toBeGreaterThan(0);
+      expect((await data(walker)).hearts).toBeUndefined();
+      await expect(guide.locator(".maze-cell.heart").first()).toBeVisible();
+      if (round === 0) {
+        await walker.getByRole("button", { name: "爱你哟" }).click();
+        await expect(guide.locator(".maze-signal.reply")).toHaveText("爱你哟");
+      }
+      if (round === 2) {
+        expect(m.ghosts.length).toBeGreaterThan(0);
+        await expect(guide.locator(".maze-ghost").first()).toBeVisible();
+        await guide.screenshot({ path: "test-results/eyes-guide-r3.png" });
+        await walker.screenshot({ path: "test-results/eyes-walker-r3.png" });
+        break;
+      }
+      let last = m.pos;
+      for (const [n, cell] of route(m).slice(1).entries()) {
+        const delta = cell - last,
+          dir = delta === 1 ? 1 : delta === -1 ? 3 : delta === m.w ? 2 : 0;
+        await walker.waitForTimeout(60);
+        await game(walker, "move", { round, n, dir });
+        last = cell;
+      }
+      await walker.getByRole("button", { name: "交换身份，下一关 →" }).click();
+      await one.waitForFunction(
+        (r) => (window as any).observed.game.data.round === r,
+        round + 1,
+      );
+    }
+    expect(errors).toEqual([]);
+  } finally {
+    await a.close();
+    await b.close();
+  }
+});

@@ -270,6 +270,7 @@ export const TILE_COLORS: Record<string, [string, string]> = {
   "puzzle-us": ["#A9CCFF", "#5B8DEF"],
   heartbeat: ["#FFA3E3", "#C45BFF"],
   "puck-sling": ["#F3D29B", "#C98B4E"],
+  "love-slots": ["#FFB3C7", "#E8436D"],
 };
 const S = { stroke: INK, "stroke-width": 2.6, "stroke-linejoin": "round", "stroke-linecap": "round" } as const;
 const HEART = (x: number, y: number, r: number) =>
@@ -400,7 +401,7 @@ export function GameIcon({ id }: { id: string }) {
       </>
     );
   if (!body) {
-    const symbols: Record<string, string> = {survival:'💌','spot-difference':'🔍','coop-kitchen':'🍳','couple-ludo':'🎲','hide-seek':'🔦','couple-jump':'🧊'};
+    const symbols: Record<string, string> = {survival:'💌','spot-difference':'🔍','coop-kitchen':'🍳','couple-ludo':'🎲','hide-seek':'🔦','couple-jump':'🧊','love-slots':'🎰'};
     body = <text x="32" y="44" text-anchor="middle" font-size="31">{symbols[id] || '💗'}</text>;
   }
   const [a, b] = TILE_COLORS[id] || ["#FFD", "#FC8"];

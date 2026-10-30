@@ -1,0 +1,392 @@
+/* ---------- 心动棋 ---------- */
+.ludo-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: linear-gradient(#fff8f1, #ffeef3);
+}
+.ludo-players {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.ludo-player {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 16px;
+  background: #fff;
+  border: 2px solid #ecd3d8;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+.ludo-player > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ludo-player b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ludo-player small {
+  font-size: 11px;
+  color: #8a6b74;
+}
+.ludo-player small.gift {
+  color: #d1477a;
+  font-weight: 700;
+}
+.ludo-player.active {
+  border-color: #ff8a9f;
+  box-shadow: 0 0 0 3px rgba(255, 138, 159, 0.3);
+  transform: translateY(-2px);
+}
+.ludo-player em {
+  position: absolute;
+  right: 8px;
+  top: -10px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #ff8a9f;
+  color: #fff;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+.ludo-meta {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.ludo-meta span {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #ecd3d8;
+}
+.ludo-board-wrap {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 3px solid #523c47;
+  box-shadow: 0 6px 0 #cf9a87;
+}
+.ludo-board {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.zone-label {
+  font-size: 12px;
+  font-weight: 700;
+  fill: #523c47;
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-width: 3px;
+}
+.zone-1 .zone-label,
+.zone-4 .zone-label {
+  fill: #fff;
+  stroke: rgba(30, 20, 60, 0.6);
+}
+.ludo-road-edge {
+  fill: none;
+  stroke: rgba(82, 60, 71, 0.35);
+  stroke-width: 26;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ludo-road {
+  fill: none;
+  stroke: #fff6e6;
+  stroke-width: 20;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ludo-tile .tile-shape {
+  stroke: #523c47;
+  stroke-width: 2;
+}
+.ludo-tile .tile-no {
+  font-size: 8px;
+  fill: #523c47;
+  opacity: 0.55;
+}
+.ludo-tile.target .tile-shape {
+  stroke: #ff3d7f;
+  stroke-width: 3.5;
+  animation: ludo-target 0.8s ease-in-out infinite alternate;
+}
+@keyframes ludo-target {
+  to {
+    stroke-width: 6;
+  }
+}
+.ludo-token {
+  transition: transform 0.7s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+.ludo-token.active svg {
+  animation: ludo-hop 0.9s ease-in-out infinite;
+}
+@keyframes ludo-hop {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+.ludo-chapter {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translateX(-50%);
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 3px solid #523c47;
+  font-family: var(--display);
+  white-space: nowrap;
+  animation: pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ludo-event {
+  margin: 0;
+  text-align: center;
+  font-family: var(--display);
+  color: #b23a5c;
+}
+.ludo-console {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.ludo-console p {
+  margin: 0;
+}
+.couple-new-stage .ludo-roll-button {
+  padding: 14px 28px;
+  font-size: 20px;
+  border-radius: 18px;
+  box-shadow: 0 5px 0 #b6506c;
+}
+.ludo-dice-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.couple-new-stage .ludo-die-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 112px;
+  padding: 10px 6px;
+  border-radius: 16px;
+  background: #fff;
+  border: 2px solid #ecd3d8;
+  box-shadow: 0 4px 0 #ecd3d8;
+}
+.couple-new-stage .ludo-die-card:not(:disabled):hover {
+  border-color: #ff8a9f;
+  transform: translateY(-2px);
+}
+.ludo-die-card small {
+  font-size: 11px;
+  color: #8a6b74;
+  font-weight: 400;
+}
+.couple-new-stage .ludo-die-card.gift {
+  background: #fff1f6;
+  border-style: dashed;
+}
+.gift-icon {
+  font-size: 34px;
+  line-height: 44px;
+}
+.ludo-die {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  width: 44px;
+  height: 44px;
+  padding: 6px;
+  border-radius: 10px;
+  background: linear-gradient(#fff, #f3e6e9);
+  border: 2px solid #523c47;
+  box-shadow: 0 3px 0 #b48a95;
+}
+.ludo-die i {
+  border-radius: 50%;
+}
+.ludo-die i.on {
+  background: #e8436d;
+}
+.ludo-die.rolling {
+  animation: ludo-roll 0.65s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+@keyframes ludo-roll {
+  0% {
+    transform: rotate(-200deg) scale(0.4);
+  }
+  60% {
+    transform: rotate(20deg) scale(1.15);
+  }
+}
+.ludo-card {
+  width: min(100%, 460px);
+  padding: 12px 14px 14px;
+  border-radius: 18px;
+  border: 3px solid #523c47;
+  background: #fff;
+  box-shadow: 0 6px 0 rgba(82, 60, 71, 0.25);
+  animation: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ludo-card .card-tag {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 2px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+  background: #6aa9e8;
+}
+.card-challenge {
+  background: #fff7ec;
+}
+.card-challenge .card-tag {
+  background: #f39a3d;
+}
+.card-memory {
+  background: #fff3f7;
+  transform: rotate(-1deg);
+}
+.card-memory .card-tag {
+  background: #e8678f;
+}
+.card-rate .card-tag {
+  background: #e8436d;
+}
+.card-fork {
+  background: #f5f0ff;
+}
+.card-fork .card-tag {
+  background: #8a6ae0;
+}
+.card-truth {
+  background: #f0f7ff;
+}
+.ludo-card .card-text {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.card-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.card-input label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  text-align: left;
+}
+.card-input input {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 2px solid #ecd3d8;
+  font-size: 16px;
+}
+.ludo-card blockquote {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff;
+  border-left: 4px solid #e8436d;
+  text-align: left;
+  font-size: 16px;
+}
+.rate-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+.rate-row button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.rate-row small {
+  font-size: 10px;
+  font-weight: 400;
+}
+.couple-new-stage .ludo-card button.done {
+  background: #d7f5d0;
+  border-color: #6cbf6c;
+  color: #2a7a2a;
+}
+.fork-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.couple-new-stage .fork-sign {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 8px;
+  border-radius: 6px 18px 18px 6px;
+  border-width: 3px;
+}
+.couple-new-stage .fork-sign.short {
+  background: #fff1c9;
+  border-color: #d9a400;
+}
+.couple-new-stage .fork-sign.long {
+  background: #e3f6dc;
+  border-color: #6cbf6c;
+  border-radius: 18px 6px 6px 18px;
+}
+.fork-sign b {
+  font-size: 18px;
+}
+.fork-sign small {
+  font-size: 11px;
+  font-weight: 400;
+}
+.ludo-legend {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+.ludo-legend li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ludo-legend i {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  font-style: normal;
+  font-size: 11px;
+  border: 1.5px solid #523c47;
+}

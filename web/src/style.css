@@ -21,9 +21,11 @@
   --soil-dark: #8a5a31;
   --grass: #6fcb45;
   --sky: #8fd3ff;
-  --display: "DuoLatin", "DuoDisplay", "PingFang SC", "HarmonyOS Sans SC", "MiSans",
+  --display:
+    "DuoLatin", "DuoDisplay", "PingFang SC", "HarmonyOS Sans SC", "MiSans",
     "Microsoft YaHei", sans-serif;
-  --body: -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans SC",
+  --body:
+    -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans SC",
     "MiSans", "Microsoft YaHei", "Noto Sans SC", sans-serif;
   --social-h: 62px;
   color-scheme: light;
@@ -155,8 +157,9 @@ img {
   bottom: 0;
   height: 22vh;
   min-height: 130px;
-  background: radial-gradient(circle at 20% 40%, #8e5a31 0 3px, transparent 4px)
-      0 0 / 46px 38px,
+  background:
+    radial-gradient(circle at 20% 40%, #8e5a31 0 3px, transparent 4px) 0 0 /
+      46px 38px,
     radial-gradient(circle at 70% 70%, #8e5a31 0 2.5px, transparent 3.5px) 0 0 /
       58px 44px,
     var(--soil);
@@ -172,15 +175,24 @@ img {
 .scene .stars {
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(#fff 1.2px, transparent 1.8px),
+  background-image:
+    radial-gradient(#fff 1.2px, transparent 1.8px),
     radial-gradient(#ffe58a 1.6px, transparent 2.2px);
-  background-size: 73px 61px, 131px 97px;
-  background-position: 0 0, 40px 30px;
+  background-size:
+    73px 61px,
+    131px 97px;
+  background-position:
+    0 0,
+    40px 30px;
   opacity: 0.9;
 }
 .scene .stars-2 {
-  background-size: 97px 83px, 163px 119px;
-  background-position: 20px 50px, 90px 10px;
+  background-size:
+    97px 83px,
+    163px 119px;
+  background-position:
+    20px 50px,
+    90px 10px;
   opacity: 0.55;
 }
 .room-page.playing .scene .moon {
@@ -194,8 +206,9 @@ img {
 }
 .underground {
   position: relative;
-  background: radial-gradient(circle at 20% 40%, #946036 0 3px, transparent 4px)
-      0 0 / 52px 44px,
+  background:
+    radial-gradient(circle at 20% 40%, #946036 0 3px, transparent 4px) 0 0 /
+      52px 44px,
     radial-gradient(circle at 70% 70%, #946036 0 2.5px, transparent 3.5px) 0 0 /
       64px 50px,
     linear-gradient(#a8703f, #8a5a31 70%, #774c29);
@@ -239,12 +252,17 @@ img {
   background: linear-gradient(var(--top), var(--bottom));
   border: 3px solid var(--edge);
   border-radius: 999px;
-  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -4px 0 rgba(0, 0, 0, 0.1), 0 5px 0 var(--edge),
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.1),
+    0 5px 0 var(--edge),
     0 9px 14px rgba(58, 38, 24, 0.22);
   text-decoration: none;
   white-space: nowrap;
-  transition: transform 0.08s, box-shadow 0.08s, filter 0.15s;
+  transition:
+    transform 0.08s,
+    box-shadow 0.08s,
+    filter 0.15s;
   -webkit-user-select: none;
   user-select: none;
 }
@@ -289,8 +307,10 @@ img {
 .pink-button:active:not(:disabled),
 .danger-button:active:not(:disabled) {
   transform: translateY(4px);
-  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.08), 0 1px 0 var(--edge),
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.08),
+    0 1px 0 var(--edge),
     0 2px 4px rgba(58, 38, 24, 0.2);
 }
 :is(.primary, .secondary, .go, .pink-button, .danger-button):disabled {
@@ -356,7 +376,9 @@ img {
   border: 3px solid #fff;
   color: #fff;
   background: radial-gradient(circle at 35% 30%, #ffd879, #ffa42e 72%);
-  box-shadow: 0 0 0 2.5px #c9701a, 0 4px 0 2.5px #a85a10,
+  box-shadow:
+    0 0 0 2.5px #c9701a,
+    0 4px 0 2.5px #a85a10,
     0 7px 10px rgba(58, 38, 24, 0.25);
   font-family: var(--display);
   font-size: 24px;
@@ -371,13 +393,17 @@ img {
 .round-small:active,
 .close-button:active {
   transform: translateY(3px);
-  box-shadow: 0 0 0 2.5px #c9701a, 0 1px 0 2.5px #a85a10;
+  box-shadow:
+    0 0 0 2.5px #c9701a,
+    0 1px 0 2.5px #a85a10;
 }
 .close-button {
   width: 40px;
   height: 40px;
   background: radial-gradient(circle at 35% 30%, #ff9b9b, #f04e5e 72%);
-  box-shadow: 0 0 0 2.5px #a82838, 0 4px 0 2.5px #861c2a;
+  box-shadow:
+    0 0 0 2.5px #a82838,
+    0 4px 0 2.5px #861c2a;
   font-size: 26px;
   text-shadow: 0 2px 0 #861c2a;
 }
@@ -403,7 +429,9 @@ img {
   border-radius: 50%;
   border: 3px solid #fff;
   background: radial-gradient(circle at 35% 30%, #ffd879, #ffa42e 72%);
-  box-shadow: 0 0 0 2.5px #c9701a, 0 4px 0 2.5px #a85a10,
+  box-shadow:
+    0 0 0 2.5px #c9701a,
+    0 4px 0 2.5px #a85a10,
     0 7px 10px rgba(58, 38, 24, 0.25);
   filter: none;
 }
@@ -414,12 +442,18 @@ img {
   font-size: 15px;
   line-height: 1;
   color: #fff;
-  text-shadow: 0 0 3px #a85a10, 0 2px 0 #a85a10, 2px 0 0 #a85a10,
-    -2px 0 0 #a85a10, 0 -2px 0 #a85a10;
+  text-shadow:
+    0 0 3px #a85a10,
+    0 2px 0 #a85a10,
+    2px 0 0 #a85a10,
+    -2px 0 0 #a85a10,
+    0 -2px 0 #a85a10;
 }
 .round-button:active .icon {
   transform: translateY(3px);
-  box-shadow: 0 0 0 2.5px #c9701a, 0 1px 0 2.5px #a85a10;
+  box-shadow:
+    0 0 0 2.5px #c9701a,
+    0 1px 0 2.5px #a85a10;
 }
 .badge {
   position: absolute;
@@ -444,7 +478,9 @@ img {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
   border: 3px solid #fff;
-  box-shadow: 0 0 0 2.5px #5aa9e6, 0 4px 0 2.5px #3c86c2;
+  box-shadow:
+    0 0 0 2.5px #5aa9e6,
+    0 4px 0 2.5px #3c86c2;
   color: #1d5f96;
   font-family: var(--display);
   font-size: 16px;
@@ -462,7 +498,9 @@ img {
   background: linear-gradient(#fffdf3, #fff1c8);
   border: 4px solid var(--gold);
   border-radius: 28px;
-  box-shadow: inset 0 0 0 3px #fffbea, 0 6px 0 var(--gold-dark),
+  box-shadow:
+    inset 0 0 0 3px #fffbea,
+    0 6px 0 var(--gold-dark),
     0 12px 26px rgba(58, 38, 24, 0.24);
 }
 .ribbon {
@@ -476,8 +514,13 @@ img {
   background: linear-gradient(#ff8f8f, #f0485e);
   border: 3px solid #a82838;
   border-radius: 14px;
-  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35), 0 4px 0 #a82838;
-  text-shadow: 0 2px 0 #a82838, 1.5px 0 0 #a82838, -1.5px 0 0 #a82838,
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.35),
+    0 4px 0 #a82838;
+  text-shadow:
+    0 2px 0 #a82838,
+    1.5px 0 0 #a82838,
+    -1.5px 0 0 #a82838,
     0 -1.5px 0 #a82838;
 }
 .wood-sign {
@@ -486,7 +529,8 @@ img {
   padding: 8px 22px 10px;
   font-size: 21px;
   color: #fff;
-  background: repeating-linear-gradient(
+  background:
+    repeating-linear-gradient(
       0deg,
       transparent 0 9px,
       rgba(0, 0, 0, 0.06) 9px 11px
@@ -494,8 +538,13 @@ img {
     linear-gradient(#e6a75f, #c9813e);
   border: 3px solid var(--ink);
   border-radius: 12px;
-  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.3), 0 5px 0 #6e4423;
-  text-shadow: 0 2px 0 #7a4a1f, 1.5px 0 0 #7a4a1f, -1.5px 0 0 #7a4a1f,
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.3),
+    0 5px 0 #6e4423;
+  text-shadow:
+    0 2px 0 #7a4a1f,
+    1.5px 0 0 #7a4a1f,
+    -1.5px 0 0 #7a4a1f,
     0 -1.5px 0 #7a4a1f;
 }
 .name-tag {
@@ -635,7 +684,9 @@ dialog[open] .sheet {
   background: linear-gradient(#fffdf3, #fff1c8);
   border: 4px solid var(--gold);
   border-radius: 28px;
-  box-shadow: inset 0 0 0 3px #fffbea, 0 6px 0 var(--gold-dark),
+  box-shadow:
+    inset 0 0 0 3px #fffbea,
+    0 6px 0 var(--gold-dark),
     0 18px 40px rgba(20, 20, 60, 0.35);
 }
 .sheet-top {
@@ -942,13 +993,17 @@ dialog[open] .sheet {
   border-radius: 24px;
   background: linear-gradient(#fffdf3, #fff1c8);
   border: 3px solid var(--ink);
-  box-shadow: inset 0 0 0 3px #fffbea, 0 6px 0 #5c3a1c,
+  box-shadow:
+    inset 0 0 0 3px #fffbea,
+    0 6px 0 #5c3a1c,
     0 10px 16px rgba(30, 15, 5, 0.3);
   transition: transform 0.12s;
 }
 .game-card:active {
   transform: translateY(4px);
-  box-shadow: inset 0 0 0 3px #fffbea, 0 2px 0 #5c3a1c;
+  box-shadow:
+    inset 0 0 0 3px #fffbea,
+    0 2px 0 #5c3a1c;
 }
 .game-icon {
   display: block;
@@ -1135,7 +1190,9 @@ dialog[open] .sheet {
 .avatar-options .option.selected {
   border-color: #ff8a1f;
   background: #fff1d6;
-  box-shadow: 0 3px 0 #b85a0c, 0 0 0 3px rgba(255, 138, 31, 0.3);
+  box-shadow:
+    0 3px 0 #b85a0c,
+    0 0 0 3px rgba(255, 138, 31, 0.3);
 }
 .swatch {
   width: 42px;
@@ -1143,7 +1200,9 @@ dialog[open] .sheet {
   border-radius: 50%;
   border: 3px solid #fff;
   background: var(--player);
-  box-shadow: 0 0 0 2.5px var(--ink), 0 3px 0 2.5px var(--ink);
+  box-shadow:
+    0 0 0 2.5px var(--ink),
+    0 3px 0 2.5px var(--ink);
   color: #fff;
   font-weight: 900;
   font-size: 18px;
@@ -1308,8 +1367,9 @@ dialog[open] .sheet {
   right: 4%;
   bottom: 30px;
   height: 46px;
-  background: radial-gradient(circle at 30% 50%, #8e5a31 0 3px, transparent 4px)
-      0 0 / 34px 22px,
+  background:
+    radial-gradient(circle at 30% 50%, #8e5a31 0 3px, transparent 4px) 0 0 /
+      34px 22px,
     linear-gradient(var(--soil), #8a5a31);
   border: 3px solid var(--ink);
   border-radius: 10px 10px 50% 50% / 10px 10px 100% 100%;
@@ -1325,7 +1385,9 @@ dialog[open] .sheet {
   background: var(--grass);
   border: 3px solid var(--ink);
   border-radius: 12px;
-  box-shadow: inset 0 4px 0 #a6eb6f, inset 0 -3px 0 #3f8f27;
+  box-shadow:
+    inset 0 4px 0 #a6eb6f,
+    inset 0 -3px 0 #3f8f27;
 }
 .island-couple {
   position: relative;
@@ -1527,8 +1589,12 @@ dialog[open] .sheet {
   font-size: 22px;
   line-height: 1.1;
   color: #fff;
-  text-shadow: 0 2px 0 #b85a0c, 2px 0 0 #b85a0c, -2px 0 0 #b85a0c,
-    0 -2px 0 #b85a0c, 0 4px 0 rgba(0, 0, 0, 0.2);
+  text-shadow:
+    0 2px 0 #b85a0c,
+    2px 0 0 #b85a0c,
+    -2px 0 0 #b85a0c,
+    0 -2px 0 #b85a0c,
+    0 4px 0 rgba(0, 0, 0, 0.2);
 }
 .hud-title small {
   max-width: 100%;
@@ -1576,9 +1642,16 @@ dialog[open] .sheet {
   font-size: 110px;
   line-height: 1;
   color: #ffd23f;
-  text-shadow: 0 5px 0 #8a3f0a, 4px 0 0 #8a3f0a, -4px 0 0 #8a3f0a,
-    0 -4px 0 #8a3f0a, 3px 3px 0 #8a3f0a, -3px -3px 0 #8a3f0a,
-    3px -3px 0 #8a3f0a, -3px 3px 0 #8a3f0a, 0 10px 18px rgba(0, 0, 0, 0.35);
+  text-shadow:
+    0 5px 0 #8a3f0a,
+    4px 0 0 #8a3f0a,
+    -4px 0 0 #8a3f0a,
+    0 -4px 0 #8a3f0a,
+    3px 3px 0 #8a3f0a,
+    -3px -3px 0 #8a3f0a,
+    3px -3px 0 #8a3f0a,
+    -3px 3px 0 #8a3f0a,
+    0 10px 18px rgba(0, 0, 0, 0.35);
   animation: count-pop 1s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes count-pop {
@@ -1632,7 +1705,9 @@ dialog[open] .sheet {
   border-radius: 999px;
   background: linear-gradient(#fffdf3, #ffefc4);
   border: 3px solid var(--gold);
-  box-shadow: 0 4px 0 var(--gold-dark), 0 8px 16px rgba(30, 30, 70, 0.25);
+  box-shadow:
+    0 4px 0 var(--gold-dark),
+    0 8px 16px rgba(30, 30, 70, 0.25);
 }
 .reactions {
   display: flex;
@@ -1775,9 +1850,15 @@ dialog[open] .sheet {
   font-size: 54px;
   line-height: 1.1;
   color: #ff6b6b;
-  text-shadow: 0 4px 0 #7a1e2e, 3px 0 0 #7a1e2e, -3px 0 0 #7a1e2e,
-    0 -3px 0 #7a1e2e, 2px 2px 0 #7a1e2e, -2px -2px 0 #7a1e2e,
-    2px -2px 0 #7a1e2e, -2px 2px 0 #7a1e2e;
+  text-shadow:
+    0 4px 0 #7a1e2e,
+    3px 0 0 #7a1e2e,
+    -3px 0 0 #7a1e2e,
+    0 -3px 0 #7a1e2e,
+    2px 2px 0 #7a1e2e,
+    -2px -2px 0 #7a1e2e,
+    2px -2px 0 #7a1e2e,
+    -2px 2px 0 #7a1e2e;
 }
 .result-highlight {
   width: 100%;
@@ -1972,7 +2053,9 @@ dialog[open] .sheet {
 }
 .calibration-pad.pulse-1 {
   background: radial-gradient(circle at 35% 30%, #ffe0ea, #ff8fb1 70%);
-  box-shadow: 0 6px 0 #9c2a52, 0 0 0 8px rgba(255, 111, 156, 0.35);
+  box-shadow:
+    0 6px 0 #9c2a52,
+    0 0 0 8px rgba(255, 111, 156, 0.35);
 }
 
 /* ---------- keepsakes / chat / journal ---------- */
@@ -2296,7 +2379,9 @@ dialog[open] .sheet {
   font-family: var(--display);
   font-size: 15px;
   color: #fff;
-  text-shadow: 0 2px 0 rgba(20, 40, 90, 0.45), 0 0 6px rgba(20, 40, 90, 0.35);
+  text-shadow:
+    0 2px 0 rgba(20, 40, 90, 0.45),
+    0 0 6px rgba(20, 40, 90, 0.35);
 }
 .keyboard-help {
   margin: 0;
@@ -2368,7 +2453,9 @@ dialog[open] .sheet {
   border-radius: 24px;
   overflow: hidden;
   border: 4px solid var(--ink);
-  box-shadow: 0 6px 0 rgba(58, 38, 24, 0.4), 0 12px 24px rgba(20, 30, 70, 0.25);
+  box-shadow:
+    0 6px 0 rgba(58, 38, 24, 0.4),
+    0 12px 24px rgba(20, 30, 70, 0.25);
   background: #9fd9ff;
 }
 .red-stage canvas,
@@ -2437,18 +2524,24 @@ dialog[open] .sheet {
 }
 .pad-button.move {
   background: radial-gradient(circle at 35% 30%, #c4f56b, #6ccb2e 72%);
-  box-shadow: 0 0 0 2.5px #3d8a16, 0 5px 0 2.5px #2c6a0e;
+  box-shadow:
+    0 0 0 2.5px #3d8a16,
+    0 5px 0 2.5px #2c6a0e;
 }
 .pad-button.grab {
   background: radial-gradient(circle at 35% 30%, #ffc2d6, #ff6f9c 72%);
-  box-shadow: 0 0 0 2.5px #c23e6a, 0 5px 0 2.5px #9c2a52;
+  box-shadow:
+    0 0 0 2.5px #c23e6a,
+    0 5px 0 2.5px #9c2a52;
 }
 .pad-button.jump {
   width: 76px;
   height: 76px;
   font-size: 30px;
   background: radial-gradient(circle at 35% 30%, #ffd879, #ff8a1f 72%);
-  box-shadow: 0 0 0 2.5px #b85a0c, 0 5px 0 2.5px #8a420a;
+  box-shadow:
+    0 0 0 2.5px #b85a0c,
+    0 5px 0 2.5px #8a420a;
 }
 .pad-button:active {
   transform: translateY(3px) scale(0.96);
@@ -2476,7 +2569,9 @@ dialog[open] .sheet {
   background: #141b45;
 }
 .rhythm-field.in-sync {
-  box-shadow: 0 6px 0 rgba(58, 38, 24, 0.4), 0 0 0 6px rgba(255, 77, 106, 0.55),
+  box-shadow:
+    0 6px 0 rgba(58, 38, 24, 0.4),
+    0 0 0 6px rgba(255, 77, 106, 0.55),
     0 0 30px rgba(255, 77, 106, 0.6);
 }
 .heartbeat-stage {
@@ -2542,9 +2637,17 @@ dialog[open] .sheet {
   gap: 14px;
   border-radius: 28px;
   border: 4px solid var(--ink);
-  background: radial-gradient(circle at 50% 30%, #6a5cff 0, #3b3f8c 55%, #23265c 100%);
-  box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.85),
-    inset 0 0 0 9px #c9b8ff, 0 8px 0 #0f1230, 0 16px 30px rgba(0, 0, 0, 0.35);
+  background: radial-gradient(
+    circle at 50% 30%,
+    #6a5cff 0,
+    #3b3f8c 55%,
+    #23265c 100%
+  );
+  box-shadow:
+    inset 0 0 0 6px rgba(255, 255, 255, 0.85),
+    inset 0 0 0 9px #c9b8ff,
+    0 8px 0 #0f1230,
+    0 16px 30px rgba(0, 0, 0, 0.35);
   color: #fff;
   font-family: var(--body);
 }
@@ -2562,7 +2665,10 @@ dialog[open] .sheet {
 .talk-card.revealed {
   background: linear-gradient(#fffdf3, #fff1c8);
   color: var(--ink);
-  box-shadow: inset 0 0 0 6px #fff, inset 0 0 0 9px #f2c94c, 0 8px 0 #0f1230,
+  box-shadow:
+    inset 0 0 0 6px #fff,
+    inset 0 0 0 9px #f2c94c,
+    0 8px 0 #0f1230,
     0 16px 30px rgba(0, 0, 0, 0.35);
   animation: flip-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -2587,7 +2693,10 @@ dialog[open] .sheet {
   font-family: var(--display);
   font-size: 34px;
   color: #ffe066;
-  text-shadow: 0 3px 0 #7a3a0a, 2px 0 0 #7a3a0a, -2px 0 0 #7a3a0a,
+  text-shadow:
+    0 3px 0 #7a3a0a,
+    2px 0 0 #7a3a0a,
+    -2px 0 0 #7a3a0a,
     0 -2px 0 #7a3a0a;
 }
 .card-foot {
@@ -2655,7 +2764,9 @@ dialog[open] .sheet {
   background: linear-gradient(#fffdf3, #fff1c8);
   border: 4px solid var(--gold);
   border-radius: 28px;
-  box-shadow: inset 0 0 0 3px #fffbea, 0 6px 0 var(--gold-dark);
+  box-shadow:
+    inset 0 0 0 3px #fffbea,
+    0 6px 0 var(--gold-dark);
 }
 .word-choices h2 {
   font-size: 22px;
@@ -2733,7 +2844,9 @@ dialog[open] .sheet {
   border: 10px solid #c98a4b;
   outline: 3px solid var(--ink);
   outline-offset: 0;
-  box-shadow: inset 0 0 0 3px var(--ink), 0 8px 0 #6e4423,
+  box-shadow:
+    inset 0 0 0 3px var(--ink),
+    0 8px 0 #6e4423,
     0 12px 24px rgba(30, 30, 70, 0.25);
   touch-action: none;
 }
@@ -2757,21 +2870,24 @@ dialog[open] .sheet {
   height: 31px;
   border-radius: 50% 46% 52% 44%;
   border: 3px solid var(--ink);
-  box-shadow: inset -4px -4px 0 rgba(0, 0, 0, 0.15),
+  box-shadow:
+    inset -4px -4px 0 rgba(0, 0, 0, 0.15),
     inset 3px 3px 0 rgba(255, 255, 255, 0.35);
   padding: 0;
 }
 .ink-palette button.active {
   transform: scale(1.18) translateY(-3px);
-  box-shadow: inset -4px -4px 0 rgba(0, 0, 0, 0.15),
-    inset 3px 3px 0 rgba(255, 255, 255, 0.35), 0 0 0 3px #ffd23f;
+  box-shadow:
+    inset -4px -4px 0 rgba(0, 0, 0, 0.15),
+    inset 3px 3px 0 rgba(255, 255, 255, 0.35),
+    0 0 0 3px #ffd23f;
 }
 .ink-palette button[aria-label="橡皮"] {
   background: repeating-linear-gradient(
-      45deg,
-      #ffd6e0 0 6px,
-      #fff 6px 12px
-    ) !important;
+    45deg,
+    #ffd6e0 0 6px,
+    #fff 6px 12px
+  ) !important;
 }
 .word-choices .stars {
   color: #ffb020;
@@ -2910,7 +3026,9 @@ dialog[open] .sheet {
   border-radius: 24px;
   background: linear-gradient(#fffdf3, #fff1c8);
   border: 4px solid var(--gold);
-  box-shadow: inset 0 0 0 3px #fffbea, 0 6px 0 var(--gold-dark);
+  box-shadow:
+    inset 0 0 0 3px #fffbea,
+    0 6px 0 var(--gold-dark);
 }
 .mind-form label {
   display: flex;
@@ -2950,14 +3068,17 @@ dialog[open] .sheet {
   margin: 0;
   padding: 18px 16px 16px 16px;
   border-radius: 24px;
-  background: repeating-linear-gradient(
+  background:
+    repeating-linear-gradient(
       0deg,
       transparent 0 14px,
       rgba(0, 0, 0, 0.05) 14px 16px
     ),
     linear-gradient(#ffe9b8, #f5c77e);
   border: 4px solid var(--ink);
-  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.5), 0 6px 0 #8a5a31;
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.5),
+    0 6px 0 #8a5a31;
   font-family: var(--body);
   font-weight: 900;
   font-size: 21px;
@@ -3012,7 +3133,9 @@ dialog[open] .sheet {
 .choice-grid .choice.selected {
   background: linear-gradient(#fff, var(--c));
   transform: translateY(3px);
-  box-shadow: 0 2px 0 var(--e), 0 0 0 4px rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 2px 0 var(--e),
+    0 0 0 4px rgba(255, 255, 255, 0.85);
 }
 .range-answer {
   display: flex;
@@ -3126,7 +3249,10 @@ dialog[open] .sheet {
 .round-score {
   margin: 0;
   color: #fff !important;
-  text-shadow: 0 2px 0 #3d8a16, 2px 0 0 #3d8a16, -2px 0 0 #3d8a16,
+  text-shadow:
+    0 2px 0 #3d8a16,
+    2px 0 0 #3d8a16,
+    -2px 0 0 #3d8a16,
     0 -2px 0 #3d8a16;
 }
 
@@ -3191,14 +3317,17 @@ dialog[open] .sheet {
   grid-template-columns: repeat(15, minmax(0, 1fr));
   padding: 10px;
   border-radius: 22px;
-  background: repeating-linear-gradient(
+  background:
+    repeating-linear-gradient(
       100deg,
       rgba(140, 85, 30, 0.07) 0 3px,
       transparent 3px 13px
     ),
     linear-gradient(135deg, #f9d9a2, #e8b467);
   border: 4px solid var(--ink);
-  box-shadow: inset 0 0 0 4px #ffe7b8, 0 8px 0 #8a5a31,
+  box-shadow:
+    inset 0 0 0 4px #ffe7b8,
+    0 8px 0 #8a5a31,
     0 14px 24px rgba(30, 30, 70, 0.25);
 }
 .gomoku-board button {
@@ -3214,7 +3343,8 @@ dialog[open] .sheet {
   border: 0;
   display: grid;
   place-items: center;
-  background: linear-gradient(#9a6233, #9a6233) var(--hp) / var(--hs) no-repeat,
+  background:
+    linear-gradient(#9a6233, #9a6233) var(--hp) / var(--hs) no-repeat,
     linear-gradient(#9a6233, #9a6233) var(--vp) / var(--vs) no-repeat;
 }
 .gomoku-board button:nth-child(-n + 15) {
@@ -3233,7 +3363,14 @@ dialog[open] .sheet {
   --hs: 50% 1.6px;
   --hp: left center;
 }
-.gomoku-board button:is(:nth-child(49), :nth-child(57), :nth-child(113), :nth-child(169), :nth-child(177))::before {
+.gomoku-board
+  button:is(
+    :nth-child(49),
+    :nth-child(57),
+    :nth-child(113),
+    :nth-child(169),
+    :nth-child(177)
+  )::before {
   content: "";
   position: absolute;
   width: 6px;
@@ -3296,7 +3433,9 @@ dialog[open] .sheet {
   border: 4px solid var(--ink);
   background: #b9e88f;
   overflow: hidden;
-  box-shadow: 0 8px 0 #2f6b1f, 0 14px 24px rgba(30, 30, 70, 0.25);
+  box-shadow:
+    0 8px 0 #2f6b1f,
+    0 14px 24px rgba(30, 30, 70, 0.25);
   touch-action: none;
 }
 @supports (height: 1svh) {
@@ -3342,14 +3481,15 @@ dialog[open] .sheet {
   background: rgba(255, 255, 255, 0.7);
 }
 .maze-cell.wall {
-  background: radial-gradient(circle at 28% 32%, #6fd157 0 22%, transparent 23%),
-    radial-gradient(circle at 70% 64%, #57b844 0 26%, transparent 27%),
-    #3f9a33;
+  background:
+    radial-gradient(circle at 28% 32%, #6fd157 0 22%, transparent 23%),
+    radial-gradient(circle at 70% 64%, #57b844 0 26%, transparent 27%), #3f9a33;
   border-radius: 7px;
   box-shadow: inset 0 0 0 2px #2b6e21;
 }
 .maze-cell.fog {
-  background: radial-gradient(circle at 30% 38%, #fff 0 30%, transparent 31%),
+  background:
+    radial-gradient(circle at 30% 38%, #fff 0 30%, transparent 31%),
     radial-gradient(circle at 70% 62%, #fff 0 33%, transparent 34%), #d4e2f3;
 }
 .maze-cell.trap::before,
@@ -3365,7 +3505,9 @@ dialog[open] .sheet {
   height: 48%;
   border-radius: 50%;
   background: #4a2c17;
-  box-shadow: inset 0 3px 0 rgba(0, 0, 0, 0.45), 0 0 0 2px #6b4423;
+  box-shadow:
+    inset 0 3px 0 rgba(0, 0, 0, 0.45),
+    0 0 0 2px #6b4423;
 }
 .maze-cell.key::before {
   content: "🔑";
@@ -3392,7 +3534,9 @@ dialog[open] .sheet {
   display: grid;
   place-items: center;
   pointer-events: none;
-  transition: left 0.18s ease, top 0.18s ease;
+  transition:
+    left 0.18s ease,
+    top 0.18s ease;
   z-index: 2;
 }
 .maze-player .critter {
@@ -3415,6 +3559,184 @@ dialog[open] .sheet {
   font-size: 26px;
   white-space: nowrap;
   animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.maze-signal.reply {
+  top: auto;
+  bottom: 12px;
+  background: #ffe3ef;
+}
+/* Six scenes: tint the floor and hedges per level. */
+.maze-board.scene-1 .maze-cell:not(.wall):not(.fog) {
+  background: #a6dd8a;
+}
+.maze-board.scene-1 .maze-cell.wall {
+  background:
+    radial-gradient(circle at 30% 30%, #fff59a 0 8%, transparent 9%), #2f7a3a;
+}
+.maze-board.scene-2 .maze-cell:not(.wall):not(.fog) {
+  background: #ffe1ef;
+}
+.maze-board.scene-2 .maze-cell.wall {
+  background: repeating-linear-gradient(45deg, #ff8fb8 0 6px, #fff 6px 12px);
+  box-shadow: inset 0 0 0 2px #d9578a;
+}
+.maze-board.scene-3 .maze-cell:not(.wall):not(.fog) {
+  background: #c8c3ef;
+}
+.maze-board.scene-3 .maze-cell.wall {
+  background:
+    radial-gradient(circle at 70% 30%, #fff 0 6%, transparent 7%), #3c3577;
+  box-shadow: inset 0 0 0 2px #241f52;
+}
+.maze-board.scene-4 .maze-cell:not(.wall):not(.fog) {
+  background: #dfe6f7;
+}
+.maze-board.scene-4 .maze-cell.wall {
+  background: linear-gradient(#9aa6c4 0 30%, #7a86a6 30%);
+  box-shadow: inset 0 0 0 2px #4c5675;
+}
+.maze-board.scene-5 .maze-cell:not(.wall):not(.fog) {
+  background: #ffefd2;
+}
+.maze-board.scene-5 .maze-cell.wall {
+  background:
+    radial-gradient(circle at 50% 50%, #fff 0 40%, transparent 41%), #8fd0ff;
+  box-shadow: inset 0 0 0 2px #4d9be0;
+}
+.maze-board.spooked {
+  animation:
+    shake 0.3s,
+    spook 0.6s;
+}
+@keyframes spook {
+  40% {
+    filter: hue-rotate(200deg) brightness(0.7);
+  }
+}
+.maze-cell.heart::before {
+  content: "💗";
+  font-size: min(5.4vw, 22px);
+  animation: beat-plain 0.9s ease-in-out infinite;
+}
+.maze-cell.fog.heart,
+.maze-cell.heart {
+  background: radial-gradient(circle, #fff6 0 40%, transparent 70%);
+}
+.maze-ghost {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  font-size: min(6vw, 26px);
+  transition:
+    left 0.35s ease,
+    top 0.35s ease;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(98, 70, 190, 0.55) 0 45%,
+    transparent 72%
+  );
+  animation: ghost-float 1.2s ease-in-out infinite alternate;
+  filter: drop-shadow(0 2px 2px rgba(40, 30, 90, 0.4));
+}
+@keyframes ghost-float {
+  to {
+    transform: translateY(-12%);
+  }
+}
+.maze-pops {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  pointer-events: none;
+}
+.maze-pop {
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 2.5px solid var(--ink);
+  background: #fff;
+  font-family: var(--display);
+  font-size: 18px;
+  white-space: nowrap;
+  animation: maze-pop 1.3s ease-out forwards;
+}
+.maze-pop.good {
+  background: #fff3b0;
+}
+.maze-pop.love {
+  background: #ffd1e4;
+}
+.maze-pop.bad {
+  background: #e6ecf6;
+}
+@keyframes maze-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  15% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(-20px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+}
+.maze-combo {
+  position: absolute;
+  z-index: 3;
+  right: 8px;
+  top: 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 2.5px solid var(--ink);
+  background: linear-gradient(#ffd23f, #ff8c1a);
+  color: #fff;
+  font-family: var(--display);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+  animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.maze-win {
+  position: relative;
+  overflow: hidden;
+}
+.maze-sweet {
+  margin: 0;
+  font-family: var(--display);
+  color: #e8436d;
+}
+.maze-confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.maze-confetti i {
+  position: absolute;
+  top: -20px;
+  left: calc(var(--i) * 7%);
+  font-style: normal;
+  animation: confetti-fall 1.8s ease-in calc(var(--i) * 0.07s) both;
+}
+@keyframes confetti-fall {
+  to {
+    transform: translateY(260px) rotate(320deg);
+    opacity: 0;
+  }
+}
+.maze-replies {
+  justify-content: center;
 }
 .dpad {
   display: grid;
@@ -3496,7 +3818,9 @@ dialog[open] .sheet {
   width: 100%;
   border-radius: 20px;
   border: 4px solid var(--ink);
-  box-shadow: 0 8px 0 #6e4423, 0 14px 24px rgba(30, 30, 70, 0.25);
+  box-shadow:
+    0 8px 0 #6e4423,
+    0 14px 24px rgba(30, 30, 70, 0.25);
   touch-action: none;
 }
 .puzzle-preview {
@@ -3582,7 +3906,10 @@ dialog[open] .sheet {
   color: #3a2618;
   font-size: 13px;
 }
-.preview-notice a { margin-left: 8px; text-decoration: underline; }
+.preview-notice a {
+  margin-left: 8px;
+  text-decoration: underline;
+}
 .match-wait {
   padding: 16px 4px;
   text-align: center;
@@ -3594,7 +3921,9 @@ dialog[open] .sheet {
   font-weight: 700;
   text-align: center;
 }
-.online-count span { color: #40a66b; }
+.online-count span {
+  color: #40a66b;
+}
 .match-wait p {
   line-height: 1.6;
 }
@@ -3604,11 +3933,22 @@ dialog[open] .sheet {
   animation: match-bounce 1s ease-in-out infinite alternate;
 }
 @keyframes match-bounce {
-  to { transform: translateY(-10px) rotate(12deg); }
+  to {
+    transform: translateY(-10px) rotate(12deg);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .match-spinner { animation: none; }
+  .match-spinner {
+    animation: none;
+  }
 }
 
-.catalog-group-title { margin: 24px 4px 12px; font-size: 20px; }
-.device-tag { color: #64537e; font-size: 12px; font-weight: 600; }
+.catalog-group-title {
+  margin: 24px 4px 12px;
+  font-size: 20px;
+}
+.device-tag {
+  color: #64537e;
+  font-size: 12px;
+  font-weight: 600;
+}

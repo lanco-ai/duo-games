@@ -235,6 +235,26 @@ export const games: GameMeta[] = [
     milestone: "M3",
   },
   {
+    id: "love-slots",
+    devices: "both",
+    name: "心动老虎机",
+    emoji: "🎰",
+    tagline: "你拉拉杆，TA 握着第三个转轮的命运",
+    intro:
+      "游乐园深处藏着一台月老留下的老虎机。投入爱心币，拉下拉杆：前两个转轮自己停，第三个由 TA 喊停——帮你凑三连，还是故意让你心碎？每次转出的命运卡，都要两个人一起完成。",
+    rules: [
+      "轮流拉杆，押 1–3 枚爱心币",
+      "前两轮自动停，第三轮由 TA 看准时机喊「停」",
+      "三个💗 中大奖并获得心愿券；转出💔 要哄 TA",
+      "命运卡完成了由对方确认 +1 币，耍赖 -2 币",
+    ],
+    tags: ["默契"],
+    duration: "10 分钟",
+    net: "一般网络即可",
+    gradient: "#FFB3C7,#E8436D",
+    milestone: "M6",
+  },
+  {
     id: "heart-bounce",
     devices: "pair",
     name: "颠颠爱心",
@@ -311,7 +331,11 @@ export const games: GameMeta[] = [
 
 export const gameGroups = ["聊天", "合作", "较量", "动作"] as const;
 export function gameGroup(game: GameMeta) {
-  if (["talk-cards", "mind-meld", "know-me", "survival"].includes(game.id))
+  if (
+    ["talk-cards", "mind-meld", "know-me", "survival", "love-slots"].includes(
+      game.id,
+    )
+  )
     return "聊天";
   if (["heartbeat", "couple-jump", "heart-bounce"].includes(game.id))
     return "动作";

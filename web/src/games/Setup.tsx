@@ -215,6 +215,12 @@ export default function Setup({
             ["relay", "轮流接力"],
             ["sync", "同步蓄力"],
           ])}
+        {id === "love-slots" &&
+          select("pulls", "一共拉几次", [
+            [6, "6 次 · 小试手气"],
+            [10, "10 次 · 标准约会"],
+            [14, "14 次 · 通宵游乐园"],
+          ])}
         {id === "draw-guess" && (
           <>
             {select("rounds", "轮数", [
