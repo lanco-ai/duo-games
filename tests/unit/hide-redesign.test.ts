@@ -87,3 +87,36 @@ describe("P6 spatial secret hide-and-seek", () => {
     expect(g.ctx.seenQuestion).toHaveBeenCalledWith("level:hide-seek:2");
   });
 });
+describe("hide-and-seek scene tools", () => {
+  it("lets the hider fake one creak and the seeker use the map tool once", () => {
+    const g = make();
+    hide(g);
+    g.act(g.hider, "fake", { round: 0, room: 3 }, 2100);
+    expect(g.view(g.seeker, 2200).sound?.room).toBe(3);
+    expect(() => g.act(g.hider, "fake", { round: 0, room: 2 }, 2300)).toThrow();
+    expect(g.view(g.seeker)).not.toHaveProperty("canFake");
+    g.act(g.seeker, "tool", { round: 0, room: 0 }, 2400);
+    expect(g.tool?.spots.sort()).toEqual([0, 3]);
+    expect(() =>
+      g.act(g.seeker, "tool", { round: 0, room: 1 }, 2500),
+    ).toThrow();
+    g.act(g.seeker, "search", { round: 0, id: 7 }, 2600);
+    expect(g.view(g.seeker).trail).toEqual([{ id: 7, hint: g.hint }]);
+    g.act(g.seeker, "search", { round: 0, id: 8 }, 2700);
+    expect(g.lastRound?.id).toBe(8);
+    g.act(0, "next", { round: 0 }, 3000);
+    expect(g.tool).toBeNull();
+    expect(g.trail).toEqual([]);
+  });
+  it("firefly and crystal ball tools never lie about the hider", () => {
+    const cabin = new HideSeek("r", { map: "2" }, 9, 1000, ctx());
+    hide(cabin);
+    cabin.act(cabin.seeker, "tool", { round: 0, room: 1 }, 2100);
+    expect(cabin.tool?.text).toContain("打转");
+    const haunted = new HideSeek("r", { map: "3" }, 9, 1000, ctx());
+    hide(haunted);
+    haunted.act(haunted.seeker, "tool", { round: 0, room: 1 }, 2100);
+    expect(haunted.tool?.spots).toHaveLength(2);
+    expect(haunted.tool?.spots).not.toContain(8);
+  });
+});

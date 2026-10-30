@@ -2,6 +2,7 @@ import { BaseEngine } from "./base";
 import { shuffled } from "../../shared/rng";
 import { integer } from "../../shared/text";
 import { hideMaps } from "../../shared/games/hide-seek/maps";
+import { hideScenes } from "../../shared/games/hide-seek/scenes";
 import { unlockedLevel, unlockNext } from "../../shared/games/progress";
 import type { EngineContext, GameOptions } from "../../shared/games/types";
 import type { Seat } from "../../shared/protocol";
@@ -20,8 +21,17 @@ export class HideSeek extends BaseEngine {
   hint = "";
   sound: { room: number; at: number } | null = null;
   scores = [0, 0];
-  lastRound: { winner: Seat; spot: string; points: number } | null = null;
+  lastRound: {
+    winner: Seat;
+    spot: string;
+    points: number;
+    id: number | null;
+  } | null = null;
   history: { winner: Seat; spot: string; points: number }[] = [];
+  trail: { id: number; hint: string }[] = [];
+  fakeUsed = false;
+  toolUsed = false;
+  tool: { room: number; text: string; spots: number[] } | null = null;
   constructor(
     run: string,
     o: GameOptions,
@@ -63,12 +73,16 @@ export class HideSeek extends BaseEngine {
       scores: this.scores,
       lastRound: this.lastRound,
       sound: this.sound && now - this.sound.at < 2500 ? this.sound : null,
+      trail: this.trail,
+      tool: this.tool,
+      toolUsed: this.toolUsed,
       ...(seat === this.hider
         ? {
             ownHide: this.hiding,
             ownDecoys: this.decoys,
             movesLeft: 2 - this.moves,
             canPlayDead: !this.deadUsed,
+            canFake: !this.fakeUsed,
           }
         : {}),
       history: this.history,
@@ -128,6 +142,54 @@ export class HideSeek extends BaseEngine {
       this.sound = { room: spot.room, at: now };
       return true;
     }
+    if (cmd === "fake") {
+      // A fake creak looks exactly like a real relocation to the seeker.
+      if (seat !== this.hider || this.fakeUsed) throw Error("INVALID");
+      this.fakeUsed = true;
+      this.sound = { room: integer(p?.room, 0, 3), at: now };
+      return true;
+    }
+    if (cmd === "tool") {
+      if (seat !== this.seeker || this.toolUsed) throw Error("INVALID");
+      const room = integer(p?.room, 0, 3),
+        name = this.map.rooms[room].name,
+        here = this.map.spots[this.hiding!].room === room,
+        kind = hideScenes[this.level].tool.id;
+      this.toolUsed = true;
+      if (kind === "lamp") {
+        const traps = this.decoys.filter(
+          (d) => this.map.spots[d].room === room,
+        );
+        this.tool = {
+          room,
+          spots: traps,
+          text: traps.length
+            ? `${name}亮了：发现 ${traps.length} 个陷阱`
+            : `${name}亮了：没有陷阱`,
+        };
+      } else if (kind === "firefly")
+        this.tool = {
+          room,
+          spots: [],
+          text: here
+            ? `萤火虫绕着${name}打转…`
+            : `萤火虫在${name}转了一圈就飞走了`,
+        };
+      else {
+        const empty = shuffled(
+          this.map.spots
+            .filter((s) => s.room === room && s.id !== this.hiding)
+            .map((s) => s.id),
+          this.seed + now,
+        ).slice(0, 2);
+        this.tool = {
+          room,
+          spots: empty,
+          text: `水晶球显示：${empty.map((id) => this.map.spots[id].name).join("、")}没有人`,
+        };
+      }
+      return true;
+    }
     if (cmd === "dead") {
       if (seat !== this.hider || this.deadUsed) throw Error("INVALID");
       this.deadUsed = true;
@@ -137,6 +199,7 @@ export class HideSeek extends BaseEngine {
     if (cmd !== "search" || seat !== this.seeker) throw Error("NOT_YOUR_TURN");
     const id = integer(p?.id, 0, this.map.spots.length - 1);
     this.searches.push(id);
+    const trailHint = () => this.trail.push({ id, hint: this.hint });
     if (this.deadActive) {
       this.hint = "很安静";
       this.deadActive = false;
@@ -157,6 +220,7 @@ export class HideSeek extends BaseEngine {
             ? "隔壁有动静"
             : "很安静";
     }
+    trailHint();
     if (this.searches.length >= 6 || now >= this.deadline)
       this.endRound(this.hider, 100, now);
     return true;
@@ -166,6 +230,7 @@ export class HideSeek extends BaseEngine {
     this.lastRound = {
       winner,
       points,
+      id: this.hiding,
       spot:
         this.hiding === null
           ? "没有及时躲好"
@@ -228,6 +293,10 @@ export class HideSeek extends BaseEngine {
     this.deadActive = false;
     this.hint = "";
     this.sound = null;
+    this.trail = [];
+    this.fakeUsed = false;
+    this.toolUsed = false;
+    this.tool = null;
     this.deadline = now + 30000;
   }
   tick(now: number) {

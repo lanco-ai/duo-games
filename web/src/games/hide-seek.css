@@ -1,0 +1,579 @@
+/* ---------- 房间里的秘密 ---------- */
+.hide-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  --accent: #ff8a9f;
+}
+.hide-stage.theme-cabin {
+  background: linear-gradient(#f3e3c8, #e7cfa6);
+  border-color: #6b4c2d;
+  box-shadow: 0 5px 0 #8a5d36;
+}
+.hide-stage.theme-haunted {
+  background: linear-gradient(#2a1f3d, #160f22);
+  border-color: #0b0711;
+  box-shadow: 0 5px 0 #000;
+  color: #f1e6ff;
+}
+.hide-top {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+.hide-score {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 2px solid rgba(0, 0, 0, 0.15);
+  color: #523c47;
+  font-family: var(--display);
+  font-size: 18px;
+}
+.hide-score .critter {
+  width: 30px;
+  height: 30px;
+}
+.hide-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--display);
+}
+.hide-title b {
+  font-size: 20px;
+}
+.hide-title span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+.hide-title i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.25;
+}
+.hide-title i.done {
+  opacity: 0.7;
+}
+.hide-title i.now {
+  opacity: 1;
+  background: var(--accent);
+}
+.hide-clock {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  font-family: var(--display);
+  font-size: 15px;
+  color: #523c47;
+  background:
+    radial-gradient(circle, #fff 0 58%, transparent 60%),
+    conic-gradient(var(--accent) calc(var(--p) * 360deg), #e9d6cf 0);
+}
+.hide-clock.urgent {
+  --accent: #e8364f;
+  animation: beat-plain 0.5s ease-in-out infinite;
+}
+.hide-role {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  font-family: var(--display);
+}
+.hide-role.hider {
+  background: #ffe1ea;
+  color: #b23a5c;
+}
+.hide-role.seeker {
+  background: #fff0c2;
+  color: #8a5a00;
+}
+.hide-house {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 4px solid #3a2618;
+  background: #fdf3e4;
+  touch-action: manipulation;
+}
+.theme-cabin .hide-house {
+  background: linear-gradient(#5d7a5a 0 20%, #7f9b6b 20%);
+}
+.theme-haunted .hide-house {
+  background: radial-gradient(circle at 80% 10%, #5a3c7a, #120b1c 60%);
+  border-color: #000;
+}
+.house-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.house-backdrop .window-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 30% 25%,
+    rgba(255, 220, 140, 0.35),
+    transparent 55%
+  );
+}
+.house-backdrop .roof {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: 1%;
+  height: 22%;
+  background: linear-gradient(#9b3d2c, #6e2a1f);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.house-backdrop .rain {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    105deg,
+    transparent 0 14px,
+    rgba(255, 255, 255, 0.22) 14px 15px
+  );
+  animation: hide-rain 0.6s linear infinite;
+}
+@keyframes hide-rain {
+  to {
+    background-position: -12px 40px;
+  }
+}
+.house-backdrop .tree {
+  position: absolute;
+  font-size: 34px;
+}
+.house-backdrop .t1 {
+  left: 0;
+  top: 8%;
+}
+.house-backdrop .t2 {
+  right: 0;
+  top: 4%;
+}
+.house-backdrop .moon {
+  position: absolute;
+  right: 6%;
+  top: 4%;
+  font-size: 30px;
+  filter: drop-shadow(0 0 12px #fff6c0);
+}
+.house-backdrop .bat {
+  position: absolute;
+  font-size: 18px;
+  animation: hide-bat 4s ease-in-out infinite alternate;
+}
+.house-backdrop .b1 {
+  left: 6%;
+  top: 8%;
+}
+.house-backdrop .b2 {
+  left: 78%;
+  top: 82%;
+  animation-delay: -2s;
+}
+@keyframes hide-bat {
+  to {
+    transform: translate(30px, 14px) scaleX(-1);
+  }
+}
+.house-backdrop .fog {
+  position: absolute;
+  inset: auto 0 0;
+  height: 40%;
+  background: linear-gradient(transparent, rgba(190, 170, 230, 0.25));
+}
+.house-door {
+  position: absolute;
+  z-index: 2;
+  background: #fff3d6;
+  border-radius: 3px;
+}
+.theme-cabin .house-door {
+  background: #e9cfa2;
+}
+.theme-haunted .house-door {
+  background: #6b4c8a;
+}
+.house-room {
+  position: absolute;
+  z-index: 1;
+  border-radius: 10px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 18px,
+      rgba(0, 0, 0, 0.04) 18px 19px
+    ),
+    var(--floor);
+  box-shadow:
+    inset 0 0 0 4px var(--wall),
+    0 3px 0 rgba(0, 0, 0, 0.18);
+}
+.theme-cabin .house-room {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 12px,
+      rgba(70, 40, 10, 0.12) 12px 13px
+    ),
+    var(--floor);
+}
+.theme-haunted .house-room {
+  background:
+    radial-gradient(
+      circle at 50% 120%,
+      rgba(160, 120, 255, 0.2),
+      transparent 60%
+    ),
+    var(--floor);
+  box-shadow:
+    inset 0 0 0 3px var(--wall),
+    0 0 18px rgba(120, 60, 200, 0.35);
+}
+.house-room h3 {
+  position: absolute;
+  left: 8px;
+  top: 5px;
+  margin: 0;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: var(--wall);
+  color: #fff;
+  z-index: 3;
+  pointer-events: none;
+}
+.room-deco {
+  pointer-events: none;
+  position: absolute;
+  right: 8px;
+  top: 4px;
+  font-size: 14px;
+  opacity: 0.75;
+}
+.house-room.creak {
+  animation: hide-creak 0.5s ease-in-out 3;
+}
+@keyframes hide-creak {
+  50% {
+    box-shadow:
+      inset 0 0 0 4px var(--wall),
+      0 0 0 6px rgba(255, 210, 63, 0.75);
+  }
+}
+.creak-text {
+  pointer-events: none;
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 40%;
+  transform: translateX(-50%);
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #fff;
+  color: #6b4c2d;
+  font-style: normal;
+  font-family: var(--display);
+  border: 2px solid #3a2618;
+  white-space: nowrap;
+}
+.house-room.tooled {
+  outline: 3px dashed #ffd23f;
+  outline-offset: -8px;
+}
+.hide-house.aiming .house-spot {
+  pointer-events: none;
+}
+.house-room.pickable {
+  cursor: pointer;
+  outline: 3px dashed rgba(123, 92, 255, 0.8);
+  outline-offset: -6px;
+}
+.house-room.pickable:hover {
+  outline-color: #ffd23f;
+}
+.couple-new-stage .house-spot {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  line-height: 1.1;
+}
+.couple-new-stage .house-spot:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.spot-icon {
+  font-size: clamp(20px, 6vw, 28px);
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.2));
+  transition: transform 0.15s;
+}
+.house-spot:not(:disabled):hover .spot-icon {
+  transform: scale(1.15);
+}
+.house-spot small {
+  padding: 0 4px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #523c47;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.theme-haunted .house-spot small {
+  background: rgba(20, 10, 30, 0.75);
+  color: #e9dcff;
+}
+.couple-new-stage .house-spot.chosen {
+  box-shadow:
+    0 0 0 3px #ff8a9f,
+    0 0 16px rgba(255, 138, 159, 0.8);
+  background: rgba(255, 255, 255, 0.55);
+}
+.house-spot.trap small {
+  background: #ffe066;
+  color: #523c47;
+}
+.house-spot.hop {
+  box-shadow: 0 0 0 3px #4caf50;
+}
+.house-spot.searched {
+  opacity: 0.8;
+}
+.house-spot.searched.hot small {
+  background: #ff6b6b;
+  color: #fff;
+}
+.house-spot.searched.warm small {
+  background: #ffb347;
+  color: #523c47;
+}
+.house-spot.searched.cold small {
+  background: #a9d4ff;
+  color: #523c47;
+}
+.house-spot.cleared {
+  opacity: 0.4;
+}
+.couple-new-stage .house-spot.reveal {
+  z-index: 5;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 0 0 4px #ffd23f,
+    0 0 26px #ffd23f;
+}
+.spot-critter {
+  position: absolute;
+  z-index: 4;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.spot-critter .critter {
+  width: 34px;
+  height: 34px;
+}
+.spot-badge {
+  position: absolute;
+  right: -6px;
+  top: -6px;
+  font-size: 14px;
+}
+.spot-badge.glint {
+  animation: beat-plain 1.2s ease-in-out infinite;
+}
+.flashlight {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--x) var(--y),
+    transparent 0 14%,
+    rgba(8, 4, 20, calc(var(--dark) * 0.7)) 24%,
+    rgba(8, 4, 20, var(--dark)) 40%
+  );
+}
+.hide-reveal {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  bottom: 6%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 20px;
+  border-radius: 18px;
+  border: 3px solid #3a2618;
+  background: #fff;
+  color: #523c47;
+  font-family: var(--display);
+  white-space: nowrap;
+}
+.hide-reveal b {
+  font-size: 22px;
+  color: #e8436d;
+}
+.hide-hint {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  text-align: center;
+  font-family: var(--display);
+}
+.hide-hint.hot {
+  background: #ffd1d1;
+  color: #b3261e;
+}
+.hide-hint.warm {
+  background: #ffe6c2;
+  color: #8a5a00;
+}
+.hide-hint.cold {
+  background: #dcecff;
+  color: #2a5d8f;
+}
+.hide-hint.trap {
+  background: #fff3a6;
+  color: #7a5c00;
+}
+.hide-hint.tool {
+  background: #efe3ff;
+  color: #5a3c9a;
+}
+.hide-aim {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  font-weight: 700;
+}
+.hide-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.hide-panel p {
+  margin: 0;
+}
+.hide-panel.waiting .peek,
+.hide-handoff .peek {
+  font-size: 46px;
+}
+.hide-steps {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.hide-steps span {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+  font-weight: 700;
+}
+.hide-steps span.ok {
+  background: #d7f5d0;
+  color: #2a7a2a;
+}
+.search-left {
+  display: flex;
+  gap: 4px;
+  font-size: 20px;
+}
+.search-left i {
+  font-style: normal;
+}
+.search-left i.used {
+  filter: grayscale(1);
+  opacity: 0.3;
+}
+.couple-new-stage .tool-button {
+  background: linear-gradient(#b79bff, #7b5cff);
+  color: #fff;
+  border-color: #4b2fb0;
+}
+.hide-trail {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+.hide-trail li {
+  display: flex;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #dcecff;
+  color: #2a5d8f;
+}
+.hide-trail li.hot {
+  background: #ffd1d1;
+  color: #b3261e;
+}
+.hide-trail li.warm {
+  background: #ffe6c2;
+  color: #8a5a00;
+}
+.hide-trail li.trap {
+  background: #fff3a6;
+  color: #7a5c00;
+}
+.theme-haunted .muted {
+  color: #c9b8e6;
+}
+.hide-handoff {
+  text-align: center;
+}
+.hide-pass {
+  display: block;
+  margin: 10px auto 0;
+}
+.house-backdrop .hall {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 44px;
+  opacity: 0.55;
+  animation: ghost-float 1.6s ease-in-out infinite alternate;
+}
