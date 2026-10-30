@@ -16,7 +16,13 @@ import {
 } from "./common";
 import { audioContext, unlockMusic, scheduleBeat } from "./audio";
 import { drawCritter, kindOf } from "../art/critter";
-import { INK, chunkyText, fitCanvas, heart, stars } from "../art/paint";
+import { INK, chunkyText, fitCanvas, heart } from "../art/paint";
+import {
+  drawFloor,
+  drawPulseLine,
+  drawVenue,
+  venues,
+} from "./heartbeat-scenes";
 const LANE_COLORS = [
   ["#FF8FB1", "#FF4D7E"],
   ["#8FD3FF", "#3FA9F5"],
@@ -43,7 +49,19 @@ export default function Heartbeat(p: GameProps) {
     [score, setScore] = useState(
       (d.own as [number, number][]).reduce((n, x) => n + x[1], 0),
     ),
-    [muted, setMuted] = useState(localStore.getItem("duo.sound") === "off");
+    [muted, setMuted] = useState(localStore.getItem("duo.sound") === "off"),
+    chorusBars = useMemo(
+      () =>
+        new Set(
+          song.notes
+            .filter((n) => n.sync)
+            .map((n) => Math.floor(n.ms / (song.beat * 4))),
+        ),
+      [song],
+    ),
+    chorusSeen = useRef(-1),
+    banner = useRef({ text: "", at: -1e9 }),
+    [progress, setProgress] = useState(0);
   const elapsed = () => {
     const ctx = audioContext();
     return ctx?.state === "running" && anchor.current !== null
@@ -226,13 +244,15 @@ export default function Heartbeat(p: GameProps) {
       now = performance.now(),
       beatPhase = (((time % song.beat) + song.beat) % song.beat) / song.beat,
       pulse = time > 0 ? Math.max(0, 1 - beatPhase * 3) : 0;
-    const bg = g.createLinearGradient(0, 0, 0, h);
-    bg.addColorStop(0, "#141B45");
-    bg.addColorStop(0.7, "#2B3479");
-    bg.addColorStop(1, "#4D4FA3");
-    g.fillStyle = bg;
-    g.fillRect(0, 0, w, h);
-    stars(g, w, h * 0.7, now, 0);
+    const bar = Math.floor(time / (song.beat * 4)),
+      chorus = time > 0 && chorusBars.has(bar);
+    if (chorus && !chorusBars.has(chorusSeen.current)) {
+      banner.current = { text: "副歌！一起点亮爱心", at: now };
+    }
+    chorusSeen.current = bar;
+    const k = Math.max(0, Math.min(1, time / song.duration));
+    if (Math.abs(k - progress) > 0.01) setProgress(k);
+    drawVenue(g, d.track, w, h, now, pulse, chorus);
     for (let lane = 0; lane < 2; lane++) {
       const cx = lane * 180 + 90,
         [light, deep] = LANE_COLORS[lane],
@@ -267,18 +287,13 @@ export default function Heartbeat(p: GameProps) {
       g.ellipse(cx, line, 36 + flash * 6, 10 + flash * 3, 0, 0, Math.PI * 2);
       g.fill();
     }
-    const rainbow = [
-      "#FF6B6B",
-      "#FFA94D",
-      "#FFE066",
-      "#8CE99A",
-      "#74C0FC",
-      "#B197FC",
-    ];
-    rainbow.forEach((c, i) => {
-      g.fillStyle = c;
-      g.fillRect(0, line - 7.5 + i * 2.5, w, 2.5);
-    });
+    // The judgement line glows on every beat, gold during the chorus.
+    g.save();
+    g.shadowColor = chorus ? "#FFD23F" : "#FFFFFF";
+    g.shadowBlur = 10 + pulse * 14;
+    g.fillStyle = chorus ? "#FFE066" : "rgba(255,255,255,.85)";
+    g.fillRect(0, line - 2, w, 4);
+    g.restore();
     for (const note of song.notes) {
       if (!note.seats.includes(p.seat) || judged.current.has(note.id)) continue;
       const y =
@@ -302,7 +317,11 @@ export default function Heartbeat(p: GameProps) {
         g.fillText(note.kind === "relay-head" ? "↗" : "↘", x, y - 18);
       }
       if (note.sync) {
+        g.save();
+        g.shadowColor = "#FF4D6A";
+        g.shadowBlur = 16;
         heart(g, x, y, 17 * k, "#FF4D6A", INK);
+        g.restore();
       } else {
         const [light, deep] = LANE_COLORS[note.lane];
         g.fillStyle = deep;
@@ -318,16 +337,8 @@ export default function Heartbeat(p: GameProps) {
         g.fill();
       }
     }
-    g.fillStyle = "#6B4423";
-    g.fillRect(0, 388, w, h - 388);
-    g.fillStyle = "#8A5A31";
-    for (let i = 0; i < w; i += 40) g.fillRect(i, 388, 2, h - 388);
-    g.strokeStyle = INK;
-    g.lineWidth = 3;
-    g.beginPath();
-    g.moveTo(0, 388);
-    g.lineTo(w, 388);
-    g.stroke();
+    drawFloor(g, d.track, w, h, 388);
+    drawPulseLine(g, w, time, song.beat, sync);
     [p.seat, 1 - p.seat].forEach((seat, i) => {
       const prof = p.room.profiles[seat as 0 | 1],
         hop = pulse * (i ? 6 : 9);
@@ -370,6 +381,17 @@ export default function Heartbeat(p: GameProps) {
       heart(g, w / 2, 210, 38 + pulse * 6, "#FF4D6A", INK);
       chunkyText(g, "心跳同步！", w / 2, 270, 26, "#FFE066", "#7A1E2E");
     }
+    const ago = now - banner.current.at;
+    if (ago < 1800) {
+      g.globalAlpha = ago < 1400 ? 1 : (1800 - ago) / 400;
+      chunkyText(g, banner.current.text, w / 2, 120, 24, "#FFE066", "#7A1E2E");
+      g.globalAlpha = 1;
+    }
+    if (time < 0) {
+      const count = Math.ceil(-time / song.beat);
+      if (count <= 4)
+        chunkyText(g, String(count), w / 2, 200, 64, "#FFFFFF", "#3A2618");
+    }
     g.fillStyle = "rgba(255,255,255,.75)";
     g.font = '13px "DuoLatin", "DuoDisplay", sans-serif';
     g.textAlign = "center";
@@ -378,6 +400,12 @@ export default function Heartbeat(p: GameProps) {
   });
   return (
     <section class="extra-stage heartbeat-stage" data-testid="heartbeat-stage">
+      <div class="beat-venue">
+        <span>📍 {venues[d.track]?.name}</span>
+        <div class="beat-progress" aria-label="曲目进度">
+          <i style={{ width: progress * 100 + "%" }} />
+        </div>
+      </div>
       <div class="stage-score">
         <span>
           {song.name} · {song.bpm} BPM ·{" "}

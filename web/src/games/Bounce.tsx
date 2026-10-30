@@ -5,14 +5,18 @@ import { drawCritter, kindOf } from "../art/critter";
 import {
   INK,
   chunkyText,
-  cloud,
   fitCanvas,
   heart,
   heartPath,
-  hills,
-  sky,
   star,
 } from "../art/paint";
+import {
+  bounceStages,
+  drawBounceHud,
+  drawBounceScene,
+  stageFor,
+} from "./bounce-scenes";
+import { sfx } from "./sfx";
 interface Burst {
   x: number;
   y: number;
@@ -37,7 +41,13 @@ export default function Bounce(p: GameProps) {
     bursts = useRef<Burst[]>([]),
     lastN = useRef(d.hit.n),
     lastLives = useRef(d.lives),
-    spin = useRef(0);
+    spin = useRef(0),
+    trail = useRef<{ x: number; y: number }[]>([]),
+    stage = useRef(stageFor(d.combo)),
+    stageAt = useRef(-1e9),
+    fade = useRef<{ from: number; at: number } | null>(null),
+    comboBump = useRef(0),
+    [stageName, setStageName] = useState(bounceStages[stageFor(d.combo)].name);
   useEffect(() => {
     f.current = d;
     setFlight(d);
@@ -164,27 +174,25 @@ export default function Bounce(p: GameProps) {
     shown.current += (remote.current - shown.current) * 0.14;
     const W = sim.WIDTH,
       H = sim.HEIGHT,
-      g = fitCanvas(c, W, H);
-    sky(g, W, H, "day");
-    for (let i = 0; i < 5; i++)
-      cloud(
-        g,
-        ((i * 131 + time * 0.006 * (i % 2 ? 1 : -1)) % (W + 160)) - 100,
-        40 + i * 88,
-        80 + (i % 3) * 30,
-        0.95,
-      );
-    hills(g, W, 520, 70);
-    g.fillStyle = "#A8703F";
-    g.fillRect(0, 612, W, 40);
-    g.fillStyle = "#6FCB45";
-    g.fillRect(0, 604, W, 12);
-    g.strokeStyle = INK;
-    g.lineWidth = 3;
-    g.beginPath();
-    g.moveTo(0, 603);
-    g.lineTo(W, 603);
-    g.stroke();
+      g = fitCanvas(c, W, H),
+      now = stageFor(f.current.combo);
+    if (now !== stage.current) {
+      // Scenes only advance with the combo; a miss keeps the current one.
+      if (now > stage.current) {
+        fade.current = { from: stage.current, at: time };
+        stageAt.current = time;
+        setStageName(bounceStages[now].name);
+        sfx.win();
+      }
+      stage.current = now;
+    }
+    const wind = f.current.hit.wind || 0;
+    drawBounceScene(g, W, stage.current, time, wind);
+    if (fade.current && time - fade.current.at < 1000) {
+      g.globalAlpha = 1 - (time - fade.current.at) / 1000;
+      drawBounceScene(g, W, fade.current.from, time, wind);
+      g.globalAlpha = 1;
+    }
     const active = f.current.owner,
       positions =
         p.seat === 0
@@ -200,8 +208,13 @@ export default function Bounce(p: GameProps) {
           text: fl.combo + " 连击！",
           color: "#FFD23F",
         });
+      if (fl.hit.n > lastN.current && fl.combo > 0) {
+        comboBump.current = 1;
+        sfx.step();
+      }
       lastN.current = fl.hit.n;
     }
+    if (fl.lives < lastLives.current) sfx.bump();
     if (fl.lives < lastLives.current)
       bursts.current.push({
         x: W / 2,
@@ -266,6 +279,16 @@ export default function Bounce(p: GameProps) {
         p.room.profiles[active as 0 | 1]?.color ||
         (active ? "#4D9DFF" : "#FF6B6B"),
       lift = Math.max(0, Math.min(1, (606 - ball.y) / 520));
+    trail.current.push({ x: ball.x, y: ball.y });
+    if (trail.current.length > 14) trail.current.shift();
+    trail.current.forEach((t, i) => {
+      g.globalAlpha = (i / trail.current.length) * 0.5;
+      g.fillStyle = ownerColor;
+      g.beginPath();
+      g.arc(t.x, t.y, 3 + (i / trail.current.length) * 6, 0, Math.PI * 2);
+      g.fill();
+    });
+    g.globalAlpha = 1;
     g.fillStyle = "rgba(40,30,20," + (0.25 - lift * 0.15) + ")";
     g.beginPath();
     g.ellipse(ball.x, 607, 16 - lift * 8, 4 - lift * 2, 0, 0, Math.PI * 2);
@@ -315,6 +338,34 @@ export default function Bounce(p: GameProps) {
       "#FFFFFF",
       "#6B4F3A",
     );
+    comboBump.current = Math.max(0, comboBump.current - 0.08);
+    drawBounceHud(g, W, fl.combo, fl.best, comboBump.current);
+    if (time - stageAt.current < 2200) {
+      const k = (time - stageAt.current) / 2200,
+        info = bounceStages[stage.current];
+      g.globalAlpha = k < 0.8 ? 1 : (1 - k) * 5;
+      g.fillStyle = "rgba(255,255,255,.92)";
+      g.strokeStyle = INK;
+      g.lineWidth = 3;
+      g.beginPath();
+      g.roundRect(40, 250, W - 80, 74, 18);
+      g.fill();
+      g.stroke();
+      chunkyText(
+        g,
+        "进入「" + info.name + "」",
+        W / 2,
+        284,
+        22,
+        "#FF4D6A",
+        "#7A1E2E",
+      );
+      g.fillStyle = "#6B4F3A";
+      g.font = '13px "DuoDisplay", sans-serif';
+      g.textAlign = "center";
+      g.fillText(info.tip, W / 2, 310);
+      g.globalAlpha = 1;
+    }
   });
   function move(e: PointerEvent) {
     if (p.disabled) return;
@@ -326,28 +377,29 @@ export default function Bounce(p: GameProps) {
   }
   return (
     <section class="action-game bounce-game">
-      <div class="game-mini-stats">
+      <div class="game-mini-stats bounce-top">
         <span class="heart-pill" aria-label="剩余爱心">
           {"♥".repeat(flight.lives)}
           {"♡".repeat(3 - flight.lives)}
         </span>
-        <strong>
-          {flight.combo} 连击 ·{" "}
-          {"★".repeat(
-            flight.best >= 50
-              ? 3
-              : flight.best >= 25
-                ? 2
-                : flight.best >= 10
-                  ? 1
-                  : 0,
-          )}
-        </strong>
-        <span>{flight.score} 分</span>
+        <strong class="bounce-scene-name">📍 {stageName}</strong>
+        <span>
+          最佳 {flight.best}
+          {flight.best >= 10
+            ? " " +
+              "★".repeat(flight.best >= 50 ? 3 : flight.best >= 25 ? 2 : 1)
+            : ""}{" "}
+          · {flight.score} 分
+        </span>
       </div>
-      <p class="muted">
-        目标 10 / 25 / 50 连击；每 15 连击出现星星，碰到后托盘变宽 10 秒。
-      </p>
+      <ol class="bounce-route" aria-label="四段场景">
+        {bounceStages.map((s, i) => (
+          <li class={flight.combo >= s.from ? "reached" : ""}>
+            <b>{s.from}+</b>
+            {s.name}
+          </li>
+        ))}
+      </ol>
       <div class="bounce-stage">
         <canvas
           ref={canvas}

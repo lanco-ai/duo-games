@@ -3952,3 +3952,60 @@ dialog[open] .sheet {
   font-size: 12px;
   font-weight: 600;
 }
+
+/* ---------- action games: scene strips ---------- */
+.bounce-top .bounce-scene-name {
+  font-family: var(--display);
+}
+.bounce-route {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+  text-align: center;
+}
+.bounce-route li {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 2px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.55);
+  color: #6b4f3a;
+  opacity: 0.6;
+}
+.bounce-route li.reached {
+  background: #fff;
+  border: 2px solid #ff8fb1;
+  opacity: 1;
+}
+.bounce-route b {
+  font-family: var(--display);
+  color: #ff4d6a;
+}
+.beat-venue {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-family: var(--display);
+  text-shadow: 0 2px 0 rgba(20, 20, 60, 0.4);
+}
+.beat-venue span {
+  white-space: nowrap;
+}
+.beat-progress {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.35);
+  overflow: hidden;
+}
+.beat-progress i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #ff8fb1, #ffd23f);
+}
