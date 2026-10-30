@@ -17,6 +17,7 @@ const components = {
   "couple-ludo": lazy(() => import("./Ludo")),
   "hide-seek": lazy(() => import("./HideSeek")),
   "couple-jump": lazy(() => import("./Jump")),
+  "love-slots": lazy(() => import("./Slots")),
 };
 export default function ExtraStage(p: GameProps) {
   const Component = components[p.view.kind];

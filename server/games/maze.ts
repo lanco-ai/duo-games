@@ -95,7 +95,97 @@ export function makeMaze(round: number, seed: number) {
       }
     }
   }
-  return { w, h, grid, start, exit, door, key, traps };
+  // Optional detours: hearts wait in dead ends, ghosts patrol side branches.
+  // Neither ever touches the critical path, so a perfect run stays possible.
+  const open = (c: number) => {
+      const x = c % w,
+        y = Math.floor(c / w);
+      return x >= 0 && x < w && y >= 0 && y < h && !grid[c];
+    },
+    neighbours = (c: number) =>
+      directions
+        .filter(([dx, dy]) => {
+          const x = (c % w) + dx;
+          return x >= 0 && x < w && open(c + dy * w + dx);
+        })
+        .map(([dx, dy]) => c + dy * w + dx),
+    reserved = new Set([start, exit, key, door, ...traps, ...path]),
+    side = queue.filter((c) => !reserved.has(c)),
+    deadEnds = side.filter((c) => neighbours(c).length === 1),
+    heartCount = [1, 2, 3, 3, 3, 3][round],
+    hearts = [
+      ...shuffled(deadEnds, seed + 11),
+      ...shuffled(
+        side.filter((c) => !deadEnds.includes(c)),
+        seed + 13,
+      ),
+    ].slice(0, heartCount);
+  // A single-corridor maze has no detours: hearts then lie along the way.
+  if (hearts.length < heartCount)
+    hearts.push(
+      ...shuffled(
+        path.filter((c) => ![start, exit, key, door, ...hearts].includes(c)),
+        seed + 19,
+      ).slice(0, heartCount - hearts.length),
+    );
+  const ghosts: number[][] = [];
+  if (round >= 2) {
+    const taken = new Set(hearts);
+    for (const first of shuffled(side, seed + 17)) {
+      if (ghosts.length >= (round >= 4 ? 2 : 1)) break;
+      if (taken.has(first) || ghosts.some((g) => g.includes(first))) continue;
+      const lane = [first];
+      while (lane.length < 4) {
+        const step = neighbours(lane.at(-1)!).find(
+          (c) =>
+            !reserved.has(c) &&
+            !lane.includes(c) &&
+            !ghosts.some((g) => g.includes(c)),
+        );
+        if (step === undefined) break;
+        lane.push(step);
+      }
+      if (lane.length >= 2) ghosts.push(lane);
+    }
+  }
+  return { w, h, grid, start, exit, door, key, traps, hearts, ghosts };
+}
+export const mazeScenes = [
+  "晨雾花园",
+  "萤火森林",
+  "糖果洞穴",
+  "星空遗迹",
+  "月光城堡",
+  "鹊桥云海",
+];
+const signalTexts = [
+  "↑",
+  "→",
+  "↓",
+  "←",
+  "停！",
+  "往前走两步",
+  "回头",
+  "左边有坑",
+  "对对对",
+  "别动",
+  "有幽灵，快跑！",
+  "那边有💗",
+  "相信我",
+];
+const replyTexts = [
+  "收到！",
+  "你确定？",
+  "我怕怕",
+  "再说一遍",
+  "爱你哟",
+  "冲鸭",
+];
+/** Ping-pong position along a patrol lane at a given elapsed time. */
+export function ghostCell(lane: number[], elapsed: number, period: number) {
+  const span = (lane.length - 1) * 2,
+    step = Math.max(0, Math.floor(elapsed / period)) % span;
+  return lane[step < lane.length ? step : span - step];
 }
 export class MyEyes extends BaseEngine {
   round = 0;
@@ -111,13 +201,29 @@ export class MyEyes extends BaseEngine {
   lastMove = -1;
   roundStart: number;
   stars = 0;
-  history: { stars: number; time: number; guide: Seat }[] = [];
+  history: {
+    stars: number;
+    time: number;
+    guide: Seat;
+    hearts: number;
+    streak: number;
+  }[] = [];
   light: { cell: number; until: number } | null = null;
   signal: { text: string; at: number } | null = null;
+  reply: { text: string; at: number } | null = null;
   route: { cells: number[]; until: number } | null = null;
   routeUsed = false;
   stage = "walking";
   signals: number[] = [];
+  replies: number[] = [];
+  hearts = new Set<number>();
+  heartTotal = 0;
+  scares = 0;
+  streak = 0;
+  bestStreak = 0;
+  trail: number[] = [];
+  safeUntil = 0;
+  ghostStep = -1;
   constructor(
     run: string,
     o: GameOptions,
@@ -131,15 +237,46 @@ export class MyEyes extends BaseEngine {
     this.seen.add(this.pos);
     this.roundStart = at;
   }
+  get period() {
+    return this.round >= 4 ? 650 : 850;
+  }
+  ghostCells(now: number) {
+    return this.maze.ghosts.map((lane) =>
+      ghostCell(lane, now - this.roundStart, this.period),
+    );
+  }
+  /** A ghost on the walker's cell knocks them three steps back along the trail. */
+  scare(now: number) {
+    if (now < this.safeUntil || this.stage !== "walking") return false;
+    if (!this.ghostCells(now).includes(this.pos)) return false;
+    const back = this.trail.splice(Math.max(0, this.trail.length - 3));
+    this.pos = back[0] ?? this.maze.start;
+    this.scares++;
+    this.streak = 0;
+    this.safeUntil = now + 1500;
+    this.ctx.emit("scared", { pos: this.pos, round: this.round });
+    return true;
+  }
+  tick(now: number) {
+    if (this.stage !== "walking" || !this.maze.ghosts.length) return false;
+    const step = Math.floor((now - this.roundStart) / this.period);
+    if (step === this.ghostStep) return false;
+    this.ghostStep = step;
+    this.scare(now);
+    return true;
+  }
   view(seat: Seat, now: number) {
     const m = this.maze,
       guide = seat !== this.round % 2,
-      nearExit =
-        Math.abs((this.pos % m.w) - (m.exit % m.w)) +
-          Math.abs(Math.floor(this.pos / m.w) - Math.floor(m.exit / m.w)) <=
-        1;
+      px = this.pos % m.w,
+      py = Math.floor(this.pos / m.w),
+      dist = (c: number) =>
+        Math.abs(px - (c % m.w)) + Math.abs(py - Math.floor(c / m.w)),
+      nearExit = dist(m.exit) <= 1,
+      ghosts = this.ghostCells(now);
     return {
       round: this.round,
+      scene: mazeScenes[this.round],
       walker: this.round % 2,
       w: m.w,
       h: m.h,
@@ -150,6 +287,7 @@ export class MyEyes extends BaseEngine {
       hasKey: this.hasKey,
       bumps: this.bumps,
       falls: this.falls,
+      scares: this.scares,
       lights: this.lights,
       routeUsed: this.routeUsed,
       route: this.route && now < this.route.until ? this.route : null,
@@ -158,6 +296,12 @@ export class MyEyes extends BaseEngine {
       stars: this.stars,
       roundStart: this.roundStart,
       history: this.history,
+      got: [...this.hearts],
+      heartGoal: m.hearts.length,
+      heartTotal: this.heartTotal,
+      streak: this.streak,
+      bestStreak: this.bestStreak,
+      safe: now < this.safeUntil,
       ...(guide
         ? {
             grid: m.grid,
@@ -165,13 +309,21 @@ export class MyEyes extends BaseEngine {
             key: m.key,
             door: m.door,
             exit: m.exit,
+            hearts: m.hearts,
+            ghosts,
           }
         : {
             exit: nearExit ? m.exit : null,
             key: this.hasKey ? m.key : null,
             door: this.walls.has(m.door) ? m.door : null,
+            // The walker only senses what is right beside the lantern.
+            nearHearts: m.hearts.filter(
+              (c) => !this.hearts.has(c) && dist(c) <= 1,
+            ),
+            nearGhosts: ghosts.filter((c) => dist(c) <= 2),
           }),
       signal: this.signal && now < this.signal.at + 3000 ? this.signal : null,
+      reply: this.reply && now < this.reply.at + 3000 ? this.reply : null,
       light:
         this.light && now < this.light.until
           ? { ...this.light, wall: m.grid[this.light.cell] === 1 }
@@ -189,8 +341,17 @@ export class MyEyes extends BaseEngine {
         this.done(
           "一起走出迷雾",
           this.stars + " / 18 星",
-          [`最佳指挥：玩家 ${best.guide + 1}，${best.time.toFixed(1)} 秒`],
-          { stars: this.stars, rounds: 6 },
+          [
+            `最佳指挥：玩家 ${best.guide + 1}，${best.time.toFixed(1)} 秒`,
+            `收集爱心 ${this.heartTotal} / 15 💗`,
+            `最长默契连走 ${this.bestStreak} 步`,
+          ],
+          {
+            stars: this.stars,
+            rounds: 6,
+            hearts: this.heartTotal,
+            streak: this.bestStreak,
+          },
         );
         return true;
       }
@@ -200,14 +361,21 @@ export class MyEyes extends BaseEngine {
       this.seen = new Set([this.pos]);
       this.walls.clear();
       this.traps.clear();
+      this.hearts.clear();
       this.hasKey = false;
       this.bumps = 0;
       this.falls = 0;
+      this.scares = 0;
+      this.streak = 0;
+      this.trail = [];
+      this.safeUntil = 0;
+      this.ghostStep = -1;
       this.lights = 3;
       this.lastMove = -1;
       this.roundStart = now;
       this.light = null;
       this.signal = null;
+      this.reply = null;
       this.route = null;
       this.routeUsed = false;
       this.stage = "walking";
@@ -226,7 +394,10 @@ export class MyEyes extends BaseEngine {
         next = y * m.w + x;
       this.lastMove = n;
       let bump = false,
-        trap = false;
+        trap = false,
+        heart = false,
+        key = false,
+        scared = false;
       if (
         x < 0 ||
         x >= m.w ||
@@ -237,17 +408,31 @@ export class MyEyes extends BaseEngine {
       ) {
         this.walls.add(next);
         this.bumps++;
+        this.streak = 0;
         bump = true;
       } else {
+        this.trail.push(this.pos);
         this.pos = next;
         this.seen.add(next);
-        if (next === m.key) this.hasKey = true;
+        this.streak++;
+        this.bestStreak = Math.max(this.bestStreak, this.streak);
+        if (next === m.key && !this.hasKey) {
+          this.hasKey = true;
+          key = true;
+        }
+        if (m.hearts.includes(next) && !this.hearts.has(next)) {
+          this.hearts.add(next);
+          this.heartTotal++;
+          heart = true;
+        }
         if (m.traps.includes(next)) {
           this.traps.add(next);
           this.pos = m.start;
+          this.trail = [];
           this.falls++;
+          this.streak = 0;
           trap = true;
-        }
+        } else scared = this.scare(now);
         if (next === m.exit && (m.key < 0 || this.hasKey)) {
           const seconds = (now - this.roundStart) / 1000,
             stars =
@@ -259,15 +444,37 @@ export class MyEyes extends BaseEngine {
             stars,
             time: seconds,
             guide: (1 - walker) as Seat,
+            hearts: this.hearts.size,
+            streak: this.bestStreak,
           });
           this.stage = "complete";
         }
       }
       this.ctx.emit(
         "moved",
-        { n, pos: this.pos, bump, trap, round: this.round },
+        {
+          n,
+          pos: this.pos,
+          bump,
+          trap,
+          heart,
+          key,
+          scared,
+          streak: this.streak,
+          round: this.round,
+        },
         walker,
       );
+      return true;
+    }
+    if (cmd === "reply") {
+      if (seat !== walker) throw new Error("NOT_YOUR_TURN");
+      if (!replyTexts.includes(p.text)) throw new Error("INVALID");
+      this.replies = this.replies.filter((t) => now - t < 1000);
+      if (this.replies.length >= 3) throw new Error("RATE_LIMITED");
+      this.replies.push(now);
+      this.reply = { text: p.text, at: now };
+      this.ctx.emit("reply", this.reply, (1 - walker) as Seat);
       return true;
     }
     if (seat === walker) throw new Error("NOT_YOUR_TURN");
@@ -302,19 +509,7 @@ export class MyEyes extends BaseEngine {
       return true;
     }
     if (cmd === "signal") {
-      const allowed = [
-        "↑",
-        "→",
-        "↓",
-        "←",
-        "停！",
-        "往前走两步",
-        "回头",
-        "左边有坑",
-        "对对对",
-        "别动",
-      ];
-      if (!allowed.includes(p.text)) throw new Error("INVALID");
+      if (!signalTexts.includes(p.text)) throw new Error("INVALID");
       this.signals = this.signals.filter((t) => now - t < 1000);
       if (this.signals.length >= 3) throw new Error("RATE_LIMITED");
       this.signals.push(now);
@@ -334,8 +529,10 @@ export class MyEyes extends BaseEngine {
   shift(ms: number) {
     super.shift(ms);
     this.roundStart += ms;
+    this.safeUntil += ms;
     if (this.light) this.light.until += ms;
     if (this.route) this.route.until += ms;
     if (this.signal) this.signal.at += ms;
+    if (this.reply) this.reply.at += ms;
   }
 }

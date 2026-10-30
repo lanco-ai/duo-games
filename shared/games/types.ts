@@ -15,6 +15,7 @@ export const extraIds = [
   "couple-ludo",
   "hide-seek",
   "couple-jump",
+  "love-slots",
 ] as const;
 export type ExtraId = (typeof extraIds)[number];
 export type GameOptions = Record<string, string | number | boolean | string[]>;
@@ -64,6 +65,7 @@ export const defaults: Record<ExtraId, GameOptions> = {
   "couple-ludo": { mode: "pure", victory: "coop" },
   "hide-seek": { mode: "turn", map: "1" },
   "couple-jump": { mode: "relay", level: "1" },
+  "love-slots": { pulls: 10 },
 };
 export function isExtra(id: string): id is ExtraId {
   return (extraIds as readonly string[]).includes(id);
@@ -161,6 +163,8 @@ export function validOptions(id: string, value: unknown): value is GameOptions {
         ["relay", "sync"].includes(String(o.mode)) &&
         ["1", "2", "3", "4", "endless"].includes(String(o.level))
       );
+    case "love-slots":
+      return [6, 10, 14].includes(Number(o.pulls));
     default:
       return true;
   }

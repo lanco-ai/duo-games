@@ -502,3 +502,222 @@
     transform: translateY(3px);
   }
 }
+/* ---------- love slots ---------- */
+.slots-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+}
+.slots-stage .couple-bar {
+  margin: 0;
+}
+.slots-coins {
+  font-size: 20px;
+}
+.slot-machine {
+  position: relative;
+  padding: 14px 14px 10px;
+  border-radius: 26px 26px 18px 18px;
+  border: 4px solid #6b2737;
+  background: linear-gradient(#ff7a9a, #e8436d 60%, #b8274e);
+  box-shadow:
+    0 7px 0 #7a1e38,
+    inset 0 3px 0 rgba(255, 255, 255, 0.35);
+  overflow: hidden;
+}
+.slot-marquee {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 6px 6px;
+}
+.slot-marquee i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #ffe066;
+  box-shadow: 0 0 6px #fff3a0;
+  animation: slot-bulb 0.9s steps(1) calc(var(--i) * 0.075s) infinite;
+}
+@keyframes slot-bulb {
+  50% {
+    background: #fff;
+    box-shadow: none;
+  }
+}
+.slot-title {
+  margin: 0 0 8px;
+  color: #fff;
+  font-family: var(--display);
+  letter-spacing: 4px;
+  text-shadow: 0 3px 0 #7a1e38;
+}
+.slot-window {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 8px;
+  border-radius: 16px;
+  background: #3a1b26;
+  border: 3px solid #ffd23f;
+}
+.slot-reel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: clamp(92px, 26vw, 128px);
+  border-radius: 12px;
+  background: linear-gradient(#ddd 0, #fff 25%, #fff 75%, #ddd 100%);
+  overflow: hidden;
+}
+.slot-reel.fate {
+  box-shadow: inset 0 0 0 3px #ff8a9f;
+}
+.slot-symbol {
+  font-size: clamp(40px, 12vw, 60px);
+  line-height: 1;
+}
+.slot-reel.turning .slot-symbol {
+  animation: slot-blur 0.17s linear infinite;
+}
+.slot-reel:not(.turning) .slot-symbol {
+  animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes slot-blur {
+  from {
+    transform: translateY(-18%);
+    filter: blur(1px);
+  }
+  to {
+    transform: translateY(18%);
+    filter: blur(1px);
+  }
+}
+.slot-peek {
+  font-size: 20px;
+  opacity: 0.35;
+  line-height: 1.1;
+}
+.slot-strip {
+  margin: 8px 0 0;
+  color: #ffe9ef;
+  font-size: 12px;
+}
+.slot-machine.win {
+  animation: slot-glow 0.4s ease-in-out 4 alternate;
+}
+.slot-machine.jackpot {
+  animation:
+    slot-glow 0.2s ease-in-out 8 alternate,
+    survival-shake 0.4s 2;
+}
+@keyframes slot-glow {
+  to {
+    box-shadow:
+      0 7px 0 #7a1e38,
+      0 0 34px 10px #ffe066;
+  }
+}
+.slot-floats span {
+  position: absolute;
+  bottom: 10px;
+  font-size: 34px;
+  pointer-events: none;
+  animation: slot-float 1.8s ease-out forwards;
+}
+@keyframes slot-float {
+  to {
+    transform: translateY(-190px) scale(1.4);
+    opacity: 0;
+  }
+}
+.slot-controls p,
+.slot-wait {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.slots-stage .chip.selected {
+  background: #ffd23f;
+  border-color: #b8860b;
+}
+.slots-stage .slot-lever,
+.slots-stage .slot-stop {
+  width: min(100%, 320px);
+  margin-top: 8px;
+  padding: 16px;
+  font-size: 22px;
+  border-radius: 18px;
+  box-shadow: 0 5px 0 #b6506c;
+}
+.slots-stage .slot-stop:not(:disabled) {
+  animation: slot-urge 0.6s ease-in-out infinite alternate;
+}
+@keyframes slot-urge {
+  to {
+    box-shadow:
+      0 5px 0 #b6506c,
+      0 0 0 8px rgba(255, 138, 159, 0.45);
+  }
+}
+.slot-result h3 {
+  margin: 0 0 8px;
+  font-family: var(--display);
+  font-size: 24px;
+}
+.slot-result .plus {
+  color: #2a9d4b;
+}
+.slot-result .minus {
+  color: #d7263d;
+}
+.slot-result.jackpot h3 {
+  color: #e8436d;
+  animation: pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.fate-card {
+  margin: 0 auto 10px;
+  max-width: 420px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 3px dashed #e8436d;
+  background: #fff;
+  transform: rotate(-1deg);
+  animation: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.fate-card small {
+  color: #e8436d;
+  font-weight: 700;
+}
+.fate-card p {
+  margin: 6px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+.slot-reactions {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.slots-stage .slot-reactions .chip {
+  padding: 6px 10px;
+  font-size: 20px;
+}
+.slot-log {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+.slot-log li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  border-bottom: 1px dashed #e9c9c0;
+}
+.slot-legend {
+  font-size: 12px;
+}
