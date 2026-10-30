@@ -5,13 +5,24 @@ import {
   useFrame,
   useLatest,
   typing,
+  nickname,
   type GameProps,
 } from "./common";
+import { Critter } from "../art/ui";
+import { sfx } from "./sfx";
+import "./kitchen.css";
 import {
   walkable,
   recipes,
   foodIcons,
 } from "../../../shared/games/coop-kitchen/levels";
+const kitchenThemes = [
+  { id: "bento", icon: "🍱", sub: "TA 家的小厨房，第一次一起做饭" },
+  { id: "pub", icon: "🍸", sub: "吧台隔开两边，只能在 🤝 交接" },
+  { id: "hotpot", icon: "🏮", sub: "红灯笼下的火锅夜，锅要盯紧" },
+  { id: "truck", icon: "🚚", sub: "餐车会掉头，食材位置会对调" },
+  { id: "cake", icon: "🎂", sub: "纪念日，一起做一个大蛋糕" },
+];
 export default function Kitchen(p: GameProps) {
   const d = p.view.data,
     send = useGame(p),
@@ -28,7 +39,18 @@ export default function Kitchen(p: GameProps) {
     last = useRef(0),
     sent = useRef(0),
     moving = useRef([false, false]),
-    [, render] = useState(0);
+    [, render] = useState(0),
+    [pops, setPops] = useState<{ id: number; value: number }[]>([]),
+    lastScore = useRef(d.score);
+  useEffect(() => {
+    const gain = d.score - lastScore.current;
+    lastScore.current = d.score;
+    if (gain <= 0) return;
+    sfx.coin();
+    const id = Date.now();
+    setPops((list) => [...list.slice(-2), { id, value: gain }]);
+    setTimeout(() => setPops((list) => list.filter((x) => x.id !== id)), 1200);
+  }, [d.score]);
   const localSeats = p.local ? [p.seat, p.local.seat] : [p.seat];
   useEffect(() => {
     positions.current = d.players.map((v: any) => ({ x: v.x, y: v.y }));
@@ -205,168 +227,266 @@ export default function Kitchen(p: GameProps) {
               burned: "烧焦",
             } as any
           )[item.stage];
+  const theme = kitchenThemes[d.level] || kitchenThemes[0],
+    mine = nearestIds(),
+    left = d.endless ? null : Math.max(0, Math.ceil((d.endsAt - p.now) / 1000)),
+    stageMark: Record<string, string> = {
+      chopped: "🔪",
+      cooked: "🔥",
+      boiled: "♨️",
+      burned: "💥",
+      raw: "",
+    };
+  function nearestIds() {
+    return new Set(localSeats.map((seat) => nearest(seat)?.id).filter(Boolean));
+  }
+  const content = (s: any): string => {
+    const n = Number(s.id.at(-1));
+    if (s.id.startsWith("board"))
+      return d.boards[n]
+        ? foodIcons[d.boards[n].kind as keyof typeof foodIcons]
+        : "";
+    if (s.id.startsWith("pan"))
+      return d.pans[n]
+        ? foodIcons[d.pans[n].item.kind as keyof typeof foodIcons]
+        : "";
+    if (s.id === "pot")
+      return d.pot ? foodIcons[d.pot.item.kind as keyof typeof foodIcons] : "";
+    if (s.id.startsWith("plate")) {
+      const plate = d.plates[n];
+      return !plate
+        ? ""
+        : plate.dirty
+          ? "🫧"
+          : plate.foods
+              .map((f: any) => foodIcons[f.kind as keyof typeof foodIcons])
+              .join("");
+    }
+    if (s.id.startsWith("handoff")) {
+      const it = d.handoffs[n];
+      return it
+        ? it.kind === "plate"
+          ? "🍽️"
+          : foodIcons[it.kind as keyof typeof foodIcons]
+        : "";
+    }
+    return "";
+  };
+  const busy = (s: any) =>
+    (s.id.startsWith("pan") && d.pans[Number(s.id.at(-1))]) ||
+    (s.id === "pot" && d.pot);
   return (
-    <section class="couple-new-stage" data-testid="kitchen-stage">
-      <header class="couple-bar">
-        <b>{d.levelName}</b>
-        <b>
-          {d.score} 分 · 连击×
-          {(1 + Math.max(0, d.combo - 1) * 0.125).toFixed(2)}
-        </b>
-        <b>
-          {d.endless
-            ? "无尽"
-            : Math.max(0, Math.ceil((d.endsAt - p.now) / 1000)) + "s"}
-        </b>
+    <section
+      class={"couple-new-stage kitchen-stage kitchen-" + theme.id}
+      data-testid="kitchen-stage"
+    >
+      <header class="kitchen-top">
+        <div>
+          <b>
+            {theme.icon} {d.levelName}
+          </b>
+          <small>{theme.sub}</small>
+        </div>
+        <div class="kitchen-score">
+          <b>{d.score}</b>
+          <small>
+            分
+            {d.combo > 1
+              ? ` · 🔥×${(1 + (d.combo - 1) * 0.125).toFixed(2)}`
+              : ""}
+          </small>
+        </div>
+        <span
+          class={
+            "kitchen-clock" + (left !== null && left <= 20 ? " urgent" : "")
+          }
+        >
+          {left === null ? "∞ 无尽" : "⏱ " + left + "s"}
+        </span>
       </header>
-      <div class="kitchen-tickets">
-        {d.orders.map((o: any) => (
-          <div>
-            {recipes[o.kind as keyof typeof recipes].name}
-            <small>
-              {recipes[o.kind as keyof typeof recipes].foods
-                .map((f) => {
+      <div class="kitchen-rail">
+        {d.orders.map((o: any) => {
+          const r = recipes[o.kind as keyof typeof recipes],
+            k = Math.max(0, Math.min(1, (o.deadline - p.now) / 60000));
+          return (
+            <div class={"kitchen-ticket" + (k < 0.25 ? " late" : "")}>
+              <b>{r.name}</b>
+              <span class="ticket-foods">
+                {r.foods.map((f) => {
                   const [kind, stage] = f.split(":");
                   return (
-                    (
-                      {
-                        raw: "",
-                        chopped: "切",
-                        cooked: "煎",
-                        boiled: "煮",
-                      } as Record<string, string>
-                    )[stage] +
-                    (
-                      {
-                        tomato: "番茄",
-                        lettuce: "生菜",
-                        meat: "肉饼",
-                        bread: "面包",
-                      } as Record<string, string>
-                    )[kind]
+                    <i>
+                      {foodIcons[kind as keyof typeof foodIcons]}
+                      <sub>{stageMark[stage]}</sub>
+                    </i>
                   );
-                })
-                .join(" + ")}
-            </small>
-            <progress value={Math.max(0, o.deadline - p.now)} max="60000" />
-          </div>
-        ))}
+                })}
+              </span>
+              <small>
+                {r.foods
+                  .map((f) => {
+                    const [kind, stage] = f.split(":");
+                    return (
+                      (
+                        {
+                          raw: "",
+                          chopped: "切",
+                          cooked: "煎",
+                          boiled: "煮",
+                        } as Record<string, string>
+                      )[stage] +
+                      (
+                        {
+                          tomato: "番茄",
+                          lettuce: "生菜",
+                          meat: "肉饼",
+                          bread: "面包",
+                        } as Record<string, string>
+                      )[kind]
+                    );
+                  })
+                  .join(" + ")}
+              </small>
+              <em style={{ width: k * 100 + "%" }} />
+            </div>
+          );
+        })}
+        {!d.orders.length && <p class="muted">订单马上来…</p>}
       </div>
       {d.cakeLabel && !d.cakeDone && (
-        <p>
-          🎂 大订单 {d.cakeStep}/6：{d.cakeLabel}，两人分别在蛋糕台按住
-        </p>
+        <div class="kitchen-cake">
+          <span>🎂 纪念日大订单</span>
+          <div>
+            {Array.from({ length: 6 }, (_, i) => (
+              <i
+                class={i < d.cakeStep ? "done" : i === d.cakeStep ? "now" : ""}
+              />
+            ))}
+          </div>
+          <small>
+            {d.cakeStep + 1}/6 {d.cakeLabel} · 两人分别在 🎂 台按住
+          </small>
+        </div>
       )}
-      <div
-        class="kitchen-map"
-        style={{
-          position: "relative",
-          height: "min(70vw,360px)",
-          background: "#fff0d1",
-          border: "3px solid #9e734e",
-          borderRadius: 12,
-        }}
-      >
-        {d.bar && (
-          <div
-            style={{
-              position: "absolute",
-              left: "50%",
-              height: "100%",
-              width: "8%",
-              background: "#c18d63",
-            }}
-          />
-        )}
+      <div class="kitchen-map">
+        {d.bar && <div class="kitchen-bar" />}
         {d.stations.map((s: any) => (
-          <span
+          <div
+            class={
+              "kitchen-station st-" +
+              s.id.replace(/\d$/, "") +
+              (mine.has(s.id) ? " near" : "") +
+              (busy(s) ? " busy" : "")
+            }
             style={{
-              position: "absolute",
               left: (s.x / 8) * 100 + "%",
               top: (s.y / 8) * 100 + "%",
-              width: "12.5%",
-              textAlign: "center",
-              fontSize: 24,
             }}
             title={s.id}
           >
-            {s.label}
-            {s.id.startsWith("board") && d.boards[Number(s.id.at(-1))]
-              ? "🥗"
-              : ""}
-          </span>
+            <span class="st-icon">{s.label}</span>
+            {content(s) && <span class="st-content">{content(s)}</span>}
+          </div>
         ))}
-        {positions.current.map((v: any, i: number) => (
-          <span
-            data-x={v.x}
-            data-y={v.y}
-            class={"chef player-" + i}
-            style={{
-              position: "absolute",
-              left: (v.x / 8) * 100 + "%",
-              top: (v.y / 8) * 100 + "%",
-              fontSize: 26,
-            }}
-          >
-            {i ? "🐻" : "🐰"}
+        {positions.current.map((v: any, i: number) => {
+          const prof = p.room.profiles[i as 0 | 1],
+            held = d.players[i]?.held;
+          return (
+            <span
+              data-x={v.x}
+              data-y={v.y}
+              class={"chef player-" + i}
+              style={{
+                left: (v.x / 8) * 100 + "%",
+                top: (v.y / 8) * 100 + "%",
+              }}
+            >
+              <span class="chef-hat" aria-hidden="true" />
+              <Critter
+                avatar={prof?.avatar}
+                color={prof?.color || (i ? "#4D9DFF" : "#FF6B6B")}
+                mood={d.jobs[i] ? "wow" : "joy"}
+                shadow={false}
+                size={40}
+              />
+              {held && (
+                <span class="chef-held">{label(held).split(" ")[0]}</span>
+              )}
+              {d.jobs[i] && (
+                <span class="chef-job">
+                  <i
+                    style={{
+                      width:
+                        Math.min(100, ((p.now - d.jobs[i].at) / 2000) * 100) +
+                        "%",
+                    }}
+                  />
+                </span>
+              )}
+            </span>
+          );
+        })}
+        {pops.map((x) => (
+          <span key={x.id} class="kitchen-pop">
+            +{x.value}
           </span>
         ))}
       </div>
-      {localSeats.map((seat) => (
-        <div class="kitchen-controls">
-          <b>
-            玩家{seat + 1} · {label(d.players[seat].held)}
-          </b>
-          <div
-            role="group"
-            aria-label={"玩家" + (seat + 1) + "摇杆"}
-            style={{ display: "flex", gap: 4 }}
-          >
-            {[
-              [0, -1, "↑"],
-              [-1, 0, "←"],
-              [1, 0, "→"],
-              [0, 1, "↓"],
-            ].map(([x, y, t]) => (
+      <div class={"kitchen-pads" + (localSeats.length > 1 ? " two" : "")}>
+        {localSeats.map((seat) => (
+          <div class="kitchen-controls">
+            <b>
+              {nickname(p, seat)} · {label(d.players[seat].held)}
+            </b>
+            <div class="kitchen-pad-row">
+              <div
+                role="group"
+                aria-label={"玩家" + (seat + 1) + "摇杆"}
+                class="kitchen-dpad"
+              >
+                {[
+                  [0, -1, "↑", "up"],
+                  [-1, 0, "←", "left"],
+                  [1, 0, "→", "right"],
+                  [0, 1, "↓", "down"],
+                ].map(([x, y, t, cls]) => (
+                  <button
+                    class={"dpad-" + cls}
+                    disabled={p.disabled}
+                    onPointerDown={(e) => {
+                      e.currentTarget.setPointerCapture(e.pointerId);
+                      dirs.current[seat] = [Number(x), Number(y)];
+                      facing.current[seat] = dirs.current[seat];
+                    }}
+                    onPointerUp={() => (dirs.current[seat] = [0, 0])}
+                    onPointerCancel={() => (dirs.current[seat] = [0, 0])}
+                    onLostPointerCapture={() => (dirs.current[seat] = [0, 0])}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
               <button
-                style={{ minWidth: 44, minHeight: 44, touchAction: "none" }}
-                disabled={p.disabled}
+                class="primary kitchen-act"
+                aria-label={"操作" + (nearest(seat)?.label || " · 面向工作台")}
+                disabled={p.disabled || !nearest(seat)}
                 onPointerDown={(e) => {
                   e.currentTarget.setPointerCapture(e.pointerId);
-                  dirs.current[seat] = [Number(x), Number(y)];
-                  facing.current[seat] = dirs.current[seat];
+                  const s = nearest(seat);
+                  if (s) void act(seat, "interact", { station: s.id });
                 }}
-                onPointerUp={() => (dirs.current[seat] = [0, 0])}
-                onPointerCancel={() => (dirs.current[seat] = [0, 0])}
-                onLostPointerCapture={() => (dirs.current[seat] = [0, 0])}
+                onPointerUp={() => void act(seat, "cancel")}
+                onPointerCancel={() => void act(seat, "cancel")}
+                onLostPointerCapture={() => void act(seat, "cancel")}
               >
-                {t}
+                <span>{nearest(seat)?.label || "🙌"}</span>
+                <small>{nearest(seat) ? "操作" : "走近工作台"}</small>
               </button>
-            ))}
+            </div>
           </div>
-          <button
-            class="primary"
-            disabled={p.disabled || !nearest(seat)}
-            onPointerDown={(e) => {
-              e.currentTarget.setPointerCapture(e.pointerId);
-              const s = nearest(seat);
-              if (s) void act(seat, "interact", { station: s.id });
-            }}
-            onPointerUp={() => void act(seat, "cancel")}
-            onPointerCancel={() => void act(seat, "cancel")}
-            onLostPointerCapture={() => void act(seat, "cancel")}
-          >
-            操作{nearest(seat)?.label || " · 面向工作台"}
-          </button>
-          {d.jobs[seat] && (
-            <progress
-              value={Math.min(2000, p.now - d.jobs[seat].at)}
-              max="2000"
-            />
-          )}
-        </div>
-      ))}
-      <p>
+        ))}
+      </div>
+      <p class="muted kitchen-help">
         按住方向连续走动；面向工作台操作，切菜/洗碗按住两秒。WASD/空格，双人用方向键/回车。
       </p>
     </section>

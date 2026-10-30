@@ -77,3 +77,19 @@ describe("P4 asymmetric spot-the-difference scenes", () => {
     );
   });
 });
+describe("spot-difference magnifier and phrases", () => {
+  it("shows one hint near an unfound difference for ten seconds of time", () => {
+    const g = new SpotDifference("r", { scene: 0, mode: "split" }, 3, 0, ctx());
+    const deadline = g.deadline;
+    g.act(0, "hint", {}, 1000);
+    const hint = g.view(1, 1000).hint!,
+      target = g.scene.objects.find((o) => g.selected.includes(o.id))!;
+    expect(Math.hypot(hint.x - target.x, hint.y - target.y)).toBeLessThan(7);
+    expect(g.deadline).toBe(deadline - 10000);
+    expect(() => g.act(1, "hint", {}, 1100)).toThrow("INVALID");
+    expect(g.view(0, 6000).hint).toBeNull();
+    g.act(1, "signal", { text: "方向反了" }, 2000);
+    expect(g.view(0, 2100).signal).toMatchObject({ text: "方向反了", seat: 1 });
+    expect(() => g.act(1, "signal", { text: "随便" }, 3000)).toThrow("INVALID");
+  });
+});

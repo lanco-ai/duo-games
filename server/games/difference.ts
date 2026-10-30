@@ -7,6 +7,24 @@ import {
 import { unlockedLevel, unlockNext } from "../../shared/games/progress";
 import type { EngineContext, GameOptions } from "../../shared/games/types";
 import type { Seat } from "../../shared/protocol";
+export const spotSignals = [
+  "左上角",
+  "右上角",
+  "左下角",
+  "右下角",
+  "中间",
+  "桌子上",
+  "墙上",
+  "地上",
+  "有几个",
+  "颜色不一样",
+  "方向反了",
+  "变大了",
+  "不见了",
+  "多了条纹",
+  "右边",
+  "下面",
+];
 export class SpotDifference extends BaseEngine {
   level: number;
   selected: number[];
@@ -15,7 +33,9 @@ export class SpotDifference extends BaseEngine {
   deadline: number;
   misses = 0;
   lastMiss: { x: number; y: number; at: number } | null = null;
-  signal: { text: string; at: number } | null = null;
+  signal: { text: string; at: number; seat: Seat } | null = null;
+  hint: { x: number; y: number; at: number } | null = null;
+  hintUsed = false;
   constructor(
     run: string,
     o: GameOptions,
@@ -82,16 +102,31 @@ export class SpotDifference extends BaseEngine {
       lastMiss:
         this.lastMiss && now - this.lastMiss.at < 1000 ? this.lastMiss : null,
       signal: this.signal && now - this.signal.at < 2000 ? this.signal : null,
+      hint: this.hint && now - this.hint.at < 4000 ? this.hint : null,
+      hintUsed: this.hintUsed,
     };
   }
-  act(_seat: Seat, cmd: string, p: any, now: number) {
+  act(seat: Seat, cmd: string, p: any, now: number) {
     if (this.result || now >= this.deadline) throw Error("INVALID");
     if (cmd === "signal") {
-      if (!["左上角", "桌子上", "有几个", "右边", "下面"].includes(p?.text))
-        throw Error("INVALID");
+      if (!spotSignals.includes(p?.text)) throw Error("INVALID");
       if (this.signal && now - this.signal.at < 700)
         throw Error("RATE_LIMITED");
-      this.signal = { text: p.text, at: now };
+      this.signal = { text: p.text, at: now, seat };
+      return true;
+    }
+    if (cmd === "hint") {
+      // One shared magnifier per round: costs ten seconds, shows a rough area.
+      if (this.hintUsed) throw Error("INVALID");
+      const left = this.scene.objects.find(
+        (o) => this.selected.includes(o.id) && !this.found.includes(o.id),
+      );
+      if (!left) throw Error("INVALID");
+      this.hintUsed = true;
+      this.deadline -= 10000;
+      const jitter = ((this.seed + left.id * 7) % 9) - 4;
+      this.hint = { x: left.x + jitter, y: left.y - jitter, at: now };
+      if (now >= this.deadline) this.end(now);
       return true;
     }
     if (
@@ -161,5 +196,6 @@ export class SpotDifference extends BaseEngine {
     this.deadline += ms;
     if (this.lastMiss) this.lastMiss.at += ms;
     if (this.signal) this.signal.at += ms;
+    if (this.hint) this.hint.at += ms;
   }
 }

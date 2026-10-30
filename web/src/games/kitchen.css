@@ -1,0 +1,423 @@
+/* ---------- 双人厨房 ---------- */
+.kitchen-stage {
+  --floor-a: #fde7ef;
+  --floor-b: #f8d3e0;
+  --counter: #ffffff;
+  --counter-edge: #d9a3b5;
+  --accent: #ff8a9f;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kitchen-stage.kitchen-pub {
+  --floor-a: #e9d2b4;
+  --floor-b: #dcc09c;
+  --counter: #fff6e8;
+  --counter-edge: #9a6a3e;
+  --accent: #c9853f;
+}
+.kitchen-stage.kitchen-hotpot {
+  --floor-a: #f6d9c8;
+  --floor-b: #eec2a8;
+  --counter: #fff3e6;
+  --counter-edge: #b3261e;
+  --accent: #e8364f;
+}
+.kitchen-stage.kitchen-truck {
+  --floor-a: #dff1ff;
+  --floor-b: #c9e5fb;
+  --counter: #ffffff;
+  --counter-edge: #3f8fd8;
+  --accent: #3f8fd8;
+}
+.kitchen-stage.kitchen-cake {
+  --floor-a: #fff1e0;
+  --floor-b: #ffe2c2;
+  --counter: #ffffff;
+  --counter-edge: #e8a0b8;
+  --accent: #e8678f;
+}
+.kitchen-top {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+}
+.kitchen-top > div:first-child {
+  display: flex;
+  flex-direction: column;
+}
+.kitchen-top b {
+  font-family: var(--display);
+  font-size: 18px;
+}
+.kitchen-top small {
+  font-size: 11px;
+  opacity: 0.8;
+}
+.kitchen-score {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+.kitchen-score b {
+  font-size: 22px;
+  color: var(--accent);
+}
+.kitchen-clock {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid #ecd3d8;
+  font-family: var(--display);
+  white-space: nowrap;
+}
+.kitchen-clock.urgent {
+  color: #e8364f;
+  border-color: #e8364f;
+}
+.kitchen-rail {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 10px 6px 6px;
+  border-radius: 12px;
+  background: linear-gradient(#b5835a 0 6px, transparent 6px);
+}
+.kitchen-ticket {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 108px;
+  padding: 8px 10px 10px;
+  border-radius: 4px 4px 10px 10px;
+  background: #fffdf6;
+  border: 1.5px solid #e2cfa8;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.08);
+  transform: rotate(-1.5deg);
+  overflow: hidden;
+}
+.kitchen-ticket:nth-child(2n) {
+  transform: rotate(1.5deg);
+}
+.kitchen-ticket::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.kitchen-ticket b {
+  font-family: var(--display);
+}
+.ticket-foods {
+  display: flex;
+  gap: 2px;
+  font-size: 20px;
+}
+.ticket-foods i {
+  position: relative;
+  font-style: normal;
+}
+.ticket-foods sub {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  font-size: 10px;
+}
+.kitchen-ticket small {
+  font-size: 10px;
+  color: #8a6b74;
+}
+.kitchen-ticket em {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 4px;
+  background: #69db7c;
+  transition: width 0.3s linear;
+}
+.kitchen-ticket.late em {
+  background: #e8364f;
+}
+.kitchen-ticket.late {
+  animation: beat-plain 0.7s ease-in-out infinite;
+}
+.kitchen-cake {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: #fff0f5;
+  border: 2px dashed var(--accent);
+  font-weight: 700;
+}
+.kitchen-cake div {
+  display: flex;
+  gap: 4px;
+}
+.kitchen-cake i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+}
+.kitchen-cake i.done {
+  background: var(--accent);
+}
+.kitchen-cake i.now {
+  background: #ffd23f;
+}
+.kitchen-cake small {
+  flex-basis: 100%;
+  font-weight: 400;
+}
+.kitchen-map {
+  position: relative;
+  width: min(100%, 420px);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  border-radius: 18px;
+  border: 4px solid #523c47;
+  background-color: var(--floor-a);
+  background-image:
+    linear-gradient(
+      45deg,
+      var(--floor-b) 25%,
+      transparent 25%,
+      transparent 75%,
+      var(--floor-b) 75%
+    ),
+    linear-gradient(
+      45deg,
+      var(--floor-b) 25%,
+      transparent 25%,
+      transparent 75%,
+      var(--floor-b) 75%
+    );
+  background-size: 12.5% 12.5%;
+  background-position:
+    0 0,
+    6.25% 6.25%;
+  box-shadow:
+    inset 0 0 0 6px rgba(255, 255, 255, 0.4),
+    0 6px 0 rgba(82, 60, 71, 0.25);
+  overflow: hidden;
+}
+.kitchen-map .kitchen-bar {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 8%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    #b07a46 0 10px,
+    #9a6a3e 10px 12px
+  );
+  border-left: 2px solid #6b4423;
+  border-right: 2px solid #6b4423;
+}
+.kitchen-station {
+  position: absolute;
+  width: 12.5%;
+  height: 12.5%;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--counter);
+  box-shadow:
+    inset 0 -4px 0 var(--counter-edge),
+    0 2px 0 rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.15s;
+}
+.kitchen-station.near {
+  box-shadow:
+    inset 0 -4px 0 var(--counter-edge),
+    0 0 0 3px #ffd23f,
+    0 0 12px #ffd23f;
+}
+.st-icon {
+  font-size: clamp(16px, 5vw, 24px);
+}
+.st-content {
+  position: absolute;
+  right: -4px;
+  top: -6px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1.5px solid #523c47;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.kitchen-station.busy::after {
+  content: "";
+  position: absolute;
+  inset: -6px 20% auto;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(rgba(255, 255, 255, 0.9), transparent 70%);
+  animation: kitchen-steam 1s ease-in-out infinite;
+}
+@keyframes kitchen-steam {
+  to {
+    transform: translateY(-10px) scale(1.4);
+    opacity: 0;
+  }
+}
+.st-serve {
+  background: #fff3c4;
+}
+.st-trash {
+  background: #e9edf2;
+}
+.st-handoff {
+  background: #ffe0ea;
+}
+.chef {
+  position: absolute;
+  z-index: 2;
+  width: 12.5%;
+  height: 12.5%;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.chef .critter {
+  width: 120%;
+  height: 120%;
+  margin-top: -10%;
+}
+.chef-hat {
+  position: absolute;
+  top: -28%;
+  left: 50%;
+  width: 46%;
+  height: 34%;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 20% 20%;
+  background: #fff;
+  border: 2px solid #523c47;
+  z-index: 1;
+}
+.chef-held {
+  position: absolute;
+  right: -30%;
+  top: -20%;
+  padding: 1px 4px;
+  border-radius: 10px;
+  background: #fff;
+  border: 2px solid #523c47;
+  font-size: 13px;
+  z-index: 2;
+}
+.chef-job {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -14%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+.chef-job i {
+  display: block;
+  height: 100%;
+  background: #69db7c;
+}
+.kitchen-pop {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translateX(-50%);
+  font-family: var(--display);
+  font-size: 30px;
+  color: #ff4d6a;
+  text-shadow:
+    0 2px 0 #fff,
+    0 0 6px #fff;
+  animation: kitchen-pop 1.2s ease-out forwards;
+  pointer-events: none;
+  z-index: 3;
+}
+@keyframes kitchen-pop {
+  to {
+    transform: translate(-50%, -60px);
+    opacity: 0;
+  }
+}
+.kitchen-pads {
+  display: grid;
+  gap: 10px;
+}
+.kitchen-pads.two {
+  grid-template-columns: 1fr 1fr;
+}
+.kitchen-stage .kitchen-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.kitchen-stage .kitchen-controls > b {
+  font-size: 13px;
+}
+.kitchen-pad-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.kitchen-dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 44px);
+  grid-template-rows: repeat(3, 44px);
+  gap: 2px;
+}
+.couple-new-stage .kitchen-dpad button {
+  padding: 0;
+  border-radius: 12px;
+  font-size: 18px;
+  touch-action: none;
+}
+.kitchen-dpad .dpad-up {
+  grid-area: 1 / 2;
+}
+.kitchen-dpad .dpad-left {
+  grid-area: 2 / 1;
+}
+.kitchen-dpad .dpad-right {
+  grid-area: 2 / 3;
+}
+.kitchen-dpad .dpad-down {
+  grid-area: 3 / 2;
+}
+.couple-new-stage .kitchen-act {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  box-shadow: 0 5px 0 #b6506c;
+}
+.kitchen-act span {
+  font-size: 30px;
+}
+.kitchen-act small {
+  font-size: 11px;
+}
+.kitchen-help {
+  font-size: 12px;
+  text-align: center;
+}

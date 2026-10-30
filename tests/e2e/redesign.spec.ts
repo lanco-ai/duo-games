@@ -142,7 +142,7 @@ test("P2 two cooks prepare real orders, earn a star, settle and rematch", async 
   try {
     await start(one, two, "双人厨房");
     await expect(one.getByTestId("kitchen-stage")).toBeVisible();
-    await expect(one.locator(".kitchen-tickets > div")).toHaveCount(2);
+    await expect(one.locator(".kitchen-ticket")).toHaveCount(2);
     for (let served = 0; served < 3; served++) {
       if (served) {
         await kitchenWalk(two, 1, 6, 6.2);

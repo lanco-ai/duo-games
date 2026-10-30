@@ -1,0 +1,175 @@
+/* ---------- 各看一半 ---------- */
+.spot-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.spot-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.spot-top b {
+  font-family: var(--display);
+  font-size: 18px;
+}
+.spot-slots {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+.spot-slots i {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px dashed #d9a3b5;
+  font-style: normal;
+  font-size: 11px;
+}
+.spot-slots i.on {
+  border-style: solid;
+  border-color: #ff8a9f;
+  background: #fff0f4;
+}
+.spot-clock {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid #ecd3d8;
+  font-family: var(--display);
+}
+.spot-clock.urgent {
+  color: #e8364f;
+  border-color: #e8364f;
+  animation: beat-plain 0.6s ease-in-out infinite;
+}
+.spot-tip {
+  margin: 0;
+  font-weight: 700;
+  color: #8a5a6a;
+}
+.spot-pair {
+  display: grid;
+  gap: 8px;
+}
+@media (min-width: 640px) {
+  .spot-pair {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.spot-stage .spot-panel {
+  max-height: none;
+  margin: 0;
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 3px solid #523c47;
+  box-shadow: 0 5px 0 rgba(82, 60, 71, 0.25);
+  background: #fff;
+}
+.spot-panel.mine {
+  border-color: #ff8a9f;
+}
+.spot-panel svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  cursor: crosshair;
+}
+.spot-label {
+  position: absolute;
+  z-index: 1;
+  left: 8px;
+  top: 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid #523c47;
+  font-size: 12px;
+  pointer-events: none;
+}
+.spot-thing {
+  filter: drop-shadow(0 0.6px 0 rgba(0, 0, 0, 0.25));
+}
+.spot-thing.recolor {
+  filter: hue-rotate(170deg) saturate(1.8);
+}
+.spot-found circle {
+  fill: none;
+  stroke: #ff4d6a;
+  stroke-width: 1.2;
+}
+.spot-burst {
+  fill: none;
+  stroke: #ffd23f;
+  stroke-width: 2;
+  animation: spot-burst 0.6s ease-out forwards;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes spot-burst {
+  to {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+.spot-hint {
+  fill: rgba(255, 210, 63, 0.25);
+  stroke: #ffd23f;
+  stroke-width: 1.2;
+  stroke-dasharray: 3 2;
+  animation: beat-plain 0.8s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.spot-miss {
+  animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.spot-signal {
+  margin: 0;
+  align-self: flex-start;
+  padding: 6px 14px;
+  border-radius: 16px 16px 16px 4px;
+  background: #fff;
+  border: 2px solid #ecd3d8;
+  font-weight: 700;
+  animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.spot-signal.mine {
+  align-self: flex-end;
+  border-radius: 16px 16px 4px 16px;
+  background: #ffe9ef;
+}
+.spot-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.couple-new-stage .spot-tabs button {
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+.couple-new-stage .spot-tabs button.on {
+  background: #523c47;
+  color: #fff;
+  border-color: #523c47;
+}
+.couple-new-stage .spot-tabs .spot-magnifier {
+  margin-left: auto;
+  background: #fff3c4;
+  border-color: #d9a400;
+}
+.spot-phrases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.couple-new-stage .spot-phrases button {
+  flex: 1 1 28%;
+}
