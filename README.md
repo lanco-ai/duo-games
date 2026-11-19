@@ -78,11 +78,19 @@ npm run test:e2e
 
 ## 生产部署
 
-用户随后明确授权部署，已在现有 VPS 的 `https://lancoai.site/duo/` 上线。`duo-games.service` 以独立非 root 用户运行并开机自启；程序位于 `/opt/duo-games/current`，数据位于 `/var/lib/duo-games`。nginx 转发 `/duo/` 的 HTTP 和 WebSocket。
+正式站是 http://182.61.60.223:8790/ 。`duo-games.service` 以独立非 root 用户运行并开机自启：程序在 `/opt/lancoai/duo-games`（跟踪 `main`），Node 监听 `127.0.0.1:18790`，nginx 对外提供 8790；数据在 `/var/lib/duo-games`。服务器通过只读部署密钥从 GitHub 拉取。
 
-生产运行只依赖 `ws`；其余包都用于构建或开发。`dist/server.js` 和 `dist/web/` 是构建产物，配合仅生产依赖即可运行。已设置 `MemoryMax=200M`。生产构建使用 `BASE_PATH=/duo/`；本地运行根路径时重新执行不带该变量的 `npm run build`。
+更新：
 
-现有 443 SNI 代理隐藏访客 IP，因此公网建房额度合并计算：初始 10 次，此后每 6 分钟补充 1 次，上限 10 次。nginx 的 30 请求/秒和 100 连接限制也在这个入口合并计算；此限制及后续独立入口建议详见部署说明。
+```bash
+cd /opt/lancoai/duo-games
+bash deploy/update.sh --dry-run   # 只构建并列出会变化的文件
+bash deploy/update.sh             # 发布并重启
+```
+
+脚本在临时目录构建，先放入新的带哈希资源并保留旧资源，再原子替换 `server.js` 和首页入口，最后重启。重启会让进行中的对局回到大厅。
+
+生产运行只依赖 `ws`，其余包只用于构建。早期域名站 `lancoai.site/duo/` 的部署记录见 [DEPLOYMENT.md](DEPLOYMENT.md)。
 
 日志不输出房间凭证、聊天内容和回答。浏览器里的凭证等同房间钥匙；没有账号找回服务。已经清空浏览器数据且没有原设备换设备链接时，无法恢复原座位。
 
