@@ -3,6 +3,7 @@ import { isExtra, type ExtraView } from "../../shared/games/types";
 import { lazy, Suspense } from "preact/compat";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { games, type GameMeta } from "../../shared/catalog";
+import { readyBlockReason } from "../../shared/room";
 import {
   COLORS,
   DECKS,
@@ -285,7 +286,12 @@ export function Room({ code }: { code: string }) {
     let action: Action | null = null;
     if (room.phase === "proposed" && room.proposal?.by === 0)
       action = { type: "accept" };
-    else if (room.phase === "intro" && room.ready[0] && !room.ready[1])
+    else if (
+      room.phase === "intro" &&
+      room.ready[0] &&
+      !room.ready[1] &&
+      !readyBlockReason(room)
+    )
       action = { type: "ready" };
     else if (room.phase === "result" && room.rematch[0] && !room.rematch[1])
       action = { type: "rematch" };
@@ -298,6 +304,10 @@ export function Room({ code }: { code: string }) {
     room?.proposal?.by,
     room?.ready[0],
     room?.ready[1],
+    room?.online[0],
+    room?.online[1],
+    room?.away[0],
+    room?.away[1],
     room?.rematch[0],
     room?.rematch[1],
   ]);
@@ -602,6 +612,7 @@ export function Room({ code }: { code: string }) {
       </div>
     );
   const partnerOnline = room.online[other] && !room.away[other],
+    readyBlocked = readyBlockReason(room),
     countdown = Math.max(1, Math.ceil(((room.startAt || now) - now) / 1000));
   return (
     <div
@@ -1191,9 +1202,16 @@ export function Room({ code }: { code: string }) {
                 ),
             )}
           </div>
+          {readyBlocked && (
+            <p class="muted center" role="status">
+              {errors[readyBlocked]}
+            </p>
+          )}
           <button
             class="primary big wide"
-            disabled={busy || room.ready[seat] || !room.online.every(Boolean)}
+            disabled={
+              busy || room.ready[seat] || !!readyBlocked || status !== "已连接"
+            }
             onClick={() => {
               unlockSound();
               if (activeGame.id === "heartbeat") {

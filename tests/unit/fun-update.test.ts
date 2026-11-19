@@ -156,6 +156,9 @@ describe("love-slots", () => {
       g.act(partner, "stop", { pull: g.pull, at: t + 2500 }, t + 2600);
       expect(g.phase).toBe("task");
       expect(g.stopped).toBe(stripAt(g.offset, 2500));
+      expect(
+        g.act(partner, "stop", { pull: g.pull, at: t + 2700 }, t + 2700),
+      ).toBe(false);
       const target = g.outcome!.card.target,
         doer = target === "puller" ? puller : partner,
         verifier = target === "both" ? puller : ((1 - doer) as 0 | 1);

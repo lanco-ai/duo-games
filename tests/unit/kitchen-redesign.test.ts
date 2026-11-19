@@ -3,6 +3,7 @@ import { CoopKitchen } from "../../server/games/kitchen";
 import {
   kitchenLevels,
   kitchenStations,
+  walkable,
   recipes,
 } from "../../shared/games/coop-kitchen/levels";
 import type { EngineContext } from "../../shared/games/types";
@@ -68,6 +69,17 @@ describe("P2 cooperative kitchen levels", () => {
     expect(g.players[1].held?.kind).toBe("tomato");
     expect(g.contributions[1].passed).toBe(1);
   });
+  it("moves a chef out of the way when a moving station would trap them", () => {
+    const g = make("4");
+    Object.assign(g.players[0], { x: 5, y: 0 });
+    Object.assign(g.players[1], { x: 6, y: 3 });
+    expect(walkable(5, 0, g.stations, false)).toBe(true);
+    g.tick(g.nextSwap);
+    expect(walkable(g.players[0].x, g.players[0].y, g.stations, false)).toBe(
+      true,
+    );
+    expect(g.players[1]).toMatchObject({ x: 6, y: 3 });
+  });
   it("serves a real recipe, supplies new orders, and retains dirty plates on later levels", () => {
     const g = make("3");
     g.orders = [{ id: 0, kind: "burger", deadline: 60000 }];
@@ -93,6 +105,32 @@ describe("P2 cooperative kitchen levels", () => {
     g.act(0, "interact", { station: "sink" }, 3000);
     g.tick(5000);
     expect((g.players[0].held as any).dirty).toBe(false);
+  });
+  it("distinguishes distance, cooking time and expired orders", () => {
+    const g = make("3");
+    const interact = (station: string, now: number) =>
+      g.act(0, "interact", { station }, now);
+    expect(() => interact("pot", 1000)).toThrow("KITCHEN_DISTANCE");
+    Object.assign(g.players[0], { x: 5, y: 6 });
+    g.pot = { item: { kind: "meat", stage: "chopped", cuts: 3 }, at: 1000 };
+    expect(() => interact("pot", 8999)).toThrow("KITCHEN_COOKING");
+    expect(interact("pot", 9000)).toBe(true);
+    expect(g.players[0].held).toMatchObject({ stage: "boiled" });
+    const meat = g.players[0].held;
+    if (!meat || meat.kind === "plate") throw Error("Expected boiled meat");
+    Object.assign(g.players[0], {
+      x: 6,
+      y: 1,
+      held: {
+        kind: "plate",
+        dirty: false,
+        foods: [meat, { kind: "tomato", stage: "chopped", cuts: 3 }],
+      },
+    });
+    g.orders = [{ id: 0, kind: "hotpot", deadline: 10000 }];
+    expect(() => interact("serve", 10000)).toThrow("KITCHEN_ORDER");
+    expect(g.served).toBe(0);
+    expect(g.act(0, "cancel", {}, 10000)).toBe(false);
   });
   it("moves pan, pot, order and swap clocks on reconnect and bounds endless order pressure", () => {
     const g = make("3");

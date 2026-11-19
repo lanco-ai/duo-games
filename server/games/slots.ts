@@ -173,9 +173,14 @@ export class LoveSlots extends BaseEngine {
       return true;
     }
     if (cmd === "stop") {
-      if (this.phase !== "spinning") throw new Error("INVALID");
       if (seat !== partner) throw new Error("NOT_YOUR_TURN");
+      if (this.phase === "task") return false;
+      if (this.phase !== "spinning") throw new Error("STALE");
       if (now - this.spinAt < STOP2) throw new Error("TOO_EARLY");
+      if (now - this.spinAt >= AUTO_STOP) {
+        this.stop(this.spinAt + AUTO_STOP, true);
+        return true;
+      }
       // The tap time comes from the synced clock; allow for network delay only.
       const at = Math.min(now, Math.max(now - 700, Number(p.at) || now));
       this.stop(Math.max(at, this.spinAt + STOP2));

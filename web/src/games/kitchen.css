@@ -361,7 +361,7 @@
   gap: 10px;
 }
 .kitchen-pads.two {
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .kitchen-stage .kitchen-controls {
   display: flex;
@@ -410,6 +410,7 @@
   height: 92px;
   border-radius: 50%;
   box-shadow: 0 5px 0 #b6506c;
+  touch-action: none;
 }
 .kitchen-act span {
   font-size: 30px;
@@ -420,4 +421,26 @@
 .kitchen-help {
   font-size: 12px;
   text-align: center;
+}
+@media (max-width: 580px) {
+  .kitchen-pads.two .kitchen-pad-row {
+    width: 100%;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .kitchen-pads.two .kitchen-dpad {
+    width: min(100%, 136px);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .kitchen-pads.two .kitchen-act {
+    width: min(100%, 120px);
+    height: 48px;
+    flex-direction: row;
+    gap: 4px;
+    border-radius: 14px;
+    padding: 0 4px;
+  }
+  .kitchen-pads.two .kitchen-act span {
+    font-size: 20px;
+  }
 }

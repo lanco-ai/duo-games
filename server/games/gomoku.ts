@@ -35,6 +35,7 @@ export function winningLine(board: number[], x: number, y: number, seat: Seat) {
 export class Gomoku extends BaseEngine {
   board = new Array<number>(225).fill(-1);
   moves: { x: number; y: number; seat: Seat }[] = [];
+  revision = 0;
   turn: Seat;
   blackSeat: Seat;
   line: number[] = [];
@@ -71,6 +72,7 @@ export class Gomoku extends BaseEngine {
       forbidden: !!this.options.forbidden,
       turn: this.turn,
       move: this.moves.length,
+      revision: this.revision,
       last: this.moves.at(-1) || null,
       line: this.line,
       pending: this.pending,
@@ -90,6 +92,7 @@ export class Gomoku extends BaseEngine {
       throw new Error("INVALID");
     this.board[y * 15 + x] = seat;
     this.moves.push({ x, y, seat });
+    this.revision++;
     this.line = winningLine(this.board, x, y, seat);
     if (this.line.length) this.end(seat);
     else if (this.moves.length === 225) this.end(-1);
@@ -126,7 +129,11 @@ export class Gomoku extends BaseEngine {
     if (this.result) throw new Error("INVALID");
     if (cmd === "place") {
       if (this.deadline && now > this.deadline + 400) throw new Error("STALE");
-      if (p?.move !== this.moves.length) throw new Error("STALE");
+      if (
+        p?.move !== this.moves.length ||
+        (p.revision !== undefined && p.revision !== this.revision)
+      )
+        throw new Error("STALE");
       this.place(seat, integer(p.x, 0, 14), integer(p.y, 0, 14), now);
       return true;
     }
@@ -149,6 +156,7 @@ export class Gomoku extends BaseEngine {
         const m = this.moves.pop()!;
         this.board[m.y * 15 + m.x] = -1;
         this.turn = m.seat;
+        this.revision++;
       }
       this.nextDeadline(now);
       return true;

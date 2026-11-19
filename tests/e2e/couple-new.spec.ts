@@ -129,6 +129,7 @@ test("same device opens both kitchen and jumping controls with separate seat aut
   browser,
 }) => {
   const { c, p } = await newRoom(browser);
+  await p.setViewportSize({ width: 360, height: 740 });
   await localPartner(p);
   await start(p, "双人厨房");
   await expect(p.getByTestId("kitchen-stage")).toBeVisible();
@@ -136,6 +137,9 @@ test("same device opens both kitchen and jumping controls with separate seat aut
   await p.screenshot({ path: "test-results/new-kitchen.png", fullPage: true });
   await expect(p.getByRole("group", { name: "玩家1摇杆" })).toBeVisible();
   await expect(p.getByRole("group", { name: "玩家2摇杆" })).toBeVisible();
+  expect(await p.locator(".kitchen-act").evaluateAll((buttons) =>
+    buttons.every((button) => button.getBoundingClientRect().right <= innerWidth),
+  )).toBe(true);
   const before = await p.locator(".chef.player-1").boundingBox();
   expect(before).not.toBeNull();
   await p.keyboard.down("ArrowRight");

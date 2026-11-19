@@ -1,4 +1,5 @@
 import { test, expect, type Page, type Browser } from "@playwright/test";
+import { games, gameGroup } from "../../shared/catalog";
 async function createPair(browser: Browser, query = "") {
   const a = await browser.newContext({ viewport: { width: 390, height: 844 } }),
     b = await browser.newContext({ viewport: { width: 390, height: 844 } });
@@ -210,6 +211,38 @@ test("actual 30-second offline interruption restores the same card on both phone
   await a.close();
   await b.close();
 });
+test("realtime games explain why readiness is blocked while a partner is away", async ({
+  browser,
+}) => {
+  const { a, b, one, two } = await createPair(browser);
+  try {
+    await one.getByRole("button", { name: "了解一线牵", exact: true }).click();
+    await one.getByRole("button", { name: "一起玩这个 ❤" }).click();
+    await two.getByRole("button", { name: "好呀", exact: true }).click();
+    const ready = one.getByRole("button", { name: "我准备好了", exact: true });
+    await expect(ready).toBeEnabled();
+    async function setPartnerAway(hidden: boolean) {
+      await two.evaluate((value) => {
+        Object.defineProperty(document, "hidden", {
+          configurable: true,
+          value,
+        });
+        document.dispatchEvent(new Event("visibilitychange"));
+      }, hidden);
+    }
+    await setPartnerAway(true);
+    await expect(ready).toBeDisabled();
+    await expect(
+      one.getByText("请两个人都回到游戏页面，再开始这局"),
+    ).toBeVisible();
+    await setPartnerAway(false);
+    await expect(ready).toBeEnabled();
+  } finally {
+    await a.close();
+    await b.close();
+  }
+});
+
 test("desktop and smallest mobile layouts, categories and playable game descriptions", async ({
   page,
 }) => {
@@ -223,12 +256,14 @@ test("desktop and smallest mobile layouts, categories and playable game descript
     fullPage: true,
   });
   await noOverflow(page);
-  expect(await page.locator(".game-card").count()).toBe(16);
+  await expect(page.locator(".game-card")).toHaveCount(games.length);
   for (const group of ["聊天", "合作", "较量", "动作"])
     await expect(
       page.getByRole("region", { name: group + "游戏", exact: true }),
     ).toBeVisible();
-  await expect(page.locator(".game-card .device-tag")).toHaveCount(16);
+  await expect(page.locator(".game-card .device-tag")).toHaveCount(
+    games.length,
+  );
   await expect(
     page.getByRole("button", { name: "了解双人厨房", exact: true }),
   ).toContainText("一台设备也能玩");
@@ -236,7 +271,9 @@ test("desktop and smallest mobile layouts, categories and playable game descript
     page.getByRole("button", { name: "了解求生欲·双人版", exact: true }),
   ).toContainText("两台设备");
   await page.getByRole("button", { name: "较量", exact: true }).click();
-  expect(await page.locator(".game-card").count()).toBe(3);
+  await expect(page.locator(".game-card")).toHaveCount(
+    games.filter((game) => gameGroup(game) === "较量").length,
+  );
   await page.getByRole("button", { name: "了解爱心五子棋" }).click();
   await expect(
     page.getByRole("button", { name: "一起玩这个 ❤" }),

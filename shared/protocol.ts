@@ -52,6 +52,13 @@ export type ErrCode =
   | "RATE_LIMITED"
   | "UNAVAILABLE"
   | "LOCKED"
+  | "PARTNER_OFFLINE"
+  | "FOREGROUND_REQUIRED"
+  | "GAME_PAUSED"
+  | "TOO_EARLY"
+  | "KITCHEN_DISTANCE"
+  | "KITCHEN_COOKING"
+  | "KITCHEN_ORDER"
   | "NEED_WORDS";
 export interface JournalEntry {
   id: string;
@@ -182,6 +189,13 @@ export const errors: Record<ErrCode, string> = {
   VERSION: "页面版本已更新，请刷新后再试",
   NOT_YOUR_TURN: "现在轮到 TA 操作啦",
   LOCKED: "TA 正拿着这块，稍等一下",
+  PARTNER_OFFLINE: "等 TA 连上房间后再准备",
+  FOREGROUND_REQUIRED: "请两个人都回到游戏页面，再开始这局",
+  GAME_PAUSED: "游戏已暂停，等双方回来后再继续",
+  TOO_EARLY: "等前两个转轮停下，再按停",
+  KITCHEN_DISTANCE: "再靠近一点，面向工作台操作",
+  KITCHEN_COOKING: "还没煮好，等提示可以取出再拿",
+  KITCHEN_ORDER: "盘里的食材或做法与当前订单不符",
   NEED_WORDS: "只选回忆词时，两人需要各自先添加至少三个词",
   STALE: "状态已更新，请再试一次",
   INVALID: "这个操作现在还不能进行",

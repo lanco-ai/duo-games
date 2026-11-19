@@ -12,10 +12,14 @@ export default function Gomoku(p: GameProps) {
   useEffect(() => {
     setPreview(null);
     setPending(null);
-  }, [d.move]);
+    setWarning("");
+  }, [d.move, d.turn, d.revision, p.view.run]);
   const touch =
     matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
-  async function place(i: number) {
+  const stoneColor = (seat: number) =>
+    seat === d.blackSeat ? "black" : "white";
+  const stoneName = (seat: number) => (seat === d.blackSeat ? "黑棋" : "白棋");
+  async function place(i: number, confirmed = false) {
     if (
       d.turn !== p.seat ||
       p.disabled ||
@@ -24,13 +28,10 @@ export default function Gomoku(p: GameProps) {
       pending !== null
     )
       return;
-    if (touch && preview !== i) {
-      setPreview(i);
-      return;
-    }
     if (d.forbidden && p.seat === d.blackSeat) {
       const reason = forbiddenMove(d.board, i, p.seat);
       if (reason) {
+        setPreview(null);
         setWarning(
           reason === "double-three"
             ? "这里会形成三三禁手，请换一个位置。"
@@ -40,9 +41,21 @@ export default function Gomoku(p: GameProps) {
       }
     }
     setWarning("");
+    if (touch && preview !== i && !confirmed) {
+      setPreview(i);
+      return;
+    }
     setPending(i);
-    await send("place", { move: d.move, x: i % 15, y: Math.floor(i / 15) });
-    setPending(null);
+    try {
+      await send("place", {
+        move: d.move,
+        revision: d.revision,
+        x: i % 15,
+        y: Math.floor(i / 15),
+      });
+    } finally {
+      setPending(null);
+    }
   }
   return (
     <section class="extra-stage gomoku-stage" data-testid="gomoku-stage">
@@ -58,8 +71,12 @@ export default function Gomoku(p: GameProps) {
                 size={52}
                 class={d.turn === seat ? "hop" : ""}
               />
-              <span class="stone-chip" style={{ color: prof?.color }}>
-                ♥
+              <span class="gomoku-side">
+                <span
+                  class={"gomoku-stone " + stoneColor(seat)}
+                  aria-hidden="true"
+                />
+                {stoneName(seat)}
               </span>
               <b>{seat === p.seat ? "你" : nickname(p, seat)}</b>
             </div>
@@ -90,7 +107,7 @@ export default function Gomoku(p: GameProps) {
           <button
             role="gridcell"
             data-cell={i}
-            aria-label={`${(i % 15) + 1}列${Math.floor(i / 15) + 1}行${stone >= 0 ? "已有棋子" : ""}`}
+            aria-label={`${(i % 15) + 1}列${Math.floor(i / 15) + 1}行${stone >= 0 ? " " + stoneName(stone) : ""}`}
             disabled={
               p.disabled || d.turn !== p.seat || stone !== -1 || !!d.pending
             }
@@ -100,16 +117,14 @@ export default function Gomoku(p: GameProps) {
               (preview === i || pending === i ? "preview" : "")
             }
           >
-            <span
-              style={{
-                color:
-                  stone < 0
-                    ? p.room.profiles[p.seat]!.color
-                    : p.room.profiles[stone as 0 | 1]!.color,
-              }}
-            >
-              {stone >= 0 ? "♥" : preview === i || pending === i ? "♡" : ""}
-            </span>
+            {(stone >= 0 || preview === i || pending === i) && (
+              <span
+                class={
+                  "gomoku-stone " + stoneColor(stone >= 0 ? stone : p.seat)
+                }
+                aria-hidden="true"
+              />
+            )}
             {d.last &&
               d.last.x === i % 15 &&
               d.last.y === Math.floor(i / 15) && <i />}
@@ -117,9 +132,25 @@ export default function Gomoku(p: GameProps) {
         ))}
       </div>
       <p class="muted">
-        {touch ? "点一下预览，再点同一格落子。" : "点击空格落子。"}{" "}
+        {touch ? "点交叉点预览，再点同一点或按确认落子。" : "点击交叉点落子。"}{" "}
         {d.wager && "小约定：" + d.wager}
       </p>
+      {touch && preview !== null && (
+        <div class="game-actions">
+          <button
+            class="primary"
+            disabled={
+              p.disabled || d.turn !== p.seat || !!d.pending || pending !== null
+            }
+            onClick={() => void place(preview, true)}
+          >
+            确认落子
+          </button>
+          <button class="secondary" onClick={() => setPreview(null)}>
+            取消预览
+          </button>
+        </div>
+      )}
       {d.pending ? (
         <div class="agreement">
           <p>

@@ -8,6 +8,7 @@ import {
   reactions,
   STOP1,
   STOP2,
+  AUTO_STOP,
   SPEED,
 } from "../../../shared/games/love-slots/rules";
 import {
@@ -194,11 +195,13 @@ export default function Slots(p: GameProps) {
               {p.local ? nickname(p, partner) + "：" : ""}
               {elapsed < STOP2
                 ? "看前两个转轮停在什么…"
-                : `看准时机！想帮 TA 凑三连，还是…故意的？`}
+                : elapsed >= AUTO_STOP
+                  ? "正在自动停轮…"
+                  : "看准时机！想帮 TA 凑三连，还是…故意的？"}
             </p>
             <button
               class="primary slot-stop"
-              disabled={p.disabled || elapsed < STOP2}
+              disabled={p.disabled || elapsed < STOP2 || elapsed >= AUTO_STOP}
               onClick={() => {
                 sfx.stop();
                 void act(

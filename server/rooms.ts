@@ -20,7 +20,7 @@ import {
   type Profile,
   type GameResult,
 } from "../shared/protocol";
-import { transition } from "../shared/room";
+import { requiresForeground, transition } from "../shared/room";
 import * as talk from "../shared/games/talk-cards/rules";
 import { Store, type StoredRoom } from "./store";
 export interface Peer {
@@ -436,12 +436,16 @@ export class RoomManager {
       error = "INVALID";
     else if (a.type === "game") {
       if (!r.extra || a.run !== r.extra.run || r.view.phase !== "playing")
-        error = "STALE";
+        error =
+          r.extra?.run === a.run && r.view.phase === "paused"
+            ? "GAME_PAUSED"
+            : "STALE";
       else
         try {
           if (
             r.extra.id === "gomoku" &&
             a.command === "place" &&
+            a.payload?.revision === undefined &&
             seq !== r.view.seq
           )
             throw new Error("STALE");
@@ -489,7 +493,7 @@ export class RoomManager {
           !(r.view.phase === "result" && a.type === "answer")) ||
         !r.game
       )
-        error = "INVALID";
+        error = r.game && r.view.phase === "paused" ? "GAME_PAUSED" : "STALE";
       else if ((a.type === "draw" || a.type === "skip") && seq !== r.view.seq)
         error = "STALE";
       else {
@@ -583,13 +587,9 @@ export class RoomManager {
     this.publish(r);
   }
   visibility(r: LiveRoom, seat: Seat, hidden: boolean) {
+    if (r.view.away[seat] === hidden) return;
     r.view.away[seat] = hidden;
-    if (
-      r.extra &&
-      ["red-thread", "heart-bounce", "puck-sling"].includes(r.extra.id)
-    ) {
-      if (hidden) this.pause(r);
-    }
+    if (hidden && requiresForeground(r.extra?.id)) this.pause(r);
     if (!hidden) this.resume(r);
     this.publish(r);
   }

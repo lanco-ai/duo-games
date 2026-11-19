@@ -243,7 +243,10 @@ test("gomoku — two seats complete and rematch with 200ms delay", async ({
   browser,
 }) => {
   test.setTimeout(180000);
-  const a = await browser.newContext({ viewport: { width: 360, height: 740 } }),
+  const a = await browser.newContext({
+      viewport: { width: 360, height: 740 },
+      hasTouch: true,
+    }),
     b = await browser.newContext({ viewport: { width: 360, height: 740 } });
   await instrument(a);
   await instrument(b);
@@ -268,19 +271,25 @@ test("gomoku — two seats complete and rematch with 200ms delay", async ({
       seconds: 0,
       wager: "请喝奶茶",
     });
-    await one.locator('[data-cell="112"]').click();
-    await expect(two.locator('[data-cell="112"]')).toContainText("♥");
+    const center = one.locator('[data-cell="112"]');
+    await center.tap();
+    await expect(center).toHaveClass(/preview/);
+    await expect(two.locator('[data-cell="112"] .gomoku-stone')).toHaveCount(0);
+    await one.getByRole("button", { name: "确认落子" }).tap();
+    await expect(two.locator('[data-cell="112"] .gomoku-stone.black')).toBeVisible();
     await one.getByRole("button", { name: "悔一步", exact: true }).click();
     await two.getByRole("button", { name: "让 TA ❤", exact: true }).click();
-    await expect(one.locator('[data-cell="112"]')).not.toContainText("♥");
+    await expect(center.locator(".gomoku-stone")).toHaveCount(0);
     for (let n = 0; n < 5; n++) {
       const stone = one.locator('[data-cell="' + (112 + n) + '"]');
       await expect(stone).toBeEnabled();
-      await stone.click();
+      await stone.tap();
+      await stone.tap();
       if (n < 4) {
         const reply = two.locator('[data-cell="' + n * 15 + '"]');
         await expect(reply).toBeEnabled();
         await reply.click();
+        await expect(one.locator('[data-cell="' + n * 15 + '"] .gomoku-stone.white')).toBeVisible();
       }
     }
     const line = one.getByRole("img", {

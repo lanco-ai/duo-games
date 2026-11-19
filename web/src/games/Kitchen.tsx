@@ -15,6 +15,11 @@ import {
   walkable,
   recipes,
   foodIcons,
+  kitchenReach,
+  cookingTimes,
+  matchesKitchenOrder,
+  type Recipe,
+  type Station,
 } from "../../../shared/games/coop-kitchen/levels";
 const kitchenThemes = [
   { id: "bento", icon: "🍱", sub: "TA 家的小厨房，第一次一起做饭" },
@@ -54,7 +59,7 @@ export default function Kitchen(p: GameProps) {
   const localSeats = p.local ? [p.seat, p.local.seat] : [p.seat];
   useEffect(() => {
     positions.current = d.players.map((v: any) => ({ x: v.x, y: v.y }));
-  }, [p.view.run, d.level]);
+  }, [p.view.run, d.level, d.swapped]);
   useEvents(p, (e) => {
     if (e.kind === "kitchen-pos") {
       const { seat, x, y } = e.data;
@@ -83,6 +88,7 @@ export default function Kitchen(p: GameProps) {
     if (latest.current.disabled) return Promise.resolve(false);
     // Ordered on the same socket: interaction uses the final visible position.
     if (c === "interact") {
+      if (interactionHint(seat, nearest(seat))) return Promise.resolve(false);
       flush(seat);
       moving.current[seat] = false;
     }
@@ -96,7 +102,7 @@ export default function Kitchen(p: GameProps) {
     return [...latest.current.view.data.stations]
       .filter(
         (s: any) =>
-          Math.hypot(s.x - pos.x, s.y - pos.y) <= 1.2 &&
+          Math.hypot(s.x - pos.x, s.y - pos.y) <= kitchenReach &&
           (s.x - pos.x) * fx + (s.y - pos.y) * fy >= -0.15,
       )
       .sort(
@@ -105,6 +111,68 @@ export default function Kitchen(p: GameProps) {
           Math.hypot(b.x - pos.x, b.y - pos.y),
       )[0];
   };
+  function interactionHint(seat: number, station?: Station) {
+    if (!station) return "走近并面向工作台";
+    const { view, now } = latest.current;
+    const state = view.data;
+    const id = station.id,
+      index = Number(id.at(-1));
+    const held = state.players[seat].held;
+    if (state.jobs[1 - seat]?.station === id) return "队友正在使用这个工作台";
+    if (Object.hasOwn(foodIcons, id))
+      return held ? "手里有东西，先放下再取食材" : "";
+    if (id === "trash") return held ? "" : "手里没有要丢弃的东西";
+    if (id.startsWith("handoff")) {
+      if (held && state.handoffs[index]) return "传递台已满，等队友取走";
+      if (!held && !state.handoffs[index]) return "传递台是空的";
+    }
+    if (id.startsWith("board")) {
+      if (state.boards[index]) return held ? "空手才能切菜或取走食材" : "";
+      if (!held || held.kind === "bread" || held.stage !== "raw")
+        return "先拿待切的番茄、生菜或肉饼";
+    }
+    if (id.startsWith("pan") || id === "pot") {
+      const pot = id === "pot";
+      const cooker = pot ? state.pot : state.pans[index];
+      if (!cooker)
+        return held?.kind === "meat" && held.stage === "chopped"
+          ? ""
+          : "先把肉饼切好再下锅";
+      if (held) return "空手才能从锅里取出食材";
+      const left =
+        (pot ? cookingTimes.pot : cookingTimes.pan).ready - (now - cooker.at);
+      return left > 0
+        ? "还没煮好，约 " + Math.ceil(left / 1000) + " 秒后可取"
+        : "";
+    }
+    if (id.startsWith("plate")) {
+      const plate = state.plates[index];
+      if (held?.kind === "plate") return plate ? "这里已经有盘子" : "";
+      if (!plate) return "这里没有盘子";
+      if (held && plate.dirty) return "先把盘子洗干净";
+      if (held?.stage === "burned") return "烧焦的食材请丢进垃圾桶";
+      if (
+        held &&
+        plate.foods.some((food: { kind: string }) => food.kind === held.kind)
+      )
+        return "盘里已经有这种食材";
+    }
+    if (id === "sink" && (held?.kind !== "plate" || !held.dirty))
+      return "拿着脏盘子才能清洗";
+    if (id.startsWith("cake") && state.cakeDone) return "蛋糕已经做好了";
+    if (id === "serve") {
+      if (held?.kind !== "plate") return "请拿着装好菜的盘子来出餐";
+      if (held.dirty) return "先把盘子洗干净";
+      if (
+        !state.orders.some(
+          (order: { deadline: number; kind: Recipe }) =>
+            now < order.deadline && matchesKitchenOrder(order.kind, held.foods),
+        )
+      )
+        return "盘里的食材或做法与当前订单不符";
+    }
+    return "";
+  }
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (typing(e.target)) return;
@@ -433,58 +501,70 @@ export default function Kitchen(p: GameProps) {
         ))}
       </div>
       <div class={"kitchen-pads" + (localSeats.length > 1 ? " two" : "")}>
-        {localSeats.map((seat) => (
-          <div class="kitchen-controls">
-            <b>
-              {nickname(p, seat)} · {label(d.players[seat].held)}
-            </b>
-            <div class="kitchen-pad-row">
-              <div
-                role="group"
-                aria-label={"玩家" + (seat + 1) + "摇杆"}
-                class="kitchen-dpad"
-              >
-                {[
-                  [0, -1, "↑", "up"],
-                  [-1, 0, "←", "left"],
-                  [1, 0, "→", "right"],
-                  [0, 1, "↓", "down"],
-                ].map(([x, y, t, cls]) => (
-                  <button
-                    class={"dpad-" + cls}
-                    disabled={p.disabled}
-                    onPointerDown={(e) => {
-                      e.currentTarget.setPointerCapture(e.pointerId);
-                      dirs.current[seat] = [Number(x), Number(y)];
-                      facing.current[seat] = dirs.current[seat];
-                    }}
-                    onPointerUp={() => (dirs.current[seat] = [0, 0])}
-                    onPointerCancel={() => (dirs.current[seat] = [0, 0])}
-                    onLostPointerCapture={() => (dirs.current[seat] = [0, 0])}
-                  >
-                    {t}
-                  </button>
-                ))}
+        {localSeats.map((seat) => {
+          const station = nearest(seat),
+            hint = interactionHint(seat, station);
+          return (
+            <div class="kitchen-controls">
+              <b>
+                {nickname(p, seat)} · {label(d.players[seat].held)}
+              </b>
+              <div class="kitchen-pad-row">
+                <div
+                  role="group"
+                  aria-label={"玩家" + (seat + 1) + "摇杆"}
+                  class="kitchen-dpad"
+                >
+                  {[
+                    [0, -1, "↑", "up"],
+                    [-1, 0, "←", "left"],
+                    [1, 0, "→", "right"],
+                    [0, 1, "↓", "down"],
+                  ].map(([x, y, t, cls]) => (
+                    <button
+                      class={"dpad-" + cls}
+                      disabled={p.disabled}
+                      onPointerDown={(e) => {
+                        e.currentTarget.setPointerCapture(e.pointerId);
+                        dirs.current[seat] = [Number(x), Number(y)];
+                        facing.current[seat] = dirs.current[seat];
+                      }}
+                      onPointerUp={() => (dirs.current[seat] = [0, 0])}
+                      onPointerCancel={() => (dirs.current[seat] = [0, 0])}
+                      onLostPointerCapture={() => (dirs.current[seat] = [0, 0])}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  class="primary kitchen-act"
+                  aria-label={"操作" + (station?.label || " · 面向工作台")}
+                  aria-describedby={
+                    hint ? "kitchen-action-hint-" + seat : undefined
+                  }
+                  disabled={p.disabled || !!hint}
+                  onPointerDown={(e) => {
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                    const s = nearest(seat);
+                    if (s) void act(seat, "interact", { station: s.id });
+                  }}
+                  onPointerUp={() => void act(seat, "cancel")}
+                  onPointerCancel={() => void act(seat, "cancel")}
+                  onLostPointerCapture={() => void act(seat, "cancel")}
+                >
+                  <span>{station?.label || "🙌"}</span>
+                  <small>{station ? "操作" : "走近工作台"}</small>
+                </button>
               </div>
-              <button
-                class="primary kitchen-act"
-                aria-label={"操作" + (nearest(seat)?.label || " · 面向工作台")}
-                disabled={p.disabled || !nearest(seat)}
-                onPointerDown={(e) => {
-                  e.currentTarget.setPointerCapture(e.pointerId);
-                  const s = nearest(seat);
-                  if (s) void act(seat, "interact", { station: s.id });
-                }}
-                onPointerUp={() => void act(seat, "cancel")}
-                onPointerCancel={() => void act(seat, "cancel")}
-                onLostPointerCapture={() => void act(seat, "cancel")}
-              >
-                <span>{nearest(seat)?.label || "🙌"}</span>
-                <small>{nearest(seat) ? "操作" : "走近工作台"}</small>
-              </button>
+              {hint && (
+                <small id={"kitchen-action-hint-" + seat} class="kitchen-help">
+                  {hint}
+                </small>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <p class="muted kitchen-help">
         按住方向连续走动；面向工作台操作，切菜/洗碗按住两秒。WASD/空格，双人用方向键/回车。

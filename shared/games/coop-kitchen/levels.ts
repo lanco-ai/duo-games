@@ -28,6 +28,23 @@ export const recipes = {
   },
 } as const;
 export type Recipe = keyof typeof recipes;
+export const kitchenReach = 1.2;
+export const cookingTimes = {
+  pan: { ready: 5000, burned: 10000 },
+  pot: { ready: 8000, burned: 15000 },
+};
+export function matchesKitchenOrder(
+  kind: Recipe,
+  foods: { kind: FoodKind; stage: string }[],
+) {
+  const required = recipes[kind].foods;
+  return (
+    required.length === foods.length &&
+    required.every((ingredient) =>
+      foods.some((food) => food.kind + ":" + food.stage === ingredient),
+    )
+  );
+}
 export const kitchenLevels = [
   {
     name: "第一次约会便当",

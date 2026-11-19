@@ -3305,10 +3305,26 @@ dialog[open] .sheet {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.stone-chip {
-  font-size: 22px;
-  line-height: 1;
-  -webkit-text-stroke: 1.5px var(--ink);
+.gomoku-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.gomoku-stone {
+  display: inline-block;
+  border: 1px solid #342a24;
+  border-radius: 50%;
+}
+.gomoku-stone.black {
+  background: #222;
+}
+.gomoku-stone.white {
+  background: #fff;
+}
+.gomoku-side .gomoku-stone {
+  width: 15px;
+  height: 15px;
 }
 .gomoku-board {
   width: min(100%, 440px);
@@ -3381,17 +3397,15 @@ dialog[open] .sheet {
 .gomoku-board button:disabled {
   cursor: default;
 }
-.gomoku-board span {
+.gomoku-board .gomoku-stone {
   position: relative;
   z-index: 1;
-  font-size: min(6.4vw, 27px);
-  line-height: 1;
-  -webkit-text-stroke: 1.6px var(--ink);
-  text-shadow: 0 2px 0 rgba(58, 38, 24, 0.3);
+  width: 83%;
+  aspect-ratio: 1;
 }
-.gomoku-board button.preview span {
-  opacity: 0.7;
-  animation: beat-plain 0.8s ease-in-out 4;
+.gomoku-board button.preview .gomoku-stone {
+  opacity: 0.6;
+  outline: 2px dashed #793f12;
 }
 @keyframes beat-plain {
   50% {

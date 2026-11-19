@@ -6,6 +6,20 @@ import {
   type RoomView,
   type Seat,
 } from "./protocol";
+export function requiresForeground(gameId: string | undefined) {
+  return (
+    gameId === "red-thread" ||
+    gameId === "heart-bounce" ||
+    gameId === "puck-sling"
+  );
+}
+
+export function readyBlockReason(room: RoomView) {
+  if (!room.online.every(Boolean)) return "PARTNER_OFFLINE";
+  if (requiresForeground(room.proposal?.gameId) && room.away.some(Boolean))
+    return "FOREGROUND_REQUIRED";
+}
+
 export function transition(
   room: RoomView,
   seat: Seat,
@@ -66,16 +80,10 @@ export function transition(
       r.ready = [false, false];
       break;
     case "ready":
-      if (
-        ["red-thread", "heart-bounce", "puck-sling"].includes(
-          r.proposal?.gameId || "",
-        ) &&
-        r.away.some(Boolean)
-      )
-        return { room, error: "INVALID" };
       if (r.phase !== "intro") return { room };
-      if (!r.online.every(Boolean)) return fail("INVALID");
       if (r.ready[seat]) return { room };
+      const blocked = readyBlockReason(r);
+      if (blocked) return fail(blocked);
       r.ready[seat] = true;
       if (r.ready.every(Boolean)) {
         r.phase = "countdown";

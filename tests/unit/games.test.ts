@@ -465,6 +465,7 @@ describe("shared platform with all games", () => {
     m.visibility(r, 0, true);
     m.act(r, 1, "ready-xxx1", { type: "ready" });
     expect(r.view.phase).toBe("intro");
+    expect(r.acks[1].get("ready-xxx1")?.err).toBe("FOREGROUND_REQUIRED");
     m.visibility(r, 0, false);
     m.act(r, 0, "cancel-xxx", { type: "cancel" });
     m.act(r, 0, "propose-x2", { type: "propose", gameId: "heartbeat" });
@@ -480,6 +481,35 @@ describe("shared platform with all games", () => {
     expect((m.gameView(r, 0) as any).data.startAt).toBe(before + 5500);
     vi.advanceTimersByTime(3500);
     expect(r.view.phase).toBe("playing");
+    m.close();
+  });
+  it("accepts a current Gomoku move after chat and rejects a pre-undo move", () => {
+    vi.useFakeTimers();
+    const { m, r } = platform();
+    m.act(r, 0, "propose-revision", { type: "propose", gameId: "gomoku" });
+    m.act(r, 1, "accept-revision", { type: "accept" });
+    m.act(r, 0, "ready-revision0", { type: "ready" });
+    m.act(r, 1, "ready-revision1", { type: "ready" });
+    vi.advanceTimersByTime(3500);
+    const game = r.extra as Gomoku;
+    const seat = game.turn,
+      other = (1 - seat) as 0 | 1;
+    const seq = r.view.seq;
+    m.chat(r, other, "这步想好了");
+    const place = {
+      type: "game" as const,
+      run: game.run,
+      command: "place",
+      payload: { move: 0, revision: 0, x: 7, y: 7 },
+    };
+    m.act(r, seat, "place-after-chat", place, seq);
+    expect(r.acks[seat].get("place-after-chat")?.ok).toBe(true);
+    m.act(r, seat, "request-undo", { ...place, command: "undo" });
+    m.act(r, other, "accept-undo", { ...place, command: "accept" });
+    expect(game.moves).toHaveLength(0);
+    m.act(r, seat, "stale-after-undo", place, r.view.seq);
+    expect(r.acks[seat].get("stale-after-undo")?.err).toBe("STALE");
+    expect(game.board[112]).toBe(-1);
     m.close();
   });
 });

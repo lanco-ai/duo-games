@@ -178,7 +178,8 @@ export class Transport {
             if (p) {
               this.pending.delete(m.aid);
               if (m.ok) p.resolve();
-              else p.reject(new Error(errors[m.err || "INVALID"]));
+              else
+                p.reject(new Error((m.err && errors[m.err]) || errors.INVALID));
             }
           }
           if (

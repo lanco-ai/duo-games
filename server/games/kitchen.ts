@@ -7,6 +7,9 @@ import {
   kitchenStations,
   walkable,
   recipes,
+  kitchenReach,
+  cookingTimes,
+  matchesKitchenOrder,
   cakeSteps,
   type FoodKind,
   type Recipe,
@@ -88,6 +91,7 @@ export class CoopKitchen extends BaseEngine {
       level: this.level,
       levelName: kitchenLevels[this.level].name,
       bar: kitchenLevels[this.level].bar,
+      swapped: this.swapped,
       players: this.players,
       stations: this.stations,
       boards: this.boards,
@@ -166,7 +170,9 @@ export class CoopKitchen extends BaseEngine {
   near(seat: Seat, id: string) {
     const s = this.stations.find((s) => s.id === id),
       p = this.players[seat];
-    if (!s || Math.hypot(p.x - s.x, p.y - s.y) > 1.2) throw Error("INVALID");
+    if (!s) throw Error("STALE");
+    if (Math.hypot(p.x - s.x, p.y - s.y) > kitchenReach)
+      throw Error("KITCHEN_DISTANCE");
     return s;
   }
   act(seat: Seat, cmd: string, p: any, now: number) {
@@ -183,6 +189,7 @@ export class CoopKitchen extends BaseEngine {
       );
     }
     if (cmd === "cancel") {
+      if (!this.jobs[seat]) return false;
       this.tick(now);
       this.jobs[seat] = null;
       return true;
@@ -255,10 +262,11 @@ export class CoopKitchen extends BaseEngine {
         player.held = null;
         return true;
       }
-      const wait = s.id === "pot" ? 8000 : 5000;
-      if (pan && !player.held && now - pan.at >= wait) {
+      const times = s.id === "pot" ? cookingTimes.pot : cookingTimes.pan;
+      if (pan && !player.held) {
+        if (now - pan.at < times.ready) throw Error("KITCHEN_COOKING");
         pan.item.stage =
-          now - pan.at >= (s.id === "pot" ? 15000 : 10000)
+          now - pan.at >= times.burned
             ? "burned"
             : s.id === "pot"
               ? "boiled"
@@ -306,16 +314,12 @@ export class CoopKitchen extends BaseEngine {
       return true;
     }
     if (s.id === "serve") {
-      if (player.held?.kind !== "plate" || player.held.dirty)
-        throw Error("INVALID");
-      const foods = player.held.foods
-          .map((f) => f.kind + ":" + f.stage)
-          .sort()
-          .join(","),
-        order = this.orders.find(
-          (o) => [...recipes[o.kind].foods].sort().join(",") === foods,
-        );
-      if (!order) throw Error("INVALID");
+      const plate = player.held;
+      if (plate?.kind !== "plate" || plate.dirty) throw Error("KITCHEN_ORDER");
+      const order = this.orders.find(
+        (o) => now < o.deadline && matchesKitchenOrder(o.kind, plate.foods),
+      );
+      if (!order) throw Error("KITCHEN_ORDER");
       this.combo = Math.min(5, this.combo + 1);
       this.score += Math.round(
         recipes[order.kind].score * (1 + (this.combo - 1) * 0.125),
@@ -323,8 +327,8 @@ export class CoopKitchen extends BaseEngine {
       this.served++;
       this.contributions[seat].served++;
       this.orders = this.orders.filter((o) => o.id !== order.id);
-      player.held.foods = [];
-      player.held.dirty = this.level >= 2;
+      plate.foods = [];
+      plate.dirty = this.level >= 2;
       this.addOrder(now);
       return true;
     }
@@ -389,9 +393,9 @@ export class CoopKitchen extends BaseEngine {
       }
     }
     for (const [pan, limit] of [
-      [this.pans[0], 10000],
-      [this.pans[1], 10000],
-      [this.pot, 15000],
+      [this.pans[0], cookingTimes.pan.burned],
+      [this.pans[1], cookingTimes.pan.burned],
+      [this.pot, cookingTimes.pot.burned],
     ] as const)
       if (pan && now - pan.at >= limit && pan.item.stage !== "burned") {
         pan.item.stage = "burned";
@@ -410,6 +414,24 @@ export class CoopKitchen extends BaseEngine {
       this.swapped = !this.swapped;
       this.nextSwap += 30000;
       this.jobs = [null, null];
+      const stations = this.stations;
+      for (const player of this.players) {
+        if (walkable(player.x, player.y, stations, false)) continue;
+        // A moving ingredient counter may occupy the tile under a chef.
+        // Find the nearest open tile on the new layout before accepting moves.
+        let nearestDistance = Infinity;
+        let next = { x: player.x, y: player.y };
+        for (let y = 0; y <= 7; y++) {
+          for (let x = 0; x <= 7; x++) {
+            const distance = Math.hypot(x - player.x, y - player.y);
+            if (distance >= nearestDistance || !walkable(x, y, stations, false))
+              continue;
+            next = { x, y };
+            nearestDistance = distance;
+          }
+        }
+        Object.assign(player, next);
+      }
       changed = true;
     }
     if (!this.endless && now >= this.endsAt) {
