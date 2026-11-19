@@ -83,6 +83,21 @@ export function bindDevice(
   deviceQueue = task.catch(() => {});
   return task;
 }
+// 换设备链接（…/r/房间码#rebind=…）：同一台服务器的任何入口都认，
+// 这样从桌面打开的 App 可以粘贴 Safari 或旧地址里生成的链接接管房间。
+export function transferPath(value: string): string | null {
+  try {
+    const url = new URL(value.trim());
+    const code = url.pathname.match(
+      /\/r\/([23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6})\/?$/,
+    )?.[1];
+    const secret = new URLSearchParams(url.hash.slice(1)).get("rebind");
+    if (url.hostname !== location.hostname || !code || !secret) return null;
+    return BASE + "r/" + code + "#rebind=" + encodeURIComponent(secret);
+  } catch {
+    return null;
+  }
+}
 export function normalizeRoomCode(value: string): string {
   const trimmed = value.trim();
   if (/^https?:\/\//i.test(trimmed)) {

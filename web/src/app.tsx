@@ -4,7 +4,9 @@ import { useEffect, useState } from "preact/hooks";
 import { Home } from "./Home";
 import { Room } from "./Room";
 import { api, BASE, IS_PREVIEW, roomStorageKey } from "./api";
+import { registerWorker } from "./push";
 import "./style.css";
+registerWorker();
 const path = location.pathname.slice(BASE.length),
   code = path.match(/^r\/([23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6})\/?$/)?.[1];
 function App() {

@@ -1,6 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { randomUUID } from "node:crypto";
+import type { Subscription } from "./push";
 import type { CustomItem } from "../shared/games/types";
 import { dirname, resolve, join } from "node:path";
 import type {
@@ -50,6 +51,47 @@ export class Store {
       used_at INTEGER NOT NULL,
       PRIMARY KEY(device_hash, room_code, slot)
     );`);
+    this.db.exec(`CREATE TABLE IF NOT EXISTS push_subscriptions(
+      endpoint TEXT PRIMARY KEY,
+      room_code TEXT NOT NULL REFERENCES rooms(code) ON DELETE CASCADE,
+      seat INTEGER NOT NULL CHECK(seat IN (0,1)),
+      p256dh TEXT NOT NULL,
+      auth TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS push_room ON push_subscriptions(room_code, seat);`);
+  }
+  savePush(code: string, seat: Seat, sub: Subscription, now: number) {
+    this.db
+      .prepare(
+        `INSERT INTO push_subscriptions VALUES(?,?,?,?,?,?)
+      ON CONFLICT(endpoint) DO UPDATE SET room_code=excluded.room_code,seat=excluded.seat,p256dh=excluded.p256dh,auth=excluded.auth`,
+      )
+      .run(sub.endpoint, code, seat, sub.keys.p256dh, sub.keys.auth, now);
+  }
+  pushTargets(code: string, seat: Seat): Subscription[] {
+    return (
+      this.db
+        .prepare(
+          "SELECT endpoint,p256dh,auth FROM push_subscriptions WHERE room_code=? AND seat=?",
+        )
+        .all(code, seat) as { endpoint: string; p256dh: string; auth: string }[]
+    ).map((r) => ({
+      endpoint: r.endpoint,
+      keys: { p256dh: r.p256dh, auth: r.auth },
+    }));
+  }
+  deletePush(endpoint: string, code?: string, seat?: Seat) {
+    if (code === undefined)
+      this.db
+        .prepare("DELETE FROM push_subscriptions WHERE endpoint=?")
+        .run(endpoint);
+    else
+      this.db
+        .prepare(
+          "DELETE FROM push_subscriptions WHERE endpoint=? AND room_code=? AND seat=?",
+        )
+        .run(endpoint, code, seat!);
   }
   bindDevice(
     device: string,
@@ -87,6 +129,9 @@ export class Store {
     return row?.room_code ?? null;
   }
   revokeDevices(code: string, seat: Seat, except?: string) {
+    this.db
+      .prepare("DELETE FROM push_subscriptions WHERE room_code=? AND seat=?")
+      .run(code, seat);
     if (except)
       this.db
         .prepare(

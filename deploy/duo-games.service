@@ -15,6 +15,7 @@ Environment="PORT=18790"
 Environment="BASE_PATH=/"
 Environment="DATA_DIR=/var/lib/duo-games"
 Environment="TRUST_PROXY=1"
+Environment="PUBLIC_ORIGIN=https://182.61.60.223:8443"
 Restart=on-failure
 RestartSec=3
 UMask=0077

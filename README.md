@@ -90,6 +90,17 @@ bash deploy/update.sh             # 发布并重启
 
 脚本在临时目录构建，先放入新的带哈希资源并保留旧资源，再原子替换 `server.js` 和首页入口，最后重启。重启会让进行中的对局回到大厅。
 
+HTTPS 入口是 https://182.61.60.223:8443/（nginx 用本机的 Let's Encrypt IP 证书，转发到同一个 Node 服务）。服务配置里的 `PUBLIC_ORIGIN` 让“换设备链接”指向这个地址；8790 暂时保留，因为房间凭证按地址分开保存。
+
+手机提醒用 Web Push，密钥放在 `/var/lib/duo-games/push-keys.json`，不进仓库；文件不存在时提醒功能自动隐藏。首次生成：
+
+```bash
+sudo -u duo-games node scripts/push-keys.mjs https://182.61.60.223:8443/ /var/lib/duo-games/push-keys.json
+systemctl restart duo-games
+```
+
+换密钥会让所有设备的提醒失效，脚本因此拒绝覆盖已有文件。服务器只向 Apple、Google、Mozilla、Microsoft 的推送服务发请求；国内服务器连不上 Google，所以安卓 Chrome 收不到提醒。iPhone 要先“添加到主屏幕”再开启提醒；桌面 App 和 Safari 不共享存储，在旧页面生成换设备链接，粘贴到桌面 App 的房间码输入框即可接管房间。
+
 生产运行只依赖 `ws`，其余包只用于构建。早期域名站 `lancoai.site/duo/` 的部署记录见 [DEPLOYMENT.md](DEPLOYMENT.md)。
 
 日志不输出房间凭证、聊天内容和回答。浏览器里的凭证等同房间钥匙；没有账号找回服务。已经清空浏览器数据且没有原设备换设备链接时，无法恢复原座位。

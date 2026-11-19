@@ -33,6 +33,13 @@ import { Catalog, GameInfo } from "./ui/catalog";
 import { Couple, Modal, ProfileForm, copyText, unlockSound } from "./ui/common";
 import { Critter, GameIcon, Scene, TetheredPair } from "./art/ui";
 import { Icon } from "./ui/icons";
+import {
+  disablePush,
+  enablePush,
+  pushState,
+  resyncPush,
+  type PushState,
+} from "./push";
 import { drawCritter, kindOf } from "./art/critter";
 import { chunkyText, cloud, rope, sky as paintSky } from "./art/paint";
 const ExtraStage = lazy(() => import("./games/ExtraStage"));
@@ -76,6 +83,7 @@ export function Room({ code }: { code: string }) {
     [chat, setChat] = useState(""),
     [reaction, setReaction] = useState(""),
     [sound, setSound] = useState(localStore.getItem("duo.sound") !== "off"),
+    [push, setPush] = useState<PushState>("unsupported"),
     [deleteConfirm, setDeleteConfirm] = useState(false),
     [transfer, setTransfer] = useState(""),
     [resultImage, setResultImage] = useState(""),
@@ -92,6 +100,9 @@ export function Room({ code }: { code: string }) {
   const transferSecret = useRef(
     new URLSearchParams(location.hash.slice(1)).get("rebind"),
   );
+  useEffect(() => {
+    if (panel === "settings") void pushState().then(setPush);
+  }, [panel]);
   useEffect(() => {
     if (!room) return;
     rememberAppearances(code, room.profiles);
@@ -151,6 +162,7 @@ export function Room({ code }: { code: string }) {
           setGame(m.game);
           localStore.setItem(roomStorageKey("lastRoom"), code);
           void bindDevice(code, token).catch(() => {});
+          void resyncPush(code, token).catch(() => {});
         }
         if (m.t === "room") {
           setRoom(m.room);
@@ -1371,6 +1383,39 @@ export function Room({ code }: { code: string }) {
               {sound ? "已开启" : "已关闭"}
             </button>
           </div>
+          {push !== "unsupported" && (
+            <div class="settings-row">
+              <span>手机提醒</span>
+              <button
+                class="secondary"
+                disabled={push === "blocked"}
+                onClick={async () => {
+                  if (push === "install") {
+                    setToast("在 Safari 点分享，添加到主屏幕，再从桌面打开");
+                    return;
+                  }
+                  try {
+                    setPush(
+                      push === "on"
+                        ? await disablePush(code, token)
+                        : await enablePush(code, token),
+                    );
+                  } catch {
+                    setError("这台设备暂时收不到提醒");
+                  }
+                }}
+              >
+                {
+                  {
+                    install: "添加到主屏幕",
+                    blocked: "已在系统中关闭",
+                    off: "开启",
+                    on: "已开启",
+                  }[push]
+                }
+              </button>
+            </div>
+          )}
           <div class="settings-row">
             <span>在新设备继续玩</span>
             <button
@@ -1384,7 +1429,7 @@ export function Room({ code }: { code: string }) {
                     token,
                   );
                   setTransfer(
-                    location.origin +
+                    (r.origin || location.origin) +
                       BASE +
                       "r/" +
                       code +

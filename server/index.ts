@@ -17,6 +17,7 @@ import { RoomManager, hash, type LiveRoom, type Peer } from "./rooms";
 import { Matchmaking } from "./matchmaking";
 import { Presence } from "./presence";
 import { Bucket } from "./ratelimit";
+import { loadKeys, Pusher, validSubscription, type PushMessage } from "./push";
 import {
   VERSION,
   COLORS,
@@ -34,6 +35,7 @@ interface Options {
   web?: string;
   lag?: number;
   creationLimit?: number;
+  pusher?: Pusher | null;
 }
 export function createApp(options: Options = {}) {
   const base =
@@ -52,7 +54,30 @@ export function createApp(options: Options = {}) {
     matchmaking = new Matchmaking(manager),
     presence = new Presence(),
     matchLimits = new Map<string, { bucket: Bucket; at: number }>(),
+    testLimits = new Map<string, Bucket>(),
     limits = new Map<string, { bucket: Bucket; at: number }>();
+  const pushKeys =
+    options.pusher === undefined
+      ? loadKeys(
+          process.env.PUSH_KEYS_FILE ||
+            resolve(dirname(data), "push-keys.json"),
+        )
+      : null;
+  const pusher =
+    options.pusher === undefined
+      ? pushKeys && new Pusher(pushKeys)
+      : options.pusher;
+  // 给某个座位的所有设备发通知；失效的订阅顺手删掉。返回送达的设备数。
+  async function notify(code: string, seat: Seat, message: PushMessage) {
+    if (!pusher) return 0;
+    let sent = 0;
+    for (const sub of store.pushTargets(code, seat)) {
+      const result = await pusher.send(sub, message);
+      if (result === "gone") store.deletePush(sub.endpoint);
+      if (result === "ok") sent++;
+    }
+    return sent;
+  }
   const lag = Math.max(
     0,
     Math.min(2000, options.lag ?? (Number(process.env.DUO_LAG_MS) || 0)),
@@ -89,6 +114,10 @@ export function createApp(options: Options = {}) {
       const path = new URL(req.url || "/", "http://localhost").pathname;
       if (path === prefix + "/api/health") {
         json(res, 200, { ok: true, version: VERSION });
+        return;
+      }
+      if (path === prefix + "/api/push/key") {
+        json(res, 200, { key: pusher?.keys.publicKey ?? null });
         return;
       }
       if (path.startsWith(prefix + "/api/")) {
@@ -427,6 +456,43 @@ export function createApp(options: Options = {}) {
           json(res, 200, {
             secret: manager.transfer(room, seat),
             expiresIn: 600,
+            origin: process.env.PUBLIC_ORIGIN || null,
+          });
+          return;
+        }
+        if (route[2] === "push" && route.length === 3) {
+          const input = await body(req);
+          if (req.method === "POST") {
+            if (!pusher || !validSubscription(input))
+              throw new Error("INVALID");
+            store.savePush(code, seat, input, Date.now());
+            json(res, 200, { ok: true });
+            return;
+          }
+          if (req.method === "DELETE" && typeof input.endpoint === "string") {
+            store.deletePush(input.endpoint, code, seat);
+            json(res, 200, { ok: true });
+            return;
+          }
+          throw new Error("INVALID");
+        }
+        if (
+          route[2] === "push" &&
+          route[3] === "test" &&
+          route.length === 4 &&
+          req.method === "POST"
+        ) {
+          const key = code + seat;
+          let bucket = testLimits.get(key);
+          if (!bucket) testLimits.set(key, (bucket = new Bucket(1 / 60, 3)));
+          if (!bucket.take()) throw new Error("RATE_LIMITED");
+          json(res, 200, {
+            sent: await notify(code, seat, {
+              title: "二人世界",
+              body: "提醒已开启",
+              url: "r/" + code,
+              tag: "test",
+            }),
           });
           return;
         }
@@ -502,6 +568,7 @@ export function createApp(options: Options = {}) {
         ".css": "text/css; charset=utf-8",
         ".svg": "image/svg+xml",
         ".png": "image/png",
+        ".webmanifest": "application/manifest+json",
       };
       res.writeHead(200, {
         "Content-Type": types[extname(file)] || "application/octet-stream",
@@ -749,6 +816,7 @@ export function createApp(options: Options = {}) {
     server,
     manager,
     store,
+    notify,
     listen: (port = options.port ?? Number(process.env.PORT || 8790)) =>
       new Promise<number>((resolvePort) =>
         server.listen(port, "127.0.0.1", () =>

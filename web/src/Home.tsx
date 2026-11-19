@@ -7,6 +7,7 @@ import {
   BASE,
   bindDevice,
   normalizeRoomCode,
+  transferPath,
   profile,
   remember,
   roomAppearances,
@@ -250,6 +251,8 @@ export function Home({ online }: { online: number | null }) {
                 value={code}
                 ref={codeInput}
                 onInput={(e) => {
+                  const target = transferPath(e.currentTarget.value);
+                  if (target) return location.assign(target);
                   const normalized = normalizeRoomCode(e.currentTarget.value);
                   e.currentTarget.value = normalized;
                   setCode(normalized);
@@ -257,7 +260,10 @@ export function Home({ online }: { online: number | null }) {
                 onPaste={(e) => {
                   if (!e.clipboardData) return;
                   e.preventDefault();
-                  setCode(normalizeRoomCode(e.clipboardData.getData("text")));
+                  const text = e.clipboardData.getData("text");
+                  const target = transferPath(text);
+                  if (target) location.assign(target);
+                  else setCode(normalizeRoomCode(text));
                 }}
                 maxLength={2048}
                 placeholder="6 位房间码"
@@ -269,9 +275,10 @@ export function Home({ online }: { online: number | null }) {
                 aria-label="粘贴房间号"
                 onClick={async () => {
                   try {
-                    setCode(
-                      normalizeRoomCode(await navigator.clipboard.readText()),
-                    );
+                    const text = await navigator.clipboard.readText();
+                    const target = transferPath(text);
+                    if (target) location.assign(target);
+                    else setCode(normalizeRoomCode(text));
                   } catch {
                     codeInput.current?.focus();
                     setToast("请长按输入框粘贴房间号");
