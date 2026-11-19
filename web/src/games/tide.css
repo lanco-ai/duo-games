@@ -304,3 +304,120 @@
     animation: none;
   }
 }
+
+/* 大厅里的棋桌入口 */
+.tide-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 10px 16px 10px 10px;
+  border: 0;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #bfe9fb, #7fc8ee);
+  box-shadow:
+    0 0 0 3px #2f8fcf,
+    0 5px 0 #23709f;
+  color: var(--ink);
+  text-align: left;
+  transition: transform 0.15s;
+}
+.tide-entry:active {
+  transform: translateY(3px);
+}
+.tide-entry.yours {
+  box-shadow:
+    0 0 0 3px #ffb21e,
+    0 5px 0 #c98410;
+}
+.tide-entry-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 28px;
+}
+.tide-entry-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.tide-entry-text b {
+  font-family: var(--display);
+  font-size: 20px;
+}
+.tide-entry-text small {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.tide-entry.yours small {
+  color: #a35c00;
+  font-weight: 800;
+}
+.tide-entry-score {
+  font-family: var(--display);
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 异步对局的棋盘浮层 */
+.tide-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow-y: auto;
+  padding: max(10px, env(safe-area-inset-top)) 14px 16px;
+  background: linear-gradient(#9fd8f7, #d8f1fc 40%, #fff8e1);
+}
+.tide-overlay-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 460px;
+  margin: 0 auto 6px;
+}
+.tide-error {
+  font-size: 13px;
+  color: #c23e6a;
+}
+.tide-overlay .tide-board {
+  width: min(100%, calc((100dvh - 330px) * 6 / 7));
+}
+.tide-live {
+  margin-top: 2px;
+  padding: 2px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink-2);
+}
+.tide-live.on {
+  background: #e8436d;
+  color: #fff;
+}
+.tide-result {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  max-width: 460px;
+  margin: 0 auto 8px;
+}
+.tide-result b {
+  font-family: var(--display);
+  font-size: 24px;
+}
+.tide-result span {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.tide-end {
+  display: block;
+  margin: 4px auto 0;
+  font-size: 13px;
+}

@@ -2,6 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import { mkdirSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import type { Subscription } from "./push";
+import type { AsyncMatch } from "./tide-async";
 import type { CustomItem } from "../shared/games/types";
 import { dirname, resolve, join } from "node:path";
 import type {
@@ -60,6 +61,29 @@ export class Store {
       created_at INTEGER NOT NULL
     );
     CREATE INDEX IF NOT EXISTS push_room ON push_subscriptions(room_code, seat);`);
+    this.db.exec(`CREATE TABLE IF NOT EXISTS tide_matches(
+      id TEXT PRIMARY KEY,
+      room_code TEXT NOT NULL REFERENCES rooms(code) ON DELETE CASCADE,
+      created_at INTEGER NOT NULL,
+      data TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS tide_room ON tide_matches(room_code, created_at);`);
+  }
+  tideLatest(code: string): AsyncMatch | null {
+    const row = this.db
+      .prepare(
+        "SELECT data FROM tide_matches WHERE room_code=? ORDER BY created_at DESC LIMIT 1",
+      )
+      .get(code) as { data: string } | undefined;
+    return row ? JSON.parse(row.data) : null;
+  }
+  tideSave(code: string, m: AsyncMatch) {
+    this.db
+      .prepare(
+        `INSERT INTO tide_matches VALUES(?,?,?,?)
+      ON CONFLICT(id) DO UPDATE SET data=excluded.data`,
+      )
+      .run(m.id, code, m.createdAt, JSON.stringify(m));
   }
   savePush(code: string, seat: Seat, sub: Subscription, now: number) {
     this.db

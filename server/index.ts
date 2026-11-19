@@ -17,6 +17,7 @@ import { RoomManager, hash, type LiveRoom, type Peer } from "./rooms";
 import { Matchmaking } from "./matchmaking";
 import { Presence } from "./presence";
 import { Bucket } from "./ratelimit";
+import { AsyncTides } from "./tide-async";
 import { loadKeys, Pusher, validSubscription, type PushMessage } from "./push";
 import {
   VERSION,
@@ -78,6 +79,24 @@ export function createApp(options: Options = {}) {
     }
     return sent;
   }
+  // 异步潮汐棋：变化时通知房间里在线的人刷新，需要时给对方发提醒
+  const tides = new AsyncTides(
+    store,
+    (code) => {
+      for (const p of manager.rooms.get(code)?.peers ?? [])
+        p?.send({
+          t: "extra",
+          event: { run: "room", kind: "tide", at: Date.now(), data: {} },
+        });
+    },
+    (code, seat, message) => void notify(code, seat, message).catch(() => {}),
+    (code) => {
+      const profiles = manager.require(code).data.profiles;
+      return [profiles[0]?.nickname || "TA", profiles[1]?.nickname || "TA"];
+    },
+  );
+  const tideTimer = setInterval(() => tides.tick(Date.now()), 500);
+  tideTimer.unref();
   const lag = Math.max(
     0,
     Math.min(2000, options.lag ?? (Number(process.env.DUO_LAG_MS) || 0)),
@@ -460,6 +479,14 @@ export function createApp(options: Options = {}) {
           });
           return;
         }
+        if (route[2] === "tide" && route.length === 3) {
+          const now = Date.now();
+          if (req.method === "POST")
+            tides.act(code, seat, await body(req), now);
+          else if (req.method !== "GET") throw new Error("INVALID");
+          json(res, 200, { match: tides.view(code, seat, now) });
+          return;
+        }
         if (route[2] === "push" && route.length === 3) {
           const input = await body(req);
           if (req.method === "POST") {
@@ -817,6 +844,7 @@ export function createApp(options: Options = {}) {
     manager,
     store,
     notify,
+    tides,
     listen: (port = options.port ?? Number(process.env.PORT || 8790)) =>
       new Promise<number>((resolvePort) =>
         server.listen(port, "127.0.0.1", () =>
@@ -824,6 +852,7 @@ export function createApp(options: Options = {}) {
         ),
       ),
     close: async () => {
+      clearInterval(tideTimer);
       clearInterval(heartbeat);
       clearInterval(network);
       clearInterval(expiration);

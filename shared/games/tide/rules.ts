@@ -29,7 +29,8 @@ export type Outcome =
   | "clash" // 两人同一步抢同一格，都落空
   | "blocked" // 目标格已被占或棋子已不在
   | "missed" // 网没有网到对方棋子
-  | "timeout"; // 超时，弃掉一张牌
+  | "timeout" // 超时，弃掉一张牌
+  | "discard"; // 这张牌没有可用目标，直接弃掉
 export interface TurnRecord {
   turn: number;
   plays: [Play | null, Play | null];
@@ -182,9 +183,22 @@ export function netTargets(board: (Piece | null)[], seat: Seat) {
   return [...out].sort((a, b) => a - b);
 }
 
+/** 这张牌现在有没有能选的目标；没有的话可以直接弃掉，免得异步对局卡住 */
+export function hasTarget(s: TideState, seat: Seat, card: Card) {
+  if (card === "wave") return true;
+  if (card === "net") return netTargets(s.board, seat).length > 0;
+  if (card === "boat")
+    return s.board.some(
+      (p, i) => p?.owner === seat && boatTargets(s.board, i).length > 0,
+    );
+  return placeTargets(s, seat, card).length > 0;
+}
+
 export function validPlay(s: TideState, seat: Seat, play: Play): boolean {
   if (!play || !s.hands[seat].includes(play.card) || s.turn >= TURNS)
     return false;
+  if (!hasTarget(s, seat, play.card))
+    return play.at === undefined && play.to === undefined;
   const cell = (v: unknown) =>
     Number.isInteger(v) && (v as number) >= 0 && (v as number) < COLS * ROWS;
   switch (play.card) {
@@ -253,7 +267,14 @@ export function resolve(
       outcomes[seat] = "timeout";
     }
   }
-  const of = (card: Card) => seats.filter((x) => plays[x]?.card === card);
+  for (const seat of seats) {
+    const play = plays[seat];
+    if (play && play.card !== "wave" && play.at === undefined)
+      outcomes[seat] = "discard";
+  }
+  // 弃掉的牌不参与结算
+  const of = (card: Card) =>
+    seats.filter((x) => plays[x]?.card === card && outcomes[x] !== "discard");
 
   // 船：都按开始时的棋盘判断；两条船驶向同一格就都停在原地
   const boats = of("boat");
@@ -272,7 +293,10 @@ export function resolve(
 
   // 放置：先石头，再灯和珊瑚；同一步两人抢同一格就都落空
   for (const group of [["stone"], ["lamp", "coral"]] as Card[][]) {
-    const placing = seats.filter((x) => group.includes(plays[x]?.card as Card));
+    const placing = seats.filter(
+      (x) =>
+        group.includes(plays[x]?.card as Card) && outcomes[x] !== "discard",
+    );
     const clash = placing.length === 2 && plays[0]!.at === plays[1]!.at;
     for (const x of placing) {
       const p = plays[x]!;

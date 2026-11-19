@@ -6,6 +6,7 @@ import {
   TURNS,
   boatTargets,
   flooded,
+  hasTarget,
   netTargets,
   newGame,
   placeTargets,
@@ -144,6 +145,15 @@ describe("tide chess rules", () => {
     expect(next.board[at(5, 2)]).toEqual({ kind: "coral", owner: 1 });
   });
 
+  it("lets a card with no target be discarded instead of blocking the game", () => {
+    const s = withHands(newGame(3), ["net"], ["boat"]);
+    expect(validPlay(s, 0, { card: "net", at: 0 })).toBe(false);
+    expect(validPlay(s, 0, { card: "net" })).toBe(true);
+    const next = resolve(s, [{ card: "net" }, { card: "boat" }]);
+    expect(next.history[0].outcomes).toEqual(["discard", "discard"]);
+    expect(next.board.every((p) => p === null)).toBe(true);
+  });
+
   it("discards the leftmost card on a timeout", () => {
     const s = withHands(newGame(3), ["wave", "lamp"], ["boat", "net"]);
     const next = resolve(s, [null, null]);
@@ -178,7 +188,11 @@ describe("tide chess rules", () => {
                     options.push({ card, at: i, to });
               });
           }
-          const play = options.length ? pick(options) : null;
+          for (const card of new Set(s.hands[seat]))
+            if (!hasTarget(s, seat, card)) options.push({ card });
+          // 手里总有能出的牌（最差也能弃掉），异步对局不会卡住
+          expect(options.length).toBeGreaterThan(0);
+          const play = pick(options);
           if (play) expect(validPlay(s, seat, play)).toBe(true);
           return play;
         }) as [Play | null, Play | null];

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
-import { useGame, nickname, type GameProps } from "./common";
+import type { ComponentChildren } from "preact";
+import { useGame, type GameProps } from "./common";
+import type { Profile } from "../../../shared/protocol";
 import { Critter } from "../art/ui";
 import {
   CARD_NAMES,
@@ -8,6 +10,7 @@ import {
   TURNS,
   boatTargets,
   flooded,
+  hasTarget,
   netTargets,
   placeTargets,
   type Card,
@@ -34,6 +37,7 @@ const OUTCOME: Record<Outcome, string> = {
   blocked: "格子被占",
   missed: "没网到",
   timeout: "超时",
+  discard: "弃牌",
 };
 
 function PieceIcon({ kind, color }: { kind: Card; color?: string }) {
@@ -120,8 +124,35 @@ function PieceIcon({ kind, color }: { kind: Card; color?: string }) {
 }
 
 export default function Tide(p: GameProps) {
-  const d = p.view.data,
-    send = useGame(p),
+  const send = useGame(p);
+  return (
+    <TideBoard
+      d={p.view.data}
+      seat={p.seat}
+      profiles={p.room.profiles}
+      now={p.now}
+      disabled={p.disabled}
+      send={send}
+      runKey={p.view.run}
+    />
+  );
+}
+
+export interface TideBoardProps {
+  d: Record<string, any>;
+  seat: Seat;
+  profiles: [Profile | null, Profile | null];
+  now: number;
+  disabled: boolean;
+  send: (command: string, payload?: any) => Promise<unknown>;
+  runKey: string;
+  /** 放在计时位置旁边的额外控件（异步对局的“实时”开关） */
+  extra?: ComponentChildren;
+}
+
+export function TideBoard(p: TideBoardProps) {
+  const d = p.d,
+    send = p.send,
     me = p.seat,
     other = (1 - me) as Seat;
   const [card, setCard] = useState<number | null>(null),
@@ -132,11 +163,12 @@ export default function Tide(p: GameProps) {
     setCard(null);
     setFrom(null);
     setTarget(null);
-  }, [d.turn, p.view.run]);
+  }, [d.turn, p.runKey]);
 
   const board: (Piece | null)[] = d.board;
   const last: TurnRecord | null = d.last;
-  const color = (seat: Seat) => p.room.profiles[seat]?.color || "#FF6B6B";
+  const name = (seat: Seat) => p.profiles[seat]?.nickname || "TA";
+  const color = (seat: Seat) => p.profiles[seat]?.color || "#FF6B6B";
   const chosen: Card | null = card !== null ? d.hand[card] : null;
   const state = {
     board,
@@ -164,15 +196,18 @@ export default function Tide(p: GameProps) {
   const water = (i: number) => flooded(board, i, [level, level]);
   const rows = me === 0 ? [6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6];
   const left = Math.max(0, Math.ceil((d.deadline - p.now) / 1000));
+  const discard = !!chosen && !hasTarget(state, me, chosen);
   const ready =
     chosen === "wave" ||
+    discard ||
     (chosen === "boat" ? from !== null && target !== null : target !== null);
 
   async function play() {
     if (!chosen || !ready || busy) return;
     const payload: Play & { turn: number } = { turn: d.turn, card: chosen };
-    if (chosen === "boat") Object.assign(payload, { at: from, to: target });
-    else if (chosen !== "wave") payload.at = target!;
+    if (!discard && chosen === "boat")
+      Object.assign(payload, { at: from, to: target });
+    else if (!discard && chosen !== "wave") payload.at = target!;
     setBusy(true);
     try {
       await send("play", payload);
@@ -201,12 +236,12 @@ export default function Tide(p: GameProps) {
         {([me, other] as Seat[]).map((seat) => (
           <div class={"tide-player" + (seat === me ? " me" : "")}>
             <Critter
-              avatar={p.room.profiles[seat]?.avatar}
+              avatar={p.profiles[seat]?.avatar}
               color={color(seat)}
               mood={d.picked[seat] ? "joy" : "normal"}
               size={40}
             />
-            <span>{seat === me ? "你" : nickname(p, seat)}</span>
+            <span>{seat === me ? "你" : name(seat)}</span>
             <b>{d.scores[seat]}</b>
             {seat !== me && (
               <i class={"tide-ready" + (d.picked[seat] ? " on" : "")}>
@@ -219,7 +254,10 @@ export default function Tide(p: GameProps) {
           <b>
             {Math.min(d.turn + 1, TURNS)}/{TURNS}
           </b>
-          <span class={left <= 5 ? "urgent" : ""}>{left}s</span>
+          {d.deadline > 0 && (
+            <span class={left <= 5 ? "urgent" : ""}>{left}s</span>
+          )}
+          {p.extra}
         </div>
       </header>
 
@@ -293,8 +331,7 @@ export default function Tide(p: GameProps) {
             const play = last.plays[s];
             return (
               <span class={s === me ? "me" : ""}>
-                {s === me ? "你" : nickname(p, s)}{" "}
-                {play ? CARD_NAMES[play.card] : "—"}
+                {s === me ? "你" : name(s)} {play ? CARD_NAMES[play.card] : "—"}
                 {OUTCOME[last.outcomes[s]] && (
                   <em> {OUTCOME[last.outcomes[s]]}</em>
                 )}
@@ -304,7 +341,11 @@ export default function Tide(p: GameProps) {
           })}
         </p>
       )}
-      {chosen && !d.pick && <p class="tide-effect">{EFFECT[chosen]}</p>}
+      {chosen && !d.pick && (
+        <p class="tide-effect">
+          {discard ? "现在没有能用的位置，出这张就是弃掉" : EFFECT[chosen]}
+        </p>
+      )}
 
       {d.pick ? (
         <div class="tide-actions">

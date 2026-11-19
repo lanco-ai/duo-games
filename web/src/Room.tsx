@@ -30,6 +30,7 @@ import {
 } from "./api";
 import { Transport } from "./net/transport";
 import { Catalog, GameInfo } from "./ui/catalog";
+import { TideTable } from "./ui/TideTable";
 import { Couple, Modal, ProfileForm, copyText, unlockSound } from "./ui/common";
 import { Critter, GameIcon, Scene, TetheredPair } from "./art/ui";
 import { Icon } from "./ui/icons";
@@ -819,6 +820,16 @@ export function Room({ code }: { code: string }) {
             </nav>
           </section>
           <div class="lobby-games underground">
+            {p1 && token && (
+              <TideTable
+                code={code}
+                token={token}
+                seat={seat}
+                profiles={room.profiles}
+                transport={transport.current}
+                now={now}
+              />
+            )}
             <Catalog
               pick={setSelected}
               pair={pair}

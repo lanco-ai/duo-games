@@ -1241,3 +1241,57 @@ test("tide-chess — two seats play 12 simultaneous turns through the board", as
     await b.close();
   }
 });
+test("tide-chess async — the table card shows whose turn it is and survives a reload", async ({
+  browser,
+}) => {
+  test.setTimeout(120000);
+  const a = await browser.newContext({ viewport: { width: 390, height: 844 } }),
+    b = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const one = await a.newPage(),
+    two = await b.newPage(),
+    errors: string[] = [];
+  one.on("pageerror", (e) => errors.push(e.message));
+  two.on("pageerror", (e) => errors.push(e.message));
+  try {
+    await one.goto("/");
+    await one.getByRole("button", { name: /创建房间，邀请/ }).click();
+    await one.getByLabel("你的昵称").fill("慢棋甲");
+    await one.getByRole("button", { name: "创建我们的房间 ❤" }).click();
+    await expect(one).toHaveURL(/\/r\//);
+    await two.goto(one.url());
+    await two.getByLabel("你的昵称").fill("慢棋乙");
+    await two.getByRole("button", { name: "进入房间 ❤" }).click();
+    await expect(one.locator(".tide-entry")).toContainText("开一局慢棋");
+    await one.locator(".tide-entry").click();
+    await expect(two.locator(".tide-entry.yours")).toContainText(
+      "1/12 · 轮到你",
+    );
+    await one.locator(".tide-entry").click();
+    await expect(one.locator(".tide-overlay")).toBeVisible();
+    await expect(one).toHaveURL(/#tide$/);
+    // 出一张能放的牌
+    for (const name of ["灯", "珊瑚", "石", "浪"]) {
+      const card = one.locator(".tide-card", { hasText: name }).first();
+      if (!(await card.count())) continue;
+      await card.click();
+      if (name !== "浪") await one.locator(".tide-cell.option").first().click();
+      break;
+    }
+    await one.getByRole("button", { name: "出牌" }).click();
+    await expect(one.locator(".tide-picked")).toBeVisible();
+    await expect(
+      two.locator(".tide-player:not(.me) .tide-ready.on"),
+    ).toHaveCount(0);
+    await two.locator(".tide-entry").click();
+    await expect(two.locator(".tide-ready.on")).toHaveText("已出");
+    // 刷新后直接回到棋盘，出过的牌还在
+    await one.reload();
+    await expect(one.locator(".tide-picked")).toBeVisible();
+    await one.getByRole("button", { name: "收起棋盘" }).click();
+    await expect(one.locator(".tide-entry")).toContainText("等 慢棋乙");
+    expect(errors).toEqual([]);
+  } finally {
+    await a.close();
+    await b.close();
+  }
+});
