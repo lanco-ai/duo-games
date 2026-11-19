@@ -276,7 +276,9 @@ test("gomoku — two seats complete and rematch with 200ms delay", async ({
     await expect(center).toHaveClass(/preview/);
     await expect(two.locator('[data-cell="112"] .gomoku-stone')).toHaveCount(0);
     await one.getByRole("button", { name: "确认落子" }).tap();
-    await expect(two.locator('[data-cell="112"] .gomoku-stone.black')).toBeVisible();
+    await expect(
+      two.locator('[data-cell="112"] .gomoku-stone.black'),
+    ).toBeVisible();
     await one.getByRole("button", { name: "悔一步", exact: true }).click();
     await two.getByRole("button", { name: "让 TA ❤", exact: true }).click();
     await expect(center.locator(".gomoku-stone")).toHaveCount(0);
@@ -289,7 +291,9 @@ test("gomoku — two seats complete and rematch with 200ms delay", async ({
         const reply = two.locator('[data-cell="' + n * 15 + '"]');
         await expect(reply).toBeEnabled();
         await reply.click();
-        await expect(one.locator('[data-cell="' + n * 15 + '"] .gomoku-stone.white')).toBeVisible();
+        await expect(
+          one.locator('[data-cell="' + n * 15 + '"] .gomoku-stone.white'),
+        ).toBeVisible();
       }
     }
     const line = one.getByRole("img", {
@@ -984,7 +988,10 @@ test("puck-sling — sling pucks through the gap with real drags and reach a res
         box = (await page.getByLabel(label).boundingBox())!,
         screen = (bx: number, by: number) =>
           seat
-            ? [box.x + (1 - bx / 360) * box.width, box.y + (1 - by / 640) * box.height]
+            ? [
+                box.x + (1 - bx / 360) * box.width,
+                box.y + (1 - by / 640) * box.height,
+              ]
             : [box.x + (bx / 360) * box.width, box.y + (by / 640) * box.height];
       const [sx, sy] = screen(x, y),
         [ex, ey] = screen(x - (180 - x) * pull, y - (sling.MID - y) * pull);
@@ -1137,6 +1144,97 @@ test("my-eyes — guide sees hearts and patrolling ghosts from round three", asy
         round + 1,
       );
     }
+    expect(errors).toEqual([]);
+  } finally {
+    await a.close();
+    await b.close();
+  }
+});
+test("tide-chess — two seats play 12 simultaneous turns through the board", async ({
+  browser,
+}) => {
+  test.setTimeout(240000);
+  const a = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+    }),
+    b = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await instrument(a);
+  await instrument(b);
+  const one = await a.newPage(),
+    two = await b.newPage(),
+    errors: string[] = [];
+  one.on("pageerror", (e) => errors.push(e.message));
+  two.on("pageerror", (e) => errors.push(e.message));
+  // 依次试手牌：能出就出，船要先点棋子再点终点
+  async function playTurn(page: Page) {
+    const cards = page.locator(".tide-card");
+    const count = await cards.count();
+    for (let i = 0; i < count; i++) {
+      await cards.nth(i).click();
+      for (let step = 0; step < 2; step++) {
+        const option = page.locator(".tide-cell.option").first();
+        if (await page.getByRole("button", { name: "出牌" }).isEnabled()) break;
+        if (!(await option.count())) break;
+        await option.click();
+      }
+      const playButton = page.getByRole("button", { name: "出牌" });
+      if (await playButton.isEnabled()) {
+        const before = (await data(page)).turn;
+        await playButton.click();
+        // 先出的人看到“已出”；后出的人一出就结算，回合直接前进
+        await page.waitForFunction((t) => {
+          const o = (window as any).observed;
+          return (
+            o.game?.data.pick ||
+            o.game?.data.turn > t ||
+            o.room.phase === "result"
+          );
+        }, before);
+        return;
+      }
+      await cards.nth(i).click();
+    }
+    throw new Error("no playable card");
+  }
+  try {
+    await one.goto("/");
+    await one.getByRole("button", { name: /创建房间，邀请/ }).click();
+    await one.getByLabel("你的昵称").fill("潮汐甲");
+    await one.getByRole("button", { name: "创建我们的房间 ❤" }).click();
+    await expect(one).toHaveURL(/\/r\//);
+    await two.goto(one.url());
+    await two.getByLabel("你的昵称").fill("潮汐乙");
+    await two.getByRole("button", { name: "进入房间 ❤" }).click();
+    await expect(one.locator(".couple-names")).toContainText("潮汐乙");
+    await start(one, two, "tide-chess", "潮汐棋");
+    await expect(one.locator(".tide-cell")).toHaveCount(42);
+    // 自己的岸总在下方：两边最下面一行都是自己的岸
+    const bottom = async (p: Page) =>
+      Number(await p.locator(".tide-cell").last().getAttribute("data-cell"));
+    expect(await bottom(one)).toBe(5);
+    expect(await bottom(two)).toBe(41);
+    for (let turn = 0; turn < 12; turn++) {
+      await playTurn(one);
+      // 对方还没出时，看不到你出了什么
+      expect((await data(two)).pick).toBeNull();
+      expect((await data(two)).picked[0]).toBe(true);
+      if (turn === 0) {
+        await one.getByRole("button", { name: "收回" }).click();
+        await expect(one.locator(".tide-card")).toHaveCount(4);
+        await playTurn(one);
+      }
+      await playTurn(two);
+      await one.waitForFunction(
+        (t) =>
+          (window as any).observed.game?.data.turn > t ||
+          (window as any).observed.room.phase === "result",
+        turn,
+      );
+      if (turn < 11) await expect(one.locator(".tide-reveal")).toBeVisible();
+    }
+    await expect(one.locator(".result-page")).toBeVisible({ timeout: 20000 });
+    await expect(two.locator(".result-page")).toBeVisible();
     expect(errors).toEqual([]);
   } finally {
     await a.close();

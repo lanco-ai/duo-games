@@ -13,6 +13,25 @@ export interface GameMeta {
   milestone: string;
 }
 export const games: GameMeta[] = [
+  {
+    id: "tide-chess",
+    devices: "pair",
+    name: "潮汐棋",
+    emoji: "🌊",
+    tagline: "同时出牌，在涨落的潮水里抢分",
+    intro:
+      "12 回合，每回合两人同时暗选一张牌。灯怕水，珊瑚要水，潮汐表开局就摆在那里。",
+    rules: [
+      "每回合各选一张牌和一个格子，都选好后同时揭晓",
+      "回合末没被淹的灯、在水下的珊瑚，每个得 1 分",
+      "石挡水，船挪子，网收走对方的子，浪抬高对方的潮",
+    ],
+    tags: ["较量"],
+    duration: "15 分钟",
+    net: "实时",
+    gradient: "#7FD4F5,#2F8FCF",
+    milestone: "P1",
+  },
   ...(
     [
       [
@@ -339,6 +358,7 @@ export function gameGroup(game: GameMeta) {
     return "聊天";
   if (["heartbeat", "couple-jump", "heart-bounce"].includes(game.id))
     return "动作";
-  if (["gomoku", "couple-ludo", "hide-seek"].includes(game.id)) return "较量";
+  if (["gomoku", "couple-ludo", "hide-seek", "tide-chess"].includes(game.id))
+    return "较量";
   return "合作";
 }

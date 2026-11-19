@@ -20,6 +20,7 @@ import {
 import { CoopKitchen, HideSeek } from "./couple-action";
 import { PuckSling } from "./puck-sling";
 import { LoveSlots } from "./slots";
+import { TideChess } from "./tide";
 export function createGame(
   id: ExtraId,
   run: string,
@@ -46,6 +47,7 @@ export function createGame(
     "couple-jump": CoupleJump,
     "puck-sling": PuckSling,
     "love-slots": LoveSlots,
+    "tide-chess": TideChess,
   }[id];
   return new constructor(run, options, seed, at, ctx);
 }
