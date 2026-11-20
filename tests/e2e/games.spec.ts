@@ -1170,15 +1170,18 @@ test("tide-chess — two seats play 12 simultaneous turns through the board", as
   async function playTurn(page: Page) {
     const cards = page.locator(".tide-card");
     const count = await cards.count();
+    // 先取消上一次留下的选择（收回后牌仍是选中的）
+    const selected = page.locator('.tide-card[aria-selected="true"]');
+    if (await selected.count()) await selected.click();
     for (let i = 0; i < count; i++) {
       await cards.nth(i).click();
       for (let step = 0; step < 2; step++) {
         const option = page.locator(".tide-cell.option").first();
-        if (await page.getByRole("button", { name: "出牌" }).isEnabled()) break;
+        if (await page.locator(".tide-go").isEnabled()) break;
         if (!(await option.count())) break;
         await option.click();
       }
-      const playButton = page.getByRole("button", { name: "出牌" });
+      const playButton = page.locator(".tide-go");
       if (await playButton.isEnabled()) {
         const before = (await data(page)).turn;
         await playButton.click();
@@ -1277,16 +1280,14 @@ test("tide-chess async — the table card shows whose turn it is and survives a 
       if (name !== "浪") await one.locator(".tide-cell.option").first().click();
       break;
     }
-    await one.getByRole("button", { name: "出牌" }).click();
-    await expect(one.locator(".tide-picked")).toBeVisible();
-    await expect(
-      two.locator(".tide-player:not(.me) .tide-ready.on"),
-    ).toHaveCount(0);
+    await expect(one.locator(".tide-go")).toHaveText(/^出牌 · /);
+    await one.locator(".tide-go").click();
+    await expect(one.locator(".tide-waiting")).toContainText("等 慢棋乙 出牌");
     await two.locator(".tide-entry").click();
-    await expect(two.locator(".tide-ready.on")).toHaveText("已出");
+    await expect(two.getByLabel("已出牌")).toBeVisible();
     // 刷新后直接回到棋盘，出过的牌还在
     await one.reload();
-    await expect(one.locator(".tide-picked")).toBeVisible();
+    await expect(one.locator(".tide-waiting")).toBeVisible();
     await one.getByRole("button", { name: "收起棋盘" }).click();
     await expect(one.locator(".tide-entry")).toContainText("等 慢棋乙");
     expect(errors).toEqual([]);
@@ -1347,14 +1348,15 @@ test("island — plant, partner waters, harvest after real time, craft and ship 
     await expect(ripe).toHaveCount(1, { timeout: 15000 });
     // 连点三下只收一次，东西飞进背包
     await ripe.dblclick();
-    await expect(
-      one.getByRole("button", { name: "背包，2 件" }),
-    ).toBeVisible();
+    await expect(one.getByRole("button", { name: "背包，2 件" })).toBeVisible();
     await one.getByRole("button", { name: "工坊" }).click();
     const paper = one.locator(".recipe", { hasText: "纸" }).first();
     await expect(paper.locator(".chip-button")).toHaveText("做");
     await expect(
-      one.locator(".recipe", { hasText: "灯油" }).first().locator(".chip-button"),
+      one
+        .locator(".recipe", { hasText: "灯油" })
+        .first()
+        .locator(".chip-button"),
     ).toBeDisabled();
     await paper.locator(".chip-button").click();
     await expect(paper.locator(".chip-button")).toBeDisabled();

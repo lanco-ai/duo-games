@@ -1,11 +1,15 @@
-import { useEffect, useMemo, useState } from "preact/hooks";
+// 潮汐棋的棋盘界面。实时对局（房间里）和异步对局（大厅的棋桌）共用 TideBoard。
+// 规则全在 shared/games/tide/rules.ts，这里只负责画面、选牌选格和结算反馈。
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { useGame, type GameProps } from "./common";
-import type { Profile } from "../../../shared/protocol";
+import type { Profile, Seat } from "../../../shared/protocol";
 import { Critter } from "../art/ui";
+import { CardArt, CardBack, PieceArt } from "../art/tide";
 import {
   CARD_NAMES,
   COLS,
+  FLAT,
   ROWS,
   TURNS,
   boatTargets,
@@ -13,6 +17,7 @@ import {
   hasTarget,
   netTargets,
   placeTargets,
+  side,
   type Card,
   type Outcome,
   type Piece,
@@ -20,108 +25,24 @@ import {
   type TideState,
   type TurnRecord,
 } from "../../../shared/games/tide/rules";
-import type { Seat } from "../../../shared/protocol";
 import "./tide.css";
 
 const EFFECT: Record<Card, string> = {
-  lamp: "没被淹的灯，每回合 1 分",
-  coral: "在水下的珊瑚，每回合 1 分",
-  stone: "挡住同一列身后的水",
-  boat: "把你的一枚棋子挪最多 2 格",
-  net: "收走相邻格里对方的棋子",
-  wave: "这一回合对方那边潮位 +1",
+  lamp: "干地上每回合 1 分",
+  coral: "水下每回合 1 分",
+  stone: "挡住身后的水",
+  boat: "挪一枚子 2 格",
+  net: "收走相邻敌子",
+  wave: "对方潮位 +1",
 };
 const OUTCOME: Record<Outcome, string> = {
   ok: "",
   clash: "撞格落空",
   blocked: "格子被占",
   missed: "没网到",
-  timeout: "超时",
+  timeout: "超时弃牌",
   discard: "弃牌",
 };
-
-export function PieceIcon({ kind, color }: { kind: Card; color?: string }) {
-  const c = color || "#3a2618";
-  return (
-    <svg viewBox="0 0 32 32" class={"tide-piece " + kind} aria-hidden="true">
-      {kind === "lamp" && (
-        <>
-          <circle cx="16" cy="15" r="11" fill="#FFE27A" opacity=".45" />
-          <rect
-            x="10"
-            y="9"
-            width="12"
-            height="15"
-            rx="5"
-            fill="#FFD23F"
-            stroke={c}
-            stroke-width="2.4"
-          />
-          <path
-            d="M13 9V6h6v3M12 24h8"
-            stroke={c}
-            stroke-width="2.4"
-            fill="none"
-            stroke-linecap="round"
-          />
-        </>
-      )}
-      {kind === "coral" && (
-        <path
-          d="M16 28V16M16 18l-6-6M10 12V7M16 16l6-7M22 9l3-2M16 22l-5-3"
-          stroke={c}
-          stroke-width="4"
-          fill="none"
-          stroke-linecap="round"
-        />
-      )}
-      {kind === "stone" && (
-        <path
-          d="M5 23c0-8 5-14 11-14s11 6 11 14c0 2-2 3-4 3H9c-2 0-4-1-4-3z"
-          fill="#B9B3A8"
-          stroke={c}
-          stroke-width="2.4"
-        />
-      )}
-      {kind === "boat" && (
-        <>
-          <path
-            d="M5 19h22l-4 7H9z"
-            fill="#D9A066"
-            stroke={c}
-            stroke-width="2.4"
-            stroke-linejoin="round"
-          />
-          <path
-            d="M16 19V5l8 10h-8"
-            fill="#FFF"
-            stroke={c}
-            stroke-width="2.2"
-            stroke-linejoin="round"
-          />
-        </>
-      )}
-      {kind === "net" && (
-        <path
-          d="M6 8l20 0M5 14h22M6 20h20M9 26h14M9 6l4 22M16 5v23M23 6l-4 22"
-          stroke={c}
-          stroke-width="2"
-          fill="none"
-          stroke-linecap="round"
-        />
-      )}
-      {kind === "wave" && (
-        <path
-          d="M3 20c4-6 8-6 12 0s8 6 14 0M3 12c4-6 8-6 12 0s8 6 14 0"
-          stroke="#2F8FCF"
-          stroke-width="3.4"
-          fill="none"
-          stroke-linecap="round"
-        />
-      )}
-    </svg>
-  );
-}
 
 export default function Tide(p: GameProps) {
   const send = useGame(p);
@@ -134,6 +55,7 @@ export default function Tide(p: GameProps) {
       disabled={p.disabled}
       send={send}
       runKey={p.view.run}
+      compact
     />
   );
 }
@@ -146,8 +68,61 @@ export interface TideBoardProps {
   disabled: boolean;
   send: (command: string, payload?: any) => Promise<unknown>;
   runKey: string;
-  /** 放在计时位置旁边的额外控件（异步对局的“实时”开关） */
+  /** 放在回合标记旁边的控件（异步对局的“实时”开关） */
   extra?: ComponentChildren;
+  /** 有返回键时显示在左上角（异步对局的浮层） */
+  back?: () => void;
+  /** 棋盘下方的附加内容（结束这局） */
+  footer?: ComponentChildren;
+  /** 房间里的实时对局：空间紧，结算浮在棋盘上几秒后淡出 */
+  compact?: boolean;
+}
+
+/** 潮汐曲线：12 回合的潮位，当前回合标出数字 */
+function TideChart({ tides, turn }: { tides: number[]; turn: number }) {
+  const W = 240,
+    H = 56,
+    x = (i: number) => ((i + 0.5) / TURNS) * W,
+    y = (t: number) => H - 15 - (t * (H - 30)) / 3;
+  const line = tides.map((t, i) => `${i ? "L" : "M"}${x(i)} ${y(t)}`).join(" ");
+  const now = Math.min(turn, TURNS - 1);
+  return (
+    <div
+      class="tide-chart"
+      aria-label={`潮汐表，这一回合潮位 ${tides[now]}，下一回合 ${tides[now + 1] ?? "—"}`}
+    >
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path
+          d={`${line} L${x(TURNS - 1)} ${H} L${x(0)} ${H}Z`}
+          class="tide-chart-water"
+        />
+        <path d={line} class="tide-chart-line" />
+        <rect
+          x="0"
+          y="0"
+          width={x(now) - W / TURNS / 2}
+          height={H}
+          class="tide-chart-past"
+        />
+      </svg>
+      <span class="tide-chart-label" aria-hidden="true">
+        潮位
+      </span>
+      <span
+        class="tide-chart-now"
+        style={{
+          left: `${((now + 0.5) / TURNS) * 100}%`,
+          top: `${(y(tides[now]) / H) * 100}%`,
+        }}
+      >
+        {tides[now]}
+      </span>
+    </div>
+  );
 }
 
 export function TideBoard(p: TideBoardProps) {
@@ -167,7 +142,8 @@ export function TideBoard(p: TideBoardProps) {
 
   const board: (Piece | null)[] = d.board;
   const last: TurnRecord | null = d.last;
-  const name = (seat: Seat) => p.profiles[seat]?.nickname || "TA";
+  const name = (seat: Seat) =>
+    seat === me ? "你" : p.profiles[seat]?.nickname || "TA";
   const color = (seat: Seat) => p.profiles[seat]?.color || "#FF6B6B";
   const chosen: Card | null = card !== null ? d.hand[card] : null;
   const state = {
@@ -176,7 +152,6 @@ export function TideBoard(p: TideBoardProps) {
     turn: d.turn,
   } as unknown as TideState;
 
-  // 当前选中的牌可以点哪些格子
   const options = useMemo(() => {
     if (!chosen || d.pick) return new Set<number>();
     if (chosen === "boat")
@@ -192,6 +167,7 @@ export function TideBoard(p: TideBoardProps) {
     return new Set(placeTargets(state, me, chosen));
   }, [chosen, from, d.turn, d.pick]);
 
+  const finished = d.turn >= TURNS;
   const level = d.tides[Math.min(d.turn, TURNS - 1)];
   const water = (i: number) => flooded(board, i, [level, level]);
   const rows = me === 0 ? [6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6];
@@ -201,6 +177,34 @@ export function TideBoard(p: TideBoardProps) {
     chosen === "wave" ||
     discard ||
     (chosen === "boat" ? from !== null && target !== null : target !== null);
+  const reveal = !!last && !chosen && !d.pick;
+
+  // 结算后：哪些棋子刚得了分（按结算时的潮位）
+  const scored = useMemo(() => {
+    if (!last) return new Set<number>();
+    return new Set(
+      last.board.flatMap((x, i) => {
+        if (!x || x.kind === "stone") return [];
+        const wet = flooded(last.board, i, last.tide);
+        return (x.kind === "lamp" && !wet) || (x.kind === "coral" && wet)
+          ? [i]
+          : [];
+      }),
+    );
+  }, [last?.turn, p.runKey]);
+  // 分数变化时数字跳一下
+  const prev = useRef<[number, number]>(d.scores);
+  const [pop, setPop] = useState<[number, number]>([0, 0]);
+  useEffect(() => {
+    const gain: [number, number] = [
+      d.scores[0] - prev.current[0],
+      d.scores[1] - prev.current[1],
+    ];
+    prev.current = d.scores;
+    if (gain[0] || gain[1]) setPop(gain);
+    const t = setTimeout(() => setPop([0, 0]), 1600);
+    return () => clearTimeout(t);
+  }, [d.scores[0], d.scores[1]]);
 
   async function play() {
     if (!chosen || !ready || busy) return;
@@ -218,181 +222,289 @@ export function TideBoard(p: TideBoardProps) {
   function tap(i: number) {
     if (!options.has(i)) return;
     if (chosen === "boat" && from === null) setFrom(i);
-    else setTarget(i);
+    else if (chosen === "boat" && i === from) setFrom(null);
+    else setTarget(i === target ? null : i);
   }
-  const mark = (i: number) => {
-    if (d.pick && (d.pick.at === i || d.pick.to === i)) return "mine";
-    if (i === target || i === from) return "mine";
-    if (!last || d.pick || chosen) return "";
-    const hit = [0, 1].find(
-      (s) => last.plays[s]?.at === i || last.plays[s]?.to === i,
-    );
-    return hit === undefined ? "" : hit === me ? "mine-last" : "theirs-last";
-  };
+  const hint = !chosen
+    ? "选一张牌"
+    : discard
+      ? "弃掉这张"
+      : chosen === "wave"
+        ? "出牌 · 浪"
+        : chosen === "boat" && from === null
+          ? "点你要挪的棋子"
+          : chosen === "boat" && target === null
+            ? "点船要去的格子"
+            : target === null
+              ? "点一个亮着的格子"
+              : "出牌 · " + CARD_NAMES[chosen];
+
+  const scoreSide = (seat: Seat) => (
+    <div
+      class={"tide-side" + (seat === me ? " me" : "")}
+      style={{ "--player": color(seat) }}
+    >
+      <span class="tide-avatar">
+        <Critter
+          avatar={p.profiles[seat]?.avatar}
+          color={color(seat)}
+          mood={d.picked[seat] ? "joy" : "normal"}
+          size={40}
+          shadow={false}
+        />
+        {seat !== me && !finished && (
+          <i
+            class={"tide-status" + (d.picked[seat] ? " done" : "")}
+            aria-label={d.picked[seat] ? "已出牌" : "在想"}
+          >
+            {d.picked[seat] ? "✓" : "…"}
+          </i>
+        )}
+      </span>
+      <span class="tide-name">{name(seat)}</span>
+      <b
+        class={"tide-score" + (pop[seat] ? " pop" : "")}
+        key={seat + ":" + d.scores[seat]}
+      >
+        {d.scores[seat]}
+      </b>
+      {pop[seat] > 0 && <em class="tide-gain">+{pop[seat]}</em>}
+    </div>
+  );
+
+  const revealCard = reveal && (
+    <div class="tide-reveal" role="status" key={"r" + last!.turn}>
+      <h4>第 {last!.turn + 1} 回合</h4>
+      <div class="tide-reveal-cards">
+        {([me, other] as Seat[]).map((s) => {
+          const play = last!.plays[s];
+          return (
+            <div
+              class={"tide-mini" + (s === me ? " me" : "")}
+              style={{ "--player": color(s) }}
+            >
+              <span class="tide-mini-card">
+                {play ? <CardArt card={play.card} /> : <CardBack />}
+              </span>
+              <span class="tide-mini-text">
+                <b>{name(s)}</b>
+                <span>{play ? CARD_NAMES[play.card] : "没出牌"}</span>
+                {OUTCOME[last!.outcomes[s]] && (
+                  <em>{OUTCOME[last!.outcomes[s]]}</em>
+                )}
+              </span>
+              <strong>+{last!.gained[s]}</strong>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 
   return (
-    <section class="extra-stage tide-stage" data-testid="tide-stage">
-      <header class="tide-top">
-        {([me, other] as Seat[]).map((seat) => (
-          <div class={"tide-player" + (seat === me ? " me" : "")}>
-            <Critter
-              avatar={p.profiles[seat]?.avatar}
-              color={color(seat)}
-              mood={d.picked[seat] ? "joy" : "normal"}
-              size={40}
-            />
-            <span>{seat === me ? "你" : name(seat)}</span>
-            <b>{d.scores[seat]}</b>
-            {seat !== me && (
-              <i class={"tide-ready" + (d.picked[seat] ? " on" : "")}>
-                {d.picked[seat] ? "已出" : "在想"}
-              </i>
-            )}
-          </div>
-        ))}
-        <div class="tide-clock">
+    <section
+      class={
+        "tide-stage" +
+        (p.back ? " overlay" : "") +
+        (p.compact ? " compact" : "")
+      }
+      data-testid="tide-stage"
+    >
+      <header class="tide-hud">
+        {p.back && (
+          <button class="tide-round" aria-label="收起棋盘" onClick={p.back}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M15 5l-7 7 7 7"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        )}
+        <div class="tide-scoreboard">
+          {scoreSide(me)}
+          <span class="tide-vs">:</span>
+          {scoreSide(other)}
+        </div>
+        <div class="tide-turn">
           <b>
-            {Math.min(d.turn + 1, TURNS)}/{TURNS}
+            {Math.min(d.turn + 1, TURNS)}
+            <small>/{TURNS}</small>
           </b>
-          {d.deadline > 0 && (
-            <span class={left <= 5 ? "urgent" : ""}>{left}s</span>
+          {d.deadline > 0 && !finished && (
+            <span
+              class={"tide-clock" + (left <= 5 ? " urgent" : "")}
+              style={{ "--left": left / 30 }}
+            >
+              {left}
+            </span>
           )}
           {p.extra}
         </div>
       </header>
 
-      <ol class="tide-table" aria-label="潮汐表">
-        {d.tides.map((t: number, i: number) => (
-          <li
-            class={i === d.turn ? "now" : i < d.turn ? "past" : ""}
-            aria-label={`第 ${i + 1} 回合 潮位 ${t}`}
+      <div class="tide-main">
+        <TideChart tides={d.tides} turn={d.turn} />
+        <div class="tide-bay-wrap">
+          {p.compact && revealCard}
+          <div
+            class={"tide-bay" + (options.size ? " choosing" : "")}
+            role="grid"
+            aria-label="潮汐棋盘"
+            style={{ "--cols": COLS, "--rows": ROWS }}
           >
-            <i style={{ height: `${25 + t * 25}%` }} />
-          </li>
-        ))}
-      </ol>
-
-      <div
-        class="tide-board"
-        role="grid"
-        aria-label="潮汐棋盘"
-        style={{ "--cols": COLS, "--rows": ROWS }}
-      >
-        {rows.flatMap((r) =>
-          Array.from({ length: COLS }, (_, c) => {
-            const i = r * COLS + c,
-              piece = board[i],
-              m = mark(i),
-              caught = !!last?.captured.includes(i) && !chosen && !d.pick;
-            return (
-              <button
-                key={i}
-                data-cell={i}
-                class={[
-                  "tide-cell",
-                  water(i) ? "wet" : "dry",
-                  r === 3 ? "flat" : "",
-                  options.has(i) ? "option" : "",
-                  m,
-                  caught ? "caught" : "",
-                ].join(" ")}
-                aria-label={`${r + 1}行${c + 1}列${piece ? " " + (piece.owner === me ? "你的" : "TA的") + CARD_NAMES[piece.kind] : ""}`}
-                disabled={!options.has(i)}
-                onClick={() => tap(i)}
-              >
-                {piece && (
-                  <span
-                    class={"tide-owner" + (piece.owner === me ? " me" : "")}
-                    style={{ "--owner": color(piece.owner) }}
+            {rows.flatMap((r) =>
+              Array.from({ length: COLS }, (_, c) => {
+                const i = r * COLS + c,
+                  piece = board[i],
+                  s = side(i),
+                  wet = water(i),
+                  isOption = options.has(i),
+                  mineLast =
+                    reveal &&
+                    (last!.plays[me]?.at === i || last!.plays[me]?.to === i),
+                  theirLast =
+                    reveal &&
+                    (last!.plays[other]?.at === i ||
+                      last!.plays[other]?.to === i),
+                  caught = reveal && last!.captured.includes(i),
+                  picked =
+                    (d.pick && (d.pick.at === i || d.pick.to === i)) ||
+                    i === target ||
+                    i === from;
+                const active = piece
+                  ? piece.kind === "lamp"
+                    ? !wet
+                    : piece.kind === "coral"
+                      ? wet
+                      : false
+                  : false;
+                return (
+                  <button
+                    key={i}
+                    data-cell={i}
+                    class={[
+                      "tide-cell",
+                      s === null ? "flat" : s === me ? "mine" : "theirs",
+                      wet && "wet",
+                      r === FLAT && "flat-row",
+                      isOption && "option",
+                      picked && "picked",
+                      mineLast && "last-mine",
+                      theirLast && "last-theirs",
+                      caught && "caught",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    style={{ "--me": color(me), "--them": color(other) }}
+                    aria-label={`${r + 1}行${c + 1}列${wet ? " 水下" : ""}${piece ? " " + (piece.owner === me ? "你的" : name(other) + "的") + CARD_NAMES[piece.kind] + (active ? " 得分中" : "") : ""}`}
+                    disabled={!isOption}
+                    onClick={() => tap(i)}
                   >
-                    <PieceIcon
-                      kind={piece.kind}
-                      color={piece.owner === me ? "#3a2618" : "#2a2a4a"}
-                    />
+                    {piece && (
+                      <span
+                        class={
+                          "tide-token" +
+                          (active ? " active" : "") +
+                          (piece.owner === me ? " own" : "")
+                        }
+                        style={{ "--owner": color(piece.owner) }}
+                      >
+                        <PieceArt
+                          kind={piece.kind}
+                          active={piece.kind === "stone" || active}
+                        />
+                      </span>
+                    )}
+                    {!piece &&
+                      picked &&
+                      (chosen || d.pick) &&
+                      (d.pick?.card ?? chosen) !== "net" &&
+                      (d.pick?.card ?? chosen) !== "boat" && (
+                        <span class="tide-ghost">
+                          <PieceArt kind={(d.pick?.card ?? chosen) as "lamp"} />
+                        </span>
+                      )}
+                    {reveal && scored.has(i) && piece && (
+                      <em class="tide-plus" key={"p" + last!.turn}>
+                        +1
+                      </em>
+                    )}
+                  </button>
+                );
+              }),
+            )}
+          </div>
+        </div>
+
+        <aside class="tide-panel">
+          {reveal && !p.compact && revealCard}
+          {finished ? null : d.pick ? (
+            <div class="tide-waiting">
+              <span class="tide-played">
+                <CardBack />
+                <span class="tide-played-face">
+                  <CardArt card={d.pick.card} />
+                </span>
+              </span>
+              <span class="tide-waiting-text">
+                <b>已出{CARD_NAMES[d.pick.card as Card]}</b>
+                <span>
+                  {d.picked[other] ? "马上揭晓" : "等 " + name(other) + " 出牌"}
+                </span>
+              </span>
+              <button
+                class="tide-chip"
+                disabled={p.disabled || d.picked[other]}
+                onClick={() => void send("retract", { turn: d.turn })}
+              >
+                收回
+              </button>
+            </div>
+          ) : (
+            <>
+              <div class="tide-hand" role="listbox" aria-label="手牌">
+                {d.hand.map((c: Card, i: number) => (
+                  <button
+                    role="option"
+                    aria-selected={card === i}
+                    aria-label={CARD_NAMES[c] + "：" + EFFECT[c]}
+                    class={"tide-card" + (card === i ? " selected" : "")}
+                    disabled={p.disabled}
+                    onClick={() => {
+                      setCard(card === i ? null : i);
+                      setFrom(null);
+                      setTarget(null);
+                    }}
+                  >
+                    <CardArt card={c} />
+                    <b>{CARD_NAMES[c]}</b>
+                    <small>{EFFECT[c]}</small>
+                  </button>
+                ))}
+                {d.deck > 0 && (
+                  <span class="tide-deck" aria-label={`牌堆还有 ${d.deck} 张`}>
+                    <CardBack />
+                    <b>{d.deck}</b>
                   </span>
                 )}
-                {!piece &&
-                  (i === target || d.pick?.at === i || d.pick?.to === i) &&
-                  chosen !== "net" &&
-                  d.pick?.card !== "net" && (
-                    <span class="tide-ghost">
-                      <PieceIcon kind={(d.pick?.card || chosen) as Card} />
-                    </span>
-                  )}
-              </button>
-            );
-          }),
-        )}
-      </div>
-
-      {last && !chosen && !d.pick && (
-        <p class="tide-reveal" role="status">
-          {([me, other] as Seat[]).map((s) => {
-            const play = last.plays[s];
-            return (
-              <span class={s === me ? "me" : ""}>
-                {s === me ? "你" : name(s)} {play ? CARD_NAMES[play.card] : "—"}
-                {OUTCOME[last.outcomes[s]] && (
-                  <em> {OUTCOME[last.outcomes[s]]}</em>
-                )}
-                <b> +{last.gained[s]}</b>
-              </span>
-            );
-          })}
-        </p>
-      )}
-      {chosen && !d.pick && (
-        <p class="tide-effect">
-          {discard ? "现在没有能用的位置，出这张就是弃掉" : EFFECT[chosen]}
-        </p>
-      )}
-
-      {d.pick ? (
-        <div class="tide-actions">
-          <span class="tide-picked">
-            <PieceIcon kind={d.pick.card} /> 已出
-            {CARD_NAMES[d.pick.card as Card]}
-          </span>
-          <button
-            class="secondary"
-            disabled={p.disabled || d.picked[other]}
-            onClick={() => void send("retract", { turn: d.turn })}
-          >
-            收回
-          </button>
-        </div>
-      ) : (
-        <>
-          <div class="tide-hand" role="listbox" aria-label="手牌">
-            {d.hand.map((c: Card, i: number) => (
+              </div>
               <button
-                role="option"
-                aria-selected={card === i}
-                class={"tide-card" + (card === i ? " selected" : "")}
-                disabled={p.disabled}
-                onClick={() => {
-                  setCard(card === i ? null : i);
-                  setFrom(null);
-                  setTarget(null);
-                }}
+                class={"tide-go" + (busy ? " busy" : "")}
+                disabled={p.disabled || !ready || busy}
+                onClick={() => void play()}
               >
-                <PieceIcon kind={c} />
-                <span>{CARD_NAMES[c]}</span>
+                {hint}
               </button>
-            ))}
-            {d.deck > 0 && <span class="tide-deck">{d.deck}</span>}
-          </div>
-          <div class="tide-actions">
-            <button
-              class="primary wide"
-              disabled={p.disabled || !ready || busy}
-              onClick={() => void play()}
-            >
-              出牌
-            </button>
-          </div>
-        </>
-      )}
+            </>
+          )}
+          {p.footer}
+        </aside>
+      </div>
     </section>
   );
 }

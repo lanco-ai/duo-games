@@ -4032,3 +4032,65 @@ dialog[open] .sheet {
 .more-games[aria-expanded="true"] {
   opacity: 0.75;
 }
+
+/* 大厅：和半途岛、潮汐棋同一套视觉（深棕描边、奶油底、实色投影）。只作用于大厅，不改小游戏里的按钮。 */
+.room-page.lobby .round-small {
+  border: 3px solid var(--ink);
+  background: #fffdf6;
+  color: var(--ink);
+  box-shadow: 0 4px 0 rgba(58, 38, 24, 0.45);
+}
+.room-page.lobby .round-small .icon {
+  filter: none;
+}
+.room-page.lobby .round-small:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(58, 38, 24, 0.45);
+}
+.room-page.lobby .room-code-button {
+  border: 3px solid var(--ink);
+  background: #fffdf6;
+  box-shadow: 0 4px 0 rgba(58, 38, 24, 0.45);
+  color: var(--ink);
+}
+.room-page.lobby .room-code-button:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(58, 38, 24, 0.45);
+}
+.room-page.lobby .round-button .icon {
+  border: 3px solid var(--ink);
+  background: #fffdf6;
+  color: var(--ink);
+  box-shadow: 0 4px 0 rgba(58, 38, 24, 0.45);
+}
+.room-page.lobby .round-button:active .icon {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(58, 38, 24, 0.45);
+}
+.room-page.lobby .round-button span {
+  margin-top: 2px;
+  padding: 1px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #fffdf6;
+  color: var(--ink);
+  font-size: 13px;
+  text-shadow: none;
+}
+.room-page.lobby .network-detail {
+  border: 2.5px solid var(--ink);
+  background: #fffdf6;
+  box-shadow: 0 3px 0 rgba(58, 38, 24, 0.3);
+  color: var(--ink);
+}
+.room-page.lobby .network-detail i {
+  box-shadow: 0 0 0 2px var(--ink);
+}
+@media (hover: hover) {
+  .room-page.lobby .round-small:hover,
+  .room-page.lobby .room-code-button:hover,
+  .room-page.lobby .round-button:hover .icon {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 rgba(58, 38, 24, 0.45);
+  }
+}

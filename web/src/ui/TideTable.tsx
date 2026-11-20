@@ -5,6 +5,7 @@ import { api } from "../api";
 import type { Transport } from "../net/transport";
 import type { Profile, Seat } from "../../../shared/protocol";
 import { TideBoard } from "../games/Tide";
+import { TideMini } from "../art/tide";
 import "../games/tide.css";
 
 export function TideTable(p: {
@@ -22,26 +23,36 @@ export function TideTable(p: {
   const me = p.seat,
     other = (1 - me) as Seat,
     partner = p.profiles[other]?.nickname || "TA";
+  const load = () =>
+    api("rooms/" + p.code + "/tide", "GET", undefined, p.token)
+      .then((r) => setM(r.match))
+      .catch(() => {});
+  /** 发一个操作；失败时说明原因，再拉一次真实状态（不清掉提示） */
   const call = async (body?: object) => {
+    if (!body) return void load();
     try {
-      const r = await api(
-        "rooms/" + p.code + "/tide",
-        body ? "POST" : "GET",
-        body,
-        p.token,
-      );
+      const r = await api("rooms/" + p.code + "/tide", "POST", body, p.token);
       setM(r.match);
-      setError("");
       return true;
     } catch (e) {
-      setError((e as Error).message);
-      void call();
+      const msg = (e as Error).message;
+      setError(
+        e instanceof TypeError || msg.includes("连接")
+          ? "连不上服务器，等一下再试"
+          : msg,
+      );
+      void load();
       return false;
     }
   };
   useEffect(() => {
     void call();
   }, [p.code, p.token]);
+  useEffect(() => {
+    if (!error) return;
+    const t = setTimeout(() => setError(""), 2600);
+    return () => clearTimeout(t);
+  }, [error]);
   useEffect(
     () =>
       p.transport?.subscribe((msg) => {
@@ -88,8 +99,8 @@ export function TideTable(p: {
         class={"tide-entry" + (mine ? " yours" : "")}
         onClick={() => (m ? show(true) : void call({ cmd: "new" }))}
       >
-        <span class="tide-entry-icon" aria-hidden="true">
-          🌊
+        <span class="tide-entry-icon">
+          <TideMini />
         </span>
         <span class="tide-entry-text">
           <b>潮汐棋</b>
@@ -109,18 +120,52 @@ export function TideTable(p: {
       </button>
       {open && m && (
         <div class="tide-overlay" role="dialog" aria-label="潮汐棋">
-          <div class="tide-overlay-bar">
-            <button
-              class="round-small"
-              aria-label="收起棋盘"
-              onClick={() => show(false)}
-            >
-              ✕
-            </button>
-            {error && <span class="tide-error">{error}</span>}
-          </div>
+          <TideBoard
+            d={m}
+            seat={me}
+            profiles={p.profiles}
+            now={p.now}
+            disabled={m.finished}
+            send={(cmd, payload) => call({ cmd, ...payload })}
+            runKey={m.id}
+            back={() => show(false)}
+            extra={
+              !m.finished &&
+              (m.together || m.deadline > 0) && (
+                <button
+                  class={"tide-live" + (m.deadline > 0 ? " on" : "")}
+                  aria-pressed={m.deadline > 0}
+                  onClick={() =>
+                    void call({ cmd: "live", on: !(m.deadline > 0) })
+                  }
+                >
+                  {m.deadline > 0 ? "实时中" : "实时"}
+                </button>
+              )
+            }
+            footer={
+              !m.finished &&
+              (ending ? (
+                <div class="tide-end-confirm">
+                  <button
+                    class="tide-chip danger"
+                    onClick={() => void call({ cmd: "abandon" })}
+                  >
+                    确定结束
+                  </button>
+                  <button class="tide-chip" onClick={() => setEnding(false)}>
+                    继续下
+                  </button>
+                </div>
+              ) : (
+                <button class="tide-end" onClick={() => setEnding(true)}>
+                  结束这局
+                </button>
+              ))
+            }
+          />
           {m.finished && (
-            <div class="tide-result">
+            <div class="tide-result" role="status">
               <b>
                 {m.ended
                   ? "这局结束了"
@@ -130,57 +175,20 @@ export function TideTable(p: {
                       ? "你赢了"
                       : partner + " 赢了"}
               </b>
-              <span>
-                {m.scores[me]} : {m.scores[other]}
+              <span class="tide-result-score">
+                <em>你</em> {m.scores[me]} : {m.scores[other]}{" "}
+                <em>{partner}</em>
               </span>
-              <button class="primary" onClick={() => void call({ cmd: "new" })}>
+              <button class="tide-go" onClick={() => void call({ cmd: "new" })}>
                 再来一局
               </button>
             </div>
           )}
-          <TideBoard
-            d={m}
-            seat={me}
-            profiles={p.profiles}
-            now={p.now}
-            disabled={m.finished}
-            send={(cmd, payload) => call({ cmd, ...payload })}
-            runKey={m.id}
-            extra={
-              !m.finished &&
-              (m.together || m.deadline > 0) && (
-                <button
-                  class={"tide-live" + (m.deadline > 0 ? " on" : "")}
-                  onClick={() =>
-                    void call({ cmd: "live", on: !(m.deadline > 0) })
-                  }
-                >
-                  {m.deadline > 0 ? "实时中" : "实时"}
-                </button>
-              )
-            }
-          />
-          {!m.finished &&
-            (ending ? (
-              <div class="tide-actions">
-                <button
-                  class="secondary"
-                  onClick={() => void call({ cmd: "abandon" })}
-                >
-                  确定结束
-                </button>
-                <button class="text-button" onClick={() => setEnding(false)}>
-                  继续下
-                </button>
-              </div>
-            ) : (
-              <button
-                class="text-button tide-end"
-                onClick={() => setEnding(true)}
-              >
-                结束这局
-              </button>
-            ))}
+          {error && (
+            <p class="tide-toast" role="alert">
+              {error}
+            </p>
+          )}
         </div>
       )}
     </>

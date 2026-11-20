@@ -1,110 +1,332 @@
+/* 潮汐棋：和半途岛同一套视觉语言（深棕描边 3px、实色底投影、奶油纸面、站酷快乐体）。
+ * 层次：海（背景）→ 海湾棋盘（地形 → 水 → 棋子）→ 抬头信息 / 侧栏 → 结算与提示。
+ * 所有类名和动画都以 tide- 开头，不影响站内其他页面。 */
+.tide-stage,
+.tide-overlay,
+.tide-entry {
+  --ink: #3a2618;
+  --paper: #fff8e1;
+  --card: #fffdf6;
+  --gold: #ffd23f;
+  --sea-top: #7fd0f5;
+  --sea: #4fb3e8;
+  --sea-deep: #2f93cf;
+}
 .tide-stage {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-width: 460px;
+  gap: 10px;
+  width: 100%;
+  max-width: 480px;
   margin: 0 auto;
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  padding: 10px 10px 14px;
+  border: 3px solid var(--ink);
+  border-radius: 26px;
+  color: var(--ink);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cpath d='M8 30q10-8 20 0t20 0M68 50q10-8 20 0t20 0M70 12q8-6 16 0' fill='none' stroke='%23ffffff' stroke-opacity='.25' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"),
+    radial-gradient(
+      ellipse at 50% 40%,
+      var(--sea-top),
+      var(--sea) 55%,
+      var(--sea-deep)
+    );
+  box-shadow: 0 6px 0 rgba(58, 38, 24, 0.3);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
-.tide-top {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 8px;
+.tide-stage button {
+  font: inherit;
+  color: inherit;
+}
+.tide-stage :focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+/* ---------- 抬头信息 ---------- */
+.tide-hud {
+  display: flex;
   align-items: center;
+  gap: 8px;
 }
-.tide-player {
+.tide-round {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: var(--card);
+  box-shadow: 0 4px 0 rgba(58, 38, 24, 0.45);
+  cursor: pointer;
+  transition:
+    transform 0.12s,
+    box-shadow 0.12s;
+}
+.tide-round svg {
+  width: 22px;
+  height: 22px;
+}
+.tide-round:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(58, 38, 24, 0.45);
+}
+.tide-scoreboard {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, auto) auto minmax(0, auto);
+  justify-content: center;
+  gap: 10px;
+  align-items: center;
+  height: 52px;
+  padding: 0 8px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: 0 4px 0 rgba(58, 38, 24, 0.45);
+}
+.tide-side {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
   min-width: 0;
-  padding: 4px 10px 4px 4px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.75);
-  box-shadow: 0 2px 0 rgba(58, 38, 24, 0.12);
 }
-.tide-player span {
-  font-weight: 700;
+.tide-side:not(.me) {
+  flex-direction: row-reverse;
+}
+.tide-avatar {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 2.5px solid var(--player);
+  border-radius: 50%;
+  background: #fff;
+  overflow: visible;
+}
+.tide-avatar svg {
+  width: 40px !important;
+  height: 40px !important;
+  margin-top: 4px;
+}
+.tide-status {
+  position: absolute;
+  right: -6px;
+  bottom: -4px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: #efe4cf;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+}
+.tide-status.done {
+  background: #8fd36b;
+}
+.tide-name {
+  min-width: 0;
   overflow: hidden;
+  font-size: 13px;
+  font-weight: 800;
   text-overflow: ellipsis;
   white-space: nowrap;
-  min-width: 0;
 }
-.tide-player b {
-  margin-left: auto;
+.tide-score {
   font-family: var(--display);
-  font-size: 22px;
-  color: var(--ink);
-}
-.tide-ready {
-  font-style: normal;
-  font-size: 12px;
-  color: var(--ink-3);
-}
-.tide-ready.on {
-  color: #2f8f4e;
-}
-.tide-clock {
-  display: grid;
-  justify-items: center;
-  line-height: 1.1;
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
 }
-.tide-clock b {
-  font-size: 13px;
-  color: var(--ink-2);
+.tide-score.pop {
+  animation: tide-pop 0.5s cubic-bezier(0.3, 1.8, 0.5, 1);
 }
-.tide-clock span {
+.tide-gain {
+  position: absolute;
+  top: -14px;
+  right: 0;
+  padding: 0 6px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--gold);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+  animation: tide-rise 1.6s ease-out forwards;
+}
+.tide-side:not(.me) .tide-gain {
+  right: auto;
+  left: 0;
+}
+.tide-vs {
+  padding: 0 4px;
   font-family: var(--display);
   font-size: 22px;
+  color: #9a7d63;
 }
-.tide-clock .urgent {
-  color: #e8436d;
-  animation: tide-pulse 0.8s ease-in-out infinite;
-}
-
-.tide-table {
+.tide-turn {
+  flex: none;
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 3px;
-  height: 34px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  justify-items: center;
+  gap: 2px;
+  min-width: 50px;
+  padding: 4px 8px;
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: 0 4px 0 rgba(58, 38, 24, 0.45);
 }
-.tide-table li {
+.tide-turn > b {
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.tide-turn small {
+  font-size: 12px;
+  color: #9a7d63;
+}
+.tide-clock {
+  --left: 1;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: conic-gradient(var(--ink) calc(var(--left) * 360deg), #efe4cf 0);
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
   position: relative;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.55);
-  overflow: hidden;
 }
-.tide-table i {
+.tide-clock::before {
+  content: "";
   position: absolute;
-  inset: auto 0 0;
-  background: linear-gradient(#7fd4f5, #3a9ad9);
-  transition: height 0.4s;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--card);
 }
-.tide-table .past {
-  opacity: 0.35;
+.tide-clock {
+  isolation: isolate;
 }
-.tide-table .now {
-  outline: 2.5px solid var(--ink);
-  outline-offset: 1px;
+.tide-clock::before {
+  z-index: -1;
+}
+.tide-clock.urgent {
+  color: #c23e6a;
+  animation: tide-blink 0.8s ease-in-out infinite;
+}
+.tide-live {
+  padding: 1px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #efe4cf;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.tide-live.on {
+  background: #e8436d;
+  color: #fff;
 }
 
-.tide-board {
-  /* 让整盘棋连同上下的信息和手牌放进一屏 */
-  width: min(100%, calc((100dvh - 400px) * 6 / 7));
-  min-width: 240px;
-  margin: 0 auto;
+/* ---------- 潮汐曲线 ---------- */
+.tide-chart {
+  position: relative;
+  height: 46px;
+  margin-top: 6px;
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  background: var(--card);
+}
+.tide-chart svg {
+  border-radius: 13px;
+}
+.tide-chart svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.tide-chart-water {
+  fill: #9bddf7;
+}
+.tide-chart-line {
+  fill: none;
+  stroke: var(--sea-deep);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.tide-chart-past {
+  fill: rgba(239, 228, 207, 0.75);
+}
+.tide-chart-label {
+  position: absolute;
+  top: -11px;
+  right: 12px;
+  z-index: 2;
+  padding: 0 8px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+.tide-chart-now {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  transform: translate(-50%, -50%);
+  border: 2.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--gold);
+  font-family: var(--display);
+  font-size: 15px;
+  transition:
+    left 0.5s,
+    top 0.5s;
+}
+
+/* ---------- 海湾棋盘 ---------- */
+.tide-main {
+  display: grid;
+  gap: 10px;
+}
+.tide-bay-wrap {
+  display: grid;
+  gap: 8px;
+}
+.tide-bay {
   display: grid;
   grid-template-columns: repeat(var(--cols), 1fr);
   gap: 3px;
-  padding: 6px;
-  border-radius: 18px;
+  width: min(100%, calc((100dvh - 420px) * 6 / 7));
+  min-width: 250px;
+  margin: 0 auto;
+  padding: 5px;
+  border: 3px solid var(--ink);
+  border-radius: 20px;
   background: #c79a62;
-  box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.35),
-    0 4px 0 #8a5a31;
+  box-shadow: 0 5px 0 rgba(58, 38, 24, 0.4);
 }
 .tide-cell {
   position: relative;
@@ -113,199 +335,592 @@
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: 9px;
-  background: #f3dfb4;
-  transition:
-    background 0.5s,
-    transform 0.15s;
+  border-radius: 10px;
+  overflow: visible;
+  transition: transform 0.15s;
 }
-.tide-cell.wet {
-  background: linear-gradient(160deg, #a9e3fb, #5ab4e6);
+/* 地形 */
+.tide-cell.mine {
+  background:
+    radial-gradient(
+        circle at 30% 30%,
+        rgba(255, 255, 255, 0.4) 0 2px,
+        transparent 3px
+      )
+      0 0 / 12px 12px,
+    #f3d9a4;
 }
-.tide-cell.flat.dry {
-  background: #e6cf9c;
+.tide-cell.theirs {
+  background:
+    radial-gradient(
+        circle at 30% 30%,
+        rgba(255, 255, 255, 0.3) 0 2px,
+        transparent 3px
+      )
+      0 0 / 12px 12px,
+    #e6cc96;
 }
-.tide-cell.flat::before {
+.tide-cell.flat {
+  background: repeating-linear-gradient(170deg, #d9bd86 0 5px, #ccae76 5px 8px);
+}
+/* 水：盖在地形上面 */
+.tide-cell::before {
   content: "";
   position: absolute;
-  inset: auto 6px 5px;
-  height: 2px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.6);
+  inset: 0;
+  border-radius: inherit;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='12'%3E%3Cpath d='M2 8q5-5 10 0t10 0' fill='none' stroke='%23ffffff' stroke-opacity='.55' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")
+      0 0 / 24px 12px,
+    linear-gradient(
+      170deg,
+      rgba(127, 208, 245, 0.92),
+      rgba(63, 160, 220, 0.92)
+    );
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.tide-cell.wet::before {
+  opacity: 1;
+}
+.tide-cell > * {
+  position: relative;
+  z-index: 1;
+}
+/* 选牌后：不能点的格子压暗，能点的保持明亮 */
+.tide-bay.choosing .tide-cell:not(.option):not(.picked) {
+  filter: brightness(0.72) saturate(0.7);
+  transition: filter 0.2s;
+}
+/* 可点 */
+.tide-cell.option {
+  cursor: pointer;
+  box-shadow: inset 0 0 0 3px #fff;
+  animation: tide-breathe 1.6s ease-in-out infinite;
+}
+@media (hover: hover) {
+  .tide-cell.option:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 0 0 3px #fff,
+      0 3px 0 rgba(58, 38, 24, 0.35);
+  }
+}
+.tide-cell.option:active {
+  transform: scale(0.92);
 }
 .tide-cell:disabled {
   cursor: default;
   opacity: 1;
 }
-.tide-cell.option {
-  box-shadow: inset 0 0 0 3px #fff;
-  cursor: pointer;
-  animation: tide-breathe 1.6s ease-in-out infinite;
-}
-.tide-cell.option:active {
-  transform: scale(0.94);
-}
-.tide-cell.mine {
-  box-shadow: inset 0 0 0 3.5px var(--ink);
+.tide-cell.picked {
+  box-shadow:
+    inset 0 0 0 3.5px var(--ink),
+    0 0 0 3px var(--gold);
   animation: none;
+  z-index: 2;
 }
-.tide-cell.mine-last {
-  box-shadow: inset 0 0 0 3px rgba(58, 38, 24, 0.55);
+.tide-cell.last-mine {
+  box-shadow: inset 0 0 0 3px var(--me);
 }
-.tide-cell.theirs-last {
-  box-shadow: inset 0 0 0 3px #e8436d;
+.tide-cell.last-theirs {
+  box-shadow: inset 0 0 0 3px var(--them);
 }
 .tide-cell.caught::after {
   content: "";
   position: absolute;
-  inset: 22%;
-  border-radius: 50%;
-  border: 3px dashed #e8436d;
-  animation: tide-pop 0.6s ease-out both;
+  inset: 18%;
+  z-index: 2;
+  background:
+    linear-gradient(45deg, transparent 44%, #e8436d 44% 56%, transparent 56%),
+    linear-gradient(-45deg, transparent 44%, #e8436d 44% 56%, transparent 56%);
+  animation: tide-in 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
-.tide-owner {
-  width: 86%;
-  height: 86%;
+/* 棋子 */
+.tide-token {
   display: grid;
   place-items: center;
+  width: 88%;
+  height: 88%;
+  border: 2.5px solid var(--ink);
   border-radius: 50%;
-  background: color-mix(in srgb, var(--owner) 28%, #fff);
-  box-shadow: 0 0 0 2.5px var(--owner);
-  animation: tide-pop 0.35s ease-out both;
-}
-.tide-owner.me {
+  background: var(--card);
   box-shadow:
-    0 0 0 2.5px var(--owner),
-    0 3px 0 rgba(58, 38, 24, 0.25);
+    inset 0 0 0 3px var(--owner),
+    0 3px 0 rgba(58, 38, 24, 0.35);
+  animation: tide-in 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
-.tide-piece {
-  width: 74%;
-  height: 74%;
+.tide-token:not(.active) {
+  background: #ece3d2;
+}
+.tide-token .piece-art {
+  width: 82%;
+  height: 82%;
 }
 .tide-ghost {
-  width: 80%;
-  height: 80%;
   display: grid;
   place-items: center;
+  width: 80%;
+  height: 80%;
   opacity: 0.55;
 }
-
-.tide-reveal {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin: 0;
-  font-size: 14px;
-  color: var(--ink-2);
+.tide-ghost .piece-art {
+  width: 100%;
+  height: 100%;
 }
-.tide-reveal .me {
-  color: var(--ink);
-}
-.tide-reveal em {
+.tide-plus {
+  position: absolute !important;
+  top: -6px;
+  right: -4px;
+  z-index: 3 !important;
+  padding: 0 4px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--gold);
+  font-size: 10px;
   font-style: normal;
-  color: #e8436d;
+  font-weight: 900;
+  line-height: 1.3;
+  pointer-events: none;
+  animation: tide-rise 1.4s ease-out 0.2s both;
 }
-.tide-reveal b {
-  color: #2f8f4e;
+
+/* ---------- 侧栏：揭晓、手牌、出牌 ---------- */
+.tide-panel {
+  display: grid;
+  gap: 10px;
+  align-content: start;
 }
-.tide-effect {
+.tide-reveal {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  padding: 12px 8px 6px;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  background: var(--paper);
+  animation: tide-in 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.tide-reveal h4 {
+  position: absolute;
+  top: -12px;
+  left: 14px;
   margin: 0;
-  text-align: center;
+  padding: 0 10px;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  line-height: 1.5;
+  font-family: var(--display);
   font-size: 14px;
-  color: var(--ink-2);
+  font-weight: 400;
+  color: #6b4f3a;
+}
+.tide-reveal-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.tide-mini {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 3px;
+  border: 2.5px solid var(--player);
+  border-radius: 14px;
+  background: var(--card);
+}
+.tide-mini-card {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 42px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+}
+.tide-mini-card svg {
+  width: 28px;
+  height: 28px;
+}
+.tide-mini-card .card-back {
+  width: 100%;
+  height: 100%;
+}
+.tide-mini-text {
+  display: grid;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.3;
+}
+.tide-mini-text b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tide-mini-text em {
+  font-style: normal;
+  font-weight: 800;
+  color: #c23e6a;
+}
+.tide-mini strong {
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 400;
+  color: #2f8f4e;
 }
 
 .tide-hand {
   position: relative;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  gap: 7px;
+  padding-right: 4px;
 }
 .tide-card {
   display: grid;
   justify-items: center;
-  gap: 0;
-  padding: 6px 4px 5px;
-  border: 0;
+  align-content: start;
+  gap: 1px;
+  min-height: 98px;
+  padding: 6px 3px 6px;
+  border: 3px solid var(--ink);
   border-radius: 14px;
-  background: #fffaf0;
-  box-shadow:
-    0 0 0 2.5px #d8b680,
-    0 4px 0 #c99a52;
-  font-weight: 800;
-  color: var(--ink);
-  transition: transform 0.18s cubic-bezier(0.3, 1.6, 0.5, 1);
+  background: var(--card);
+  box-shadow: 0 4px 0 #c99a52;
+  cursor: pointer;
+  transition:
+    transform 0.18s cubic-bezier(0.3, 1.6, 0.5, 1),
+    box-shadow 0.18s;
 }
-.tide-card .tide-piece {
-  width: 28px;
-  height: 28px;
+.tide-card .card-art {
+  width: 40px;
+  height: 40px;
+}
+.tide-card b {
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+.tide-card small {
+  font-size: 11px;
+  line-height: 1.25;
+  color: #6b4f3a;
+  text-align: center;
+}
+@media (hover: hover) {
+  .tide-card:hover:not(:disabled) {
+    transform: translateY(-4px);
+  }
+}
+.tide-card:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 2px 0 #c99a52;
 }
 .tide-card.selected {
-  transform: translateY(-8px);
+  transform: translateY(-10px);
+  background: #fff6cf;
   box-shadow:
-    0 0 0 3px var(--ink),
-    0 8px 0 #c99a52;
+    0 0 0 3px var(--gold),
+    0 10px 0 #c99a52;
+}
+.tide-card:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 .tide-deck {
   position: absolute;
-  top: -10px;
-  right: -6px;
-  min-width: 22px;
-  height: 22px;
+  top: -12px;
+  right: -8px;
+  width: 26px;
+  height: 36px;
+  transform: rotate(8deg);
+}
+.tide-deck .card-back {
+  width: 100%;
+  height: 100%;
+}
+.tide-deck b {
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
-  border-radius: 11px;
-  background: var(--ink);
+  font-size: 13px;
+  font-weight: 900;
   color: #fff;
-  font-size: 12px;
-  font-weight: 800;
+  transform: rotate(-8deg);
 }
-.tide-actions {
-  display: flex;
-  gap: 10px;
+
+.tide-go {
+  position: relative;
+  width: 100%;
+  padding: 12px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: linear-gradient(#a6e07f, #6fcb45);
+  box-shadow: 0 5px 0 #3d7a22;
+  font-family: var(--display) !important;
+  font-size: 19px;
+  cursor: pointer;
+  transition:
+    transform 0.1s,
+    box-shadow 0.1s;
+}
+@media (hover: hover) {
+  .tide-go:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 0 #3d7a22;
+  }
+}
+.tide-go:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #3d7a22;
+}
+.tide-go:disabled {
+  border-color: #cdb48e;
+  background: #fbf3e2;
+  box-shadow: 0 4px 0 #e3cfa5;
+  color: #8a6d52 !important;
+  cursor: default;
+  font-size: 16px;
+}
+.tide-go.busy {
+  color: transparent !important;
+}
+.tide-go.busy::after,
+.tide-chip.busy::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  border-top-color: var(--ink);
+  border-radius: 50%;
+  animation: tide-spin 0.7s linear infinite;
+}
+
+.tide-waiting {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  background: var(--paper);
+}
+.tide-played {
+  position: relative;
+  width: 52px;
+  height: 72px;
+}
+.tide-played .card-back {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-6deg);
+}
+.tide-played-face {
+  position: absolute;
+  right: -10px;
+  bottom: -6px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--card);
+}
+.tide-played-face svg {
+  width: 26px;
+  height: 26px;
+}
+.tide-waiting-text {
+  display: grid;
+  gap: 2px;
+}
+.tide-waiting-text b {
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 400;
+}
+.tide-waiting-text span {
+  font-size: 13px;
+  color: #6b4f3a;
+}
+.tide-chip {
+  position: relative;
+  padding: 7px 14px;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: 0 3px 0 rgba(58, 38, 24, 0.4);
+  font-weight: 800;
+  cursor: pointer;
+}
+.tide-chip:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+.tide-chip:disabled {
+  border-color: #cdb48e;
+  box-shadow: none;
+  color: #9a7d63;
+  cursor: default;
+}
+.tide-chip.danger {
+  background: #ffd9df;
+}
+.tide-end {
+  justify-self: center;
+  padding: 4px 10px;
+  border: 0;
+  background: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.tide-end-confirm {
+  display: flex;
   justify-content: center;
+  gap: 10px;
 }
-.tide-actions .wide {
-  flex: 1;
+
+/* ---------- 异步对局：全屏海面 ---------- */
+.tide-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow-y: auto;
+  background: var(--sea-deep);
 }
-.tide-picked {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.tide-overlay .tide-stage {
+  min-height: 100%;
+  max-width: none;
+  padding: max(12px, env(safe-area-inset-top)) 12px
+    max(14px, env(safe-area-inset-bottom));
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.tide-overlay .tide-stage > * {
+  width: 100%;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.tide-overlay .tide-bay {
+  width: min(100%, calc((100dvh - 430px) * 6 / 7));
+}
+.tide-main {
+  grid-template-areas: "chart" "board" "panel";
+}
+.tide-chart {
+  grid-area: chart;
+}
+.tide-bay-wrap {
+  grid-area: board;
+}
+.tide-panel {
+  grid-area: panel;
+}
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  /* 横屏：左边棋盘，右边信息和手牌 */
+  .tide-overlay .tide-stage > * {
+    max-width: 1080px;
+  }
+  .tide-overlay .tide-hud {
+    max-width: 1080px;
+  }
+  .tide-overlay .tide-scoreboard {
+    flex: 0 1 auto;
+    margin: 0 auto;
+    padding: 0 18px;
+  }
+  .tide-overlay .tide-main {
+    grid-template-columns: auto 380px;
+    grid-template-areas: "board chart" "board panel";
+    grid-template-rows: auto 1fr;
+    justify-content: center;
+    align-items: start;
+    gap: 16px 28px;
+  }
+  .tide-overlay .tide-bay {
+    width: calc((100dvh - 120px) * 6 / 7);
+    max-width: 640px;
+  }
+  .tide-overlay .tide-chart {
+    height: 64px;
+  }
+
+  .tide-overlay .tide-card {
+    min-height: 124px;
+  }
+}
+.tide-result {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 70;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: min(320px, calc(100vw - 32px));
+  padding: 22px 20px 18px;
+  transform: translate(-50%, -50%);
+  border: 3px solid var(--ink);
+  border-radius: 28px;
+  background: var(--paper);
+  box-shadow:
+    0 10px 0 rgba(58, 38, 24, 0.35),
+    0 0 0 100vmax rgba(20, 30, 50, 0.35);
+  color: var(--ink);
+  animation: tide-in 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.tide-result b {
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 400;
+}
+.tide-result-score {
+  font-family: var(--display);
+  font-size: 34px;
+  font-variant-numeric: tabular-nums;
+}
+.tide-result-score em {
+  font-family: var(--body);
+  font-size: 13px;
+  font-style: normal;
+  color: #6b4f3a;
+}
+.tide-toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  z-index: 80;
+  margin: 0;
+  padding: 9px 18px;
+  transform: translateX(-50%);
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: 0 4px 0 rgba(58, 38, 24, 0.35);
+  color: var(--ink);
   font-weight: 800;
-}
-.tide-picked .tide-piece {
-  width: 30px;
-  height: 30px;
+  white-space: nowrap;
 }
 
-@keyframes tide-breathe {
-  50% {
-    box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.35);
-  }
-}
-@keyframes tide-pop {
-  from {
-    transform: scale(0.4);
-    opacity: 0;
-  }
-}
-@keyframes tide-pulse {
-  50% {
-    opacity: 0.4;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .tide-cell.option,
-  .tide-owner,
-  .tide-cell.caught::after,
-  .tide-clock .urgent {
-    animation: none;
-  }
-}
-
-/* 大厅里的棋桌入口 */
+/* ---------- 大厅入口 ---------- */
 .tide-entry {
   display: flex;
   align-items: center;
@@ -313,32 +928,34 @@
   width: 100%;
   margin-bottom: 12px;
   padding: 10px 16px 10px 10px;
-  border: 0;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #bfe9fb, #7fc8ee);
-  box-shadow:
-    0 0 0 3px #2f8fcf,
-    0 5px 0 #23709f;
+  border: 3px solid var(--ink);
+  border-radius: 22px;
+  background: linear-gradient(135deg, #d6f1fd, #7fc8ee);
+  box-shadow: 0 5px 0 #23709f;
   color: var(--ink);
   text-align: left;
+  cursor: pointer;
   transition: transform 0.15s;
 }
 .tide-entry:active {
   transform: translateY(3px);
 }
 .tide-entry.yours {
-  box-shadow:
-    0 0 0 3px #ffb21e,
-    0 5px 0 #c98410;
+  background: linear-gradient(135deg, #fff2c2, #ffd23f);
+  box-shadow: 0 5px 0 #c98410;
 }
 .tide-entry-icon {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.7);
-  font-size: 28px;
+  width: 52px;
+  height: 52px;
+  border: 2.5px solid var(--ink);
+  border-radius: 16px;
+  background: #fffdf6;
+}
+.tide-entry-icon svg {
+  width: 44px;
+  height: 44px;
 }
 .tide-entry-text {
   display: grid;
@@ -348,13 +965,14 @@
 .tide-entry-text b {
   font-family: var(--display);
   font-size: 20px;
+  font-weight: 400;
 }
 .tide-entry-text small {
   font-size: 14px;
-  color: var(--ink-2);
+  color: #6b4f3a;
 }
 .tide-entry.yours small {
-  color: #a35c00;
+  color: #8a4b00;
   font-weight: 800;
 }
 .tide-entry-score {
@@ -363,61 +981,112 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* 异步对局的棋盘浮层 */
-.tide-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  overflow-y: auto;
-  padding: max(10px, env(safe-area-inset-top)) 14px 16px;
-  background: linear-gradient(#9fd8f7, #d8f1fc 40%, #fff8e1);
+@keyframes tide-in {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
 }
-.tide-overlay-bar {
+@keyframes tide-pop {
+  40% {
+    scale: 1.35;
+  }
+}
+@keyframes tide-rise {
+  0% {
+    opacity: 0;
+    translate: 0 6px;
+  }
+  15%,
+  70% {
+    opacity: 1;
+    translate: 0 -4px;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 -14px;
+  }
+}
+@keyframes tide-breathe {
+  50% {
+    box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.35);
+  }
+}
+@keyframes tide-blink {
+  50% {
+    opacity: 0.45;
+  }
+}
+@keyframes tide-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tide-stage *,
+  .tide-stage *::before,
+  .tide-stage *::after,
+  .tide-result {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 房间里的实时对局：上有房间标题、下有表情栏，棋盘按剩余高度算；结算浮在棋盘底部，3 秒后淡出 */
+.tide-stage.compact .tide-bay {
+  width: min(100%, calc((100dvh - 560px) * 6 / 7));
+  min-width: 228px;
+}
+.tide-stage.compact .tide-chart {
+  height: 38px;
+}
+.tide-stage.compact .tide-bay-wrap {
+  position: relative;
+}
+.tide-stage.compact .tide-reveal {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 8px;
+  z-index: 5;
+  box-shadow: 0 6px 0 rgba(58, 38, 24, 0.35);
+  pointer-events: none;
+  animation:
+    tide-in 0.35s cubic-bezier(0.3, 1.4, 0.5, 1),
+    tide-fade 0.4s ease-in 3s forwards;
+}
+.tide-stage.compact .tide-card {
+  min-height: 88px;
+}
+.tide-stage.compact .tide-card .card-art {
+  width: 34px;
+  height: 34px;
+}
+@keyframes tide-fade {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+.tide-stage.compact .tide-turn {
   display: flex;
   align-items: center;
-  gap: 10px;
-  max-width: 460px;
-  margin: 0 auto 6px;
+  gap: 6px;
+  min-height: 52px;
 }
-.tide-error {
-  font-size: 13px;
-  color: #c23e6a;
+.tide-stage.compact .tide-card small {
+  display: none;
 }
-.tide-overlay .tide-board {
-  width: min(100%, calc((100dvh - 330px) * 6 / 7));
+.tide-stage.compact .tide-card {
+  min-height: 0;
+  padding-bottom: 8px;
 }
-.tide-live {
-  margin-top: 2px;
-  padding: 2px 10px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.8);
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--ink-2);
+.tide-stage.compact .tide-go {
+  padding: 10px;
 }
-.tide-live.on {
-  background: #e8436d;
-  color: #fff;
-}
-.tide-result {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  max-width: 460px;
-  margin: 0 auto 8px;
-}
-.tide-result b {
-  font-family: var(--display);
-  font-size: 24px;
-}
-.tide-result span {
-  font-size: 20px;
-  font-variant-numeric: tabular-nums;
-}
-.tide-end {
-  display: block;
-  margin: 4px auto 0;
-  font-size: 13px;
+@media (min-width: 900px) {
+  .tide-stage.compact .tide-bay {
+    width: min(100%, calc((100dvh - 470px) * 6 / 7));
+  }
 }
