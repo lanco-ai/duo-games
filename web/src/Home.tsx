@@ -32,6 +32,7 @@ export function Home({ online }: { online: number | null }) {
     [joining, setJoining] = useState(false),
     [deviceLast, setDeviceLast] = useState<string | null>(null),
     [privacy, setPrivacy] = useState(false),
+    [allGames, setAllGames] = useState(location.hash === "#games"),
     [toast, setToast] = useState("");
   const cancelling = useRef(false),
     codeInput = useRef<HTMLInputElement>(null);
@@ -150,6 +151,12 @@ export function Home({ online }: { online: number | null }) {
       setBusy(false);
     }
   }
+  function startCreate(random: boolean) {
+    setWantGame("");
+    setRandomMode(random);
+    setError("");
+    setCreating(true);
+  }
   async function share() {
     const ok = await copyText(location.origin + BASE);
     setToast(ok ? "网址已复制，发给 TA 吧" : "长按地址栏复制网址");
@@ -159,15 +166,6 @@ export function Home({ online }: { online: number | null }) {
     <>
       <section class="home-hero">
         <Scene ground />
-        <header class="home-top">
-          {back ? (
-            <a class="pill-link" href={roomLink(last!)}>
-              <Icon name="home" /> 回到我们的房间
-            </a>
-          ) : (
-            <span class="pill-link quiet">两个人，刚刚好</span>
-          )}
-        </header>
         <div class="home-title">
           <svg class="rainbow" viewBox="0 0 200 110" aria-hidden="true">
             {[
@@ -194,39 +192,24 @@ export function Home({ online }: { online: number | null }) {
             class="rainbow-rider"
           />
           <Logo />
-          <h1 class="ribbon">和 TA 一起玩的小游戏</h1>
+          <h1 class="sr-only">二人世界</h1>
         </div>
         <div class="menu-panel panel">
-          <button
-            class="go big wide hero-button"
-            onClick={() => {
-              setWantGame("");
-              setRandomMode(false);
-              setError("");
-              setCreating(true);
-            }}
-          >
-            <Icon name="heart" /> 创建房间，邀请 TA
-          </button>
-          <button
-            class="primary big wide"
-            onClick={() => {
-              setWantGame("");
-              setRandomMode(true);
-              setError("");
-              setCreating(true);
-            }}
-          >
-            🎲 随机匹配在线玩家
-          </button>
-          <p
-            class="online-count"
-            role="status"
-            title="按最近活跃的浏览器估算，同一浏览器的多个窗口计为一人"
-          >
-            <span aria-hidden="true">●</span>{" "}
-            {online === null ? "在线人数暂不可用" : `当前在线 ${online} 人`}
-          </p>
+          {back ? (
+            <a
+              class="go big wide hero-button"
+              href={roomLink(last!) + "#island"}
+            >
+              <Icon name="home" /> 回到我们的岛
+            </a>
+          ) : (
+            <button
+              class="go big wide hero-button"
+              onClick={() => startCreate(false)}
+            >
+              <Icon name="heart" /> 创建房间，邀请 TA
+            </button>
+          )}
           <button
             class="primary big wide join-trigger"
             aria-expanded={joining}
@@ -293,14 +276,26 @@ export function Home({ online }: { online: number | null }) {
               </button>
             </form>
           )}
-          <p class="menu-note">不用下载注册 · 发个链接就能一起玩</p>
+          <div class="home-links">
+            {back && (
+              <button class="text-button" onClick={() => startCreate(false)}>
+                新建房间
+              </button>
+            )}
+            <button class="text-button" onClick={() => startCreate(true)}>
+              随机匹配在线玩家
+            </button>
+            <span
+              class="online-count"
+              role="status"
+              title="按最近活跃的浏览器估算，同一浏览器的多个窗口计为一人"
+            >
+              <span aria-hidden="true">●</span>{" "}
+              {online === null ? "在线人数暂不可用" : `当前在线 ${online} 人`}
+            </span>
+          </div>
         </div>
         <nav class="side-buttons" aria-label="快捷入口">
-          <a class="round-button" href="#games">
-            <Icon name="grid" />
-            <span>游戏</span>
-            <b class="badge">{games.length}</b>
-          </a>
           <button class="round-button" onClick={() => setPrivacy(true)}>
             <Icon name="book" />
             <span>说明</span>
@@ -319,38 +314,44 @@ export function Home({ online }: { online: number | null }) {
         </div>
       </section>
       <main class="home-main underground" id="games">
-        <ol class="steps">
-          <li>
-            <b>1</b>创建房间
-          </li>
-          <li>
-            <b>2</b>链接发给 TA
-          </li>
-          <li>
-            <b>3</b>一起挑游戏
-          </li>
-        </ol>
-        <Catalog pick={setSelected} />
-        <section class="moments">
-          <h2 class="wood-sign">什么时候玩？</h2>
-          <div class="moment-grid">
-            <article>
-              <Icon name="video" />
-              <h3>异地视频时</h3>
-              <p>开着微信视频，一人一部手机，像坐在一起。</p>
-            </article>
-            <article>
-              <Icon name="sofa" />
-              <h3>窝在一起时</h3>
-              <p>比各刷各的手机更有意思。</p>
-            </article>
-            <article>
-              <Icon name="clock" />
-              <h3>等餐排队时</h3>
-              <p>一局几分钟，随时可以停。</p>
-            </article>
-          </div>
-        </section>
+        <div class="home-features">
+          <button
+            class="feature feature-island"
+            onClick={() =>
+              back
+                ? location.assign(roomLink(last!) + "#island")
+                : startCreate(false)
+            }
+          >
+            <span class="feature-art" aria-hidden="true">
+              🏝️
+            </span>
+            <b>半途岛</b>
+            <span>一起种地、做东西、寄纸船，把岛养大</span>
+          </button>
+          <button
+            class="feature feature-tide"
+            onClick={() =>
+              back
+                ? location.assign(roomLink(last!) + "#tide")
+                : startCreate(false)
+            }
+          >
+            <span class="feature-art" aria-hidden="true">
+              🌊
+            </span>
+            <b>潮汐棋</b>
+            <span>同时出牌，在涨落的潮水里抢分</span>
+          </button>
+        </div>
+        <button
+          class="more-games"
+          aria-expanded={allGames}
+          onClick={() => setAllGames(!allGames)}
+        >
+          全部小游戏 · {games.length}
+        </button>
+        {allGames && <Catalog pick={setSelected} />}
         <footer>
           <p>不用注册 · 房间只属于你们俩 · 30 天不玩自动清理</p>
           <button class="text-button" onClick={() => setPrivacy(true)}>
@@ -422,7 +423,7 @@ export function Home({ online }: { online: number | null }) {
       {privacy && (
         <Modal title="关于二人世界" close={() => setPrivacy(false)}>
           <p>
-            一个专为两个人做的小游戏合集。从慢慢聊天到并肩闯关，总有一种适合今天的你们。
+            一座两个人一起养的小岛，一盘可以慢慢下的棋，还有一些两个人玩的小游戏。
           </p>
           <h3>只属于你们的空间</h3>
           <p>

@@ -59,11 +59,11 @@ test("copy room number, paste it, and recover the same device after local cache 
     await one.close();
     one = await a.newPage();
     await one.goto("/");
-    await one.getByRole("link", { name: /回到我们的房间/ }).click();
+    await one.getByRole("link", { name: /回到我们的岛/ }).click();
     await expect(one.locator(".couple-names")).toContainText("原来的人");
     await one.evaluate(() => localStorage.clear());
     await one.goto("/");
-    await one.getByRole("link", { name: /回到我们的房间/ }).click();
+    await one.getByRole("link", { name: /回到我们的岛/ }).click();
     await expect(one.locator(".couple-names")).toContainText("原来的人");
     await expect(two.locator(".couple-names")).toContainText("伙伴");
   } finally {
@@ -124,7 +124,7 @@ test("a browser that blocks web storage can still restore through its cookie", a
     await page.getByRole("button", { name: "创建我们的房间 ❤" }).click();
     await expect(page.locator(".couple-names")).toContainText("微信用户");
     await page.goto("/");
-    await page.getByRole("link", { name: /回到我们的房间/ }).click();
+    await page.getByRole("link", { name: /回到我们的岛/ }).click();
     await expect(page.locator(".couple-names")).toContainText("微信用户");
   } finally {
     await context.close();

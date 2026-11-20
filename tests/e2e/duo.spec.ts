@@ -249,8 +249,14 @@ test("desktop and smallest mobile layouts, categories and playable game descript
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: /^和 TA 一起玩的\s*小游戏$/ }),
-  ).toBeVisible();
+    page.getByRole("heading", { name: "二人世界", exact: true }),
+  ).toBeAttached();
+  // 首页主角是半途岛和潮汐棋，小游戏收在一行里
+  await expect(page.locator(".feature")).toHaveCount(2);
+  await expect(page.locator(".game-card")).toHaveCount(0);
+  await page
+    .getByRole("button", { name: `全部小游戏 · ${games.length}` })
+    .click();
   await page.screenshot({
     path: "test-results/home-desktop.png",
     fullPage: true,

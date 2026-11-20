@@ -46,7 +46,7 @@ test("random matching pairs two devices and opens the same room", async ({
       [two, "小熊"],
     ] as const) {
       await page.goto("/");
-      await page.getByRole("button", { name: "🎲 随机匹配在线玩家" }).click();
+      await page.getByRole("button", { name: "随机匹配在线玩家" }).click();
       await page.getByLabel("你的昵称").fill(name);
       await page.getByRole("button", { name: "开始随机匹配 ❤" }).click();
       if (page === one)
@@ -65,12 +65,12 @@ test("random matching pairs two devices and opens the same room", async ({
 
 test("a player can cancel a pending match", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "🎲 随机匹配在线玩家" }).click();
+  await page.getByRole("button", { name: "随机匹配在线玩家" }).click();
   await page.getByLabel("你的昵称").fill("小鹿");
   await page.getByRole("button", { name: "开始随机匹配 ❤" }).click();
   await page.getByRole("button", { name: "取消匹配" }).click();
   await expect(page.getByText("正在寻找一起玩的伙伴…")).toBeHidden();
   await expect(
-    page.getByRole("button", { name: "🎲 随机匹配在线玩家" }),
+    page.getByRole("button", { name: "随机匹配在线玩家" }),
   ).toBeVisible();
 });

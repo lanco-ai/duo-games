@@ -49,7 +49,7 @@ test("matched players can interact in all six new games", async ({
       [two, names[1]],
     ] as const) {
       await page.goto(base);
-      await page.getByRole("button", { name: "🎲 随机匹配在线玩家" }).click();
+      await page.getByRole("button", { name: "随机匹配在线玩家" }).click();
       await page.getByLabel("你的昵称").fill(name);
       await page.getByRole("button", { name: "开始随机匹配 ❤" }).click();
       if (page === one)

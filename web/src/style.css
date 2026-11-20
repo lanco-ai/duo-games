@@ -788,12 +788,6 @@ dialog[open] .sheet {
   flex-direction: column;
   gap: 16px;
 }
-.menu-note {
-  margin: 2px 0 0;
-  text-align: center;
-  color: var(--ink-3);
-  font-size: 13px;
-}
 .code-form {
   display: flex;
   gap: 10px;
@@ -885,69 +879,6 @@ dialog[open] .sheet {
 }
 .home-main > * {
   width: min(100%, 1060px);
-}
-.steps {
-  list-style: none;
-  margin: 0 0 22px;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.steps li {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px 6px 6px;
-  border-radius: 999px;
-  background: #fff8e6;
-  border: 3px solid var(--ink);
-  font-family: var(--display);
-  font-size: 15px;
-  box-shadow: 0 4px 0 #5c3a1c;
-}
-.steps b {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: #ff8a1f;
-  color: #fff;
-  font-weight: 400;
-  border: 2px solid #b85a0c;
-}
-.moments {
-  margin-top: 30px;
-  text-align: center;
-}
-.moment-grid {
-  margin-top: 16px;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-.moment-grid article {
-  padding: 12px 8px 10px;
-  border-radius: 20px;
-  background: #fff8e6;
-  border: 3px solid var(--ink);
-  box-shadow: 0 5px 0 #5c3a1c;
-}
-.moment-grid .icon {
-  width: 34px;
-  height: 34px;
-  color: #ff7a2e;
-}
-.moment-grid h3 {
-  font-size: 15px;
-  margin: 4px 0;
-}
-.moment-grid p {
-  font-size: 12px;
-  margin: 0;
-  color: var(--ink-2);
 }
 .home-main footer {
   margin-top: 26px;
@@ -4022,4 +3953,82 @@ dialog[open] .sheet {
   display: block;
   height: 100%;
   background: linear-gradient(90deg, #ff8fb1, #ffd23f);
+}
+
+/* 首页：两个主角玩法 + 收起来的小游戏 */
+.home-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 14px;
+  margin-top: 4px;
+  font-size: 14px;
+}
+.home-links .text-button {
+  font-size: 14px;
+}
+.home-links .online-count {
+  margin: 0;
+}
+.home-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  max-width: 560px;
+  margin: 0 auto 16px;
+}
+.feature {
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: 4px;
+  padding: 14px;
+  border: 0;
+  border-radius: 22px;
+  color: var(--ink);
+  text-align: left;
+  transition: transform 0.15s;
+}
+.feature:active {
+  transform: translateY(3px);
+}
+.feature-island {
+  background: linear-gradient(160deg, #e2f7d2, #8fd36b);
+  box-shadow:
+    0 0 0 3px #4f9a2e,
+    0 5px 0 #3d7a22;
+}
+.feature-tide {
+  background: linear-gradient(160deg, #d6f1fd, #7fc8ee);
+  box-shadow:
+    0 0 0 3px #2f8fcf,
+    0 5px 0 #23709f;
+}
+.feature-art {
+  font-size: 40px;
+  line-height: 1.1;
+}
+.feature b {
+  font-family: var(--display);
+  font-size: 22px;
+}
+.feature span:last-child {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.more-games {
+  display: block;
+  margin: 0 auto 16px;
+  padding: 10px 22px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 248, 225, 0.9);
+  box-shadow: 0 3px 0 rgba(58, 38, 24, 0.25);
+  font-weight: 800;
+  color: var(--ink);
+}
+.more-games[aria-expanded="true"] {
+  opacity: 0.75;
 }
