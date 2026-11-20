@@ -13,7 +13,8 @@ import pathlib, subprocess, sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SOURCES = [*ROOT.glob("web/src/**/*.ts"), *ROOT.glob("web/src/**/*.tsx"),
            ROOT / "shared/catalog.ts", ROOT / "shared/games/red-thread/levels.ts",
-           ROOT / "shared/games/heartbeat/chart.ts"]
+           ROOT / "shared/games/heartbeat/chart.ts", ROOT / "shared/island/rules.ts",
+           ROOT / "shared/games/tide/rules.ts"]
 EXTRA = "，。！？：；、「」…—·（）《》“”‘’～♥♡★☆✓×＋－"
 text = "".join(p.read_text(encoding="utf-8") for p in SOURCES)
 chars = sorted({c for c in text if "㐀" <= c <= "鿿"} | set(EXTRA))

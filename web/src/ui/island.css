@@ -1,4 +1,1117 @@
-/* 大厅里的入口 */
+/* 半途岛
+ * 层次：海（最底）→ 两岸陆地 → 地块与作物、建筑 → 抬头信息 → 种子气泡/面板 → 飞行物与提示
+ * 统一语言：深棕描边 3px、底部实色投影表示“可按”、奶油纸面板、站酷快乐体做标题和数字。 */
+.isle {
+  --ink: #3a2618;
+  --paper: #fff8e1;
+  --card: #fffdf6;
+  --sand: #f3d9a4;
+  --grass: #7cc46a;
+  --grass-dark: #5fae4c;
+  --sea: #4fb3e8;
+  --gold: #ffd23f;
+  --hud-top: max(12px, env(safe-area-inset-top));
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  color: var(--ink);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cpath d='M8 30q10-8 20 0t20 0M68 50q10-8 20 0t20 0M70 12q8-6 16 0' fill='none' stroke='%23ffffff' stroke-opacity='.28' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse at 50% 45%, #7fd0f5 0%, #4fb3e8 55%, #2f93cf 100%);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.isle button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.isle :focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+/* ---------- 世界：两岸 + 海峡 ---------- */
+.isle .world {
+  position: absolute;
+  inset: calc(var(--hud-top) + 84px) 12px max(16px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-rows: auto clamp(48px, 9vh, 96px) auto;
+  align-content: center;
+  justify-items: center;
+  gap: 6px;
+  max-width: 620px;
+  margin: 0 auto;
+}
+/* 竖屏：自己的岸永远在下面 */
+.isle .world.mine-west > .shore.mine {
+  order: 3;
+}
+.isle .world.mine-west > .strait {
+  order: 2;
+}
+.isle .world.mine-west > .shore.theirs {
+  order: 1;
+}
+@media (min-aspect-ratio: 5/4) and (min-width: 900px) {
+  /* 横屏：按地理摆，西岸在左、东岸在右 */
+  .isle .world {
+    inset: calc(var(--hud-top) + 72px) 28px 28px;
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: auto clamp(110px, 12vw, 200px) auto;
+    justify-content: center;
+    align-items: center;
+    max-width: none;
+  }
+  .isle .world > .strait {
+    align-self: stretch;
+    width: 100%;
+  }
+  .isle .world > .shore.west {
+    order: 1 !important;
+  }
+  .isle .world > .strait {
+    order: 2 !important;
+  }
+  .isle .world > .shore.east {
+    order: 3 !important;
+  }
+}
+
+.isle .shore {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: fit-content;
+  max-width: 100%;
+  min-width: min(100%, 300px);
+  padding: 46px 40px 34px;
+}
+.isle .shore.theirs {
+  min-width: min(100%, 240px);
+  padding: 40px 34px 26px;
+}
+/* 陆地：草地 + 描边 + 沙滩 + 浅水 */
+.isle .shore::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: 3px solid var(--ink);
+  border-radius: 44% 56% 48% 52% / 40% 44% 56% 60%;
+  background:
+    radial-gradient(
+        circle at 20% 30%,
+        rgba(255, 255, 255, 0.18) 0 6px,
+        transparent 7px
+      )
+      0 0 / 46px 40px,
+    radial-gradient(
+        circle at 70% 70%,
+        rgba(40, 90, 30, 0.14) 0 4px,
+        transparent 5px
+      )
+      0 0 / 38px 34px,
+    linear-gradient(170deg, #9ad884, var(--grass) 55%, var(--grass-dark));
+  box-shadow:
+    0 0 0 9px var(--sand),
+    0 0 0 12px rgba(58, 38, 24, 0.85),
+    0 0 0 26px rgba(255, 255, 255, 0.22),
+    0 16px 0 12px rgba(20, 80, 120, 0.22);
+}
+.isle .shore.theirs::before {
+  border-radius: 52% 48% 56% 44% / 46% 52% 48% 54%;
+}
+.isle .shore > * {
+  position: relative;
+  z-index: 1;
+}
+.isle .shore-tag {
+  position: absolute !important;
+  top: -14px;
+  left: 50%;
+  margin: 0;
+  padding: 3px 12px;
+  transform: translateX(-50%);
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 400;
+  white-space: nowrap;
+  box-shadow: 0 3px 0 rgba(58, 38, 24, 0.3);
+}
+.isle .shore.mine .shore-tag {
+  background: var(--gold);
+}
+
+/* ---------- 地块 ---------- */
+.isle .plots {
+  --size: clamp(64px, 21vw, 100px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 12px;
+  max-width: calc(var(--size) * 4 + 36px);
+}
+.isle .shore.theirs .plots {
+  --size: clamp(48px, 14vw, 76px);
+  gap: 10px;
+}
+@media (min-aspect-ratio: 5/4) and (min-width: 900px) {
+  .isle .plots {
+    --size: clamp(96px, min(17vh, 10.5vw), 168px);
+    gap: 24px 20px;
+  }
+  .isle .shore.theirs .plots {
+    --size: clamp(80px, min(14vh, 8.6vw), 140px);
+    gap: 20px 16px;
+  }
+  .isle .shore {
+    padding: 56px 52px 40px;
+  }
+  .isle .building .building-art {
+    width: clamp(96px, 8.5vw, 132px);
+  }
+  .isle .shore-tag {
+    font-size: 16px;
+  }
+}
+.isle .plot {
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+  padding: 0;
+  border: 0;
+  background: none;
+  transition: transform 0.16s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.isle .plot[aria-disabled="true"] {
+  cursor: default !important;
+}
+.isle .soil {
+  position: absolute;
+  inset: 22% 0 0;
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  background: repeating-linear-gradient(
+    175deg,
+    #a3713f 0 7px,
+    #8a5a31 7px 11px
+  );
+  box-shadow:
+    inset 0 -6px 0 rgba(0, 0, 0, 0.18),
+    0 4px 0 rgba(58, 38, 24, 0.35);
+  transition: background 0.4s;
+}
+.isle .plot.wet .soil {
+  background:
+    radial-gradient(
+      ellipse at 30% 30%,
+      rgba(255, 255, 255, 0.28) 0 10%,
+      transparent 11%
+    ),
+    repeating-linear-gradient(175deg, #7a4f2b 0 7px, #5f3c20 7px 11px);
+}
+.isle .plot.ripe.actionable .soil {
+  box-shadow:
+    inset 0 -6px 0 rgba(0, 0, 0, 0.18),
+    0 4px 0 rgba(58, 38, 24, 0.35),
+    0 0 0 4px var(--gold),
+    0 0 18px 4px rgba(255, 210, 63, 0.6);
+}
+.isle .crop {
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  bottom: 14%;
+  height: 104%;
+  pointer-events: none;
+  transform-origin: 50% 100%;
+  animation: isle-crop-in 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.isle .crop svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.isle .plot.ripe .crop {
+  animation:
+    isle-crop-in 0.4s cubic-bezier(0.3, 1.6, 0.5, 1),
+    isle-sway 2.4s ease-in-out 0.4s infinite;
+}
+.isle .timer {
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  z-index: 2;
+  padding: 1px 7px;
+  transform: translateX(-50%);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.4;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.isle .water-badge {
+  position: absolute;
+  top: 6%;
+  right: -10%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 46%;
+  aspect-ratio: 1;
+  border: 2.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--card);
+  box-shadow: 0 3px 0 rgba(58, 38, 24, 0.3);
+  animation: isle-nudge 1.6s ease-in-out infinite;
+}
+.isle .water-badge svg {
+  width: 74%;
+  height: 74%;
+}
+.isle .plus {
+  position: absolute;
+  inset: 22% 0 0;
+  display: grid;
+  place-items: center;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+.isle .plus::before,
+.isle .plus::after {
+  content: "";
+  position: absolute;
+  width: 32%;
+  height: 5px;
+  border-radius: 3px;
+  background: #ffe9c4;
+}
+.isle .plus::after {
+  transform: rotate(90deg);
+}
+@media (hover: hover) {
+  .isle .plot.actionable:hover {
+    transform: translateY(-4px);
+  }
+  .isle .plot.empty.actionable:hover .plus {
+    opacity: 1;
+  }
+}
+.isle .plot.actionable:active {
+  transform: scale(0.94);
+}
+.isle .plot.actionable:focus-visible .plus {
+  opacity: 1;
+}
+.isle .busy::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  border: 3.5px solid rgba(255, 255, 255, 0.85);
+  border-top-color: var(--ink);
+  border-radius: 50%;
+  animation: isle-spin 0.7s linear infinite;
+}
+.isle .shake {
+  animation: isle-shake 0.45s;
+}
+
+/* ---------- 建筑 ---------- */
+.isle .buildings {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  width: 100%;
+  max-width: calc(var(--size, 96px) * 4 + 36px);
+  margin-top: 4px;
+}
+.isle .building {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  transition: transform 0.16s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.isle .building .building-art {
+  width: clamp(64px, 18vw, 92px);
+  height: auto;
+}
+.isle .building span {
+  margin-top: -4px;
+  padding: 1px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  font-family: var(--display);
+  font-size: 13px;
+}
+@media (hover: hover) {
+  .isle .building:hover {
+    transform: translateY(-4px);
+  }
+}
+.isle .building:active {
+  transform: scale(0.95);
+}
+.isle .dock-wrap {
+  position: relative;
+}
+.isle .docked-boat {
+  position: absolute;
+  right: -22px;
+  bottom: 30px;
+  width: 64px;
+  padding: 0;
+  border: 0;
+  background: none;
+  animation: isle-bob 1.4s ease-in-out infinite;
+}
+.isle .docked-boat svg {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 0 6px rgba(255, 210, 63, 0.9));
+}
+.isle .moored {
+  position: absolute !important;
+  right: -18px;
+  bottom: -14px;
+  width: 44px;
+  opacity: 0.9;
+  animation: isle-bob 1.8s ease-in-out infinite;
+}
+.isle .moored svg {
+  width: 100%;
+  height: auto;
+}
+
+/* ---------- 海峡与航行的纸船 ---------- */
+.isle .strait {
+  position: relative;
+}
+.isle .sailing {
+  --t: 0;
+  position: absolute;
+  top: 50%;
+  left: calc(var(--t) * (100% - 64px));
+  display: grid;
+  justify-items: center;
+  width: 64px;
+  transform: translateY(-50%);
+  transition:
+    left 1s linear,
+    top 1s linear;
+  animation: isle-rock 2.6s ease-in-out infinite;
+}
+.isle .sailing svg {
+  width: 100%;
+  height: auto;
+}
+.isle .sailing.to-them svg {
+  transform: scaleX(-1);
+}
+.isle .sailing small {
+  margin-top: -4px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(255, 253, 246, 0.92);
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+@media (min-aspect-ratio: 5/4) and (min-width: 900px) {
+  .isle .sailing {
+    top: calc(var(--t) * (100% - 64px));
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* ---------- 抬头信息 ---------- */
+.isle .hud {
+  position: absolute;
+  top: var(--hud-top);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.isle .hud-left {
+  left: 14px;
+}
+.isle .hud-right {
+  right: 14px;
+}
+.isle .hud-round,
+.isle .level-chip,
+.isle .hud-bag {
+  border: 3px solid var(--ink);
+  background: var(--card);
+  box-shadow: 0 4px 0 rgba(58, 38, 24, 0.45);
+  transition:
+    transform 0.12s,
+    box-shadow 0.12s;
+}
+.isle .hud-round {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+}
+.isle .hud-round svg {
+  width: 24px;
+  height: 24px;
+}
+.isle .level-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 14px 0 4px;
+  border-radius: 999px;
+}
+.isle .shell-badge {
+  width: 54px;
+  height: 54px;
+  margin: -6px 0 -6px -8px;
+}
+.isle .shell-number {
+  font-family: var(--display);
+  font-size: 22px;
+  fill: var(--ink);
+}
+.isle .level-bar {
+  position: relative;
+  width: clamp(84px, 22vw, 140px);
+  height: 20px;
+  overflow: hidden;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: #efe4cf;
+}
+.isle .level-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(#a6e07f, #5fae4c);
+  transition: width 0.6s cubic-bezier(0.3, 1.2, 0.5, 1);
+}
+.isle .level-bar em {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.isle .level-max {
+  font-family: var(--display);
+  font-size: 15px;
+}
+.isle .hud-bag {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  border-radius: 18px;
+}
+.isle .hud-bag svg {
+  width: 42px;
+  height: 42px;
+}
+.isle .hud-bag b {
+  position: absolute;
+  right: -8px;
+  bottom: -8px;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  border: 2.5px solid var(--card);
+  border-radius: 13px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 13px;
+  line-height: 21px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.isle .hud-bag.bump {
+  animation: isle-bump 0.4s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+@media (hover: hover) {
+  .isle .hud-round:hover,
+  .isle .level-chip:hover,
+  .isle .hud-bag:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 rgba(58, 38, 24, 0.45);
+  }
+}
+.isle .hud-round:active,
+.isle .level-chip:active,
+.isle .hud-bag:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(58, 38, 24, 0.45);
+}
+
+/* ---------- 飞进背包 ---------- */
+.isle .flyer {
+  position: fixed;
+  z-index: 80;
+  width: 48px;
+  height: 48px;
+  pointer-events: none;
+  animation: isle-fly 0.72s cubic-bezier(0.5, 0, 0.75, 0.4) forwards;
+}
+.isle .flyer svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 3px 0 rgba(58, 38, 24, 0.3));
+}
+.isle .flyer b {
+  position: absolute;
+  right: -10px;
+  top: -8px;
+  padding: 0 6px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--gold);
+  font-size: 13px;
+}
+
+/* ---------- 种子气泡 ---------- */
+.isle .seed-back {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+}
+.isle .seed-pop {
+  --arrow: 0px;
+  position: fixed;
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  transform: translate(-50%, calc(-100% - 12px));
+  border: 3px solid var(--ink);
+  border-radius: 22px;
+  background: var(--paper);
+  box-shadow: 0 6px 0 rgba(58, 38, 24, 0.35);
+  animation: isle-pop-up 0.2s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.isle .seed-pop.below {
+  transform: translate(-50%, 12px);
+}
+.isle .seed-pop::after {
+  content: "";
+  position: absolute;
+  left: calc(50% + var(--arrow) - 9px);
+  bottom: -11px;
+  width: 16px;
+  height: 16px;
+  transform: rotate(45deg);
+  border: 3px solid var(--ink);
+  border-top: 0;
+  border-left: 0;
+  background: var(--paper);
+}
+.isle .seed-pop.below::after {
+  top: -11px;
+  bottom: auto;
+  transform: rotate(225deg);
+}
+.isle .seed {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  width: 64px;
+  padding: 4px 2px 6px;
+  border: 2.5px solid transparent;
+  border-radius: 16px;
+  background: none;
+  transition: transform 0.12s;
+}
+.isle .seed svg {
+  width: 46px;
+  height: 46px;
+}
+.isle .seed b {
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 400;
+}
+.isle .seed small {
+  font-size: 11px;
+  color: #6b4f3a;
+}
+.isle .seed.special {
+  border-color: var(--gold);
+  background: #fff2c2;
+}
+@media (hover: hover) {
+  .isle .seed:hover:not(:disabled) {
+    transform: translateY(-3px);
+    background: #fff;
+    border-color: var(--ink);
+  }
+}
+.isle .seed:active:not(:disabled) {
+  transform: scale(0.94);
+}
+.isle .seed:disabled {
+  opacity: 0.45;
+  cursor: wait !important;
+}
+@media (max-width: 460px) {
+  .isle .seed-pop {
+    gap: 2px;
+    padding: 6px;
+  }
+  .isle .seed {
+    width: 62px;
+  }
+  .isle .seed svg {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* ---------- 面板 ---------- */
+.isle .sheet-back {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(30, 20, 10, 0.42);
+  animation: isle-fade 0.18s;
+}
+.isle .sheet {
+  width: 100%;
+  max-width: 540px;
+  max-height: 86dvh;
+  overflow-y: auto;
+  padding: 16px 16px max(18px, env(safe-area-inset-bottom));
+  border: 3px solid var(--ink);
+  border-bottom: 0;
+  border-radius: 28px 28px 0 0;
+  background: var(--paper);
+  animation: isle-sheet-up 0.24s cubic-bezier(0.3, 1.2, 0.5, 1);
+}
+@media (min-width: 700px) {
+  .isle .sheet-back {
+    align-items: center;
+  }
+  .isle .sheet {
+    border-bottom: 3px solid var(--ink);
+    border-radius: 28px;
+    box-shadow: 0 10px 0 rgba(58, 38, 24, 0.35);
+    animation: isle-pop-up 0.22s cubic-bezier(0.3, 1.5, 0.5, 1);
+  }
+}
+.isle .sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.isle .sheet-head h3 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 23px;
+  font-weight: 400;
+}
+.isle .sheet-close {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 2.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--card);
+  box-shadow: 0 3px 0 rgba(58, 38, 24, 0.35);
+}
+.isle .sheet-close svg {
+  width: 18px;
+  height: 18px;
+}
+.isle .sheet-close:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+.isle .bag-group h4 {
+  margin: 4px 2px 8px;
+  font-size: 13px;
+  color: #6b4f3a;
+}
+.isle .stickers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.isle .sticker {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  padding: 8px 4px 6px;
+  border: 2.5px solid var(--ink);
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: 0 3px 0 rgba(58, 38, 24, 0.2);
+}
+.isle .sticker svg {
+  width: 46px;
+  height: 46px;
+}
+.isle .sticker small {
+  font-size: 12px;
+  font-weight: 700;
+}
+.isle .sticker b {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  min-width: 24px;
+  padding: 0 6px;
+  border: 2px solid var(--card);
+  border-radius: 12px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+}
+.isle .sticker.slot {
+  height: 86px;
+  border: 2.5px dashed #d8c4a0;
+  background: none;
+  box-shadow: none;
+}
+
+.isle .recipes,
+.isle .build,
+.isle .cargo {
+  display: grid;
+  gap: 8px;
+}
+.isle .recipe {
+  display: grid;
+  grid-template-columns: auto 24px auto 1fr auto;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 2.5px solid var(--ink);
+  border-radius: 18px;
+  background: var(--card);
+}
+.isle .recipe.short {
+  background: #f6eedd;
+  border-color: #cdb48e;
+}
+.isle .recipe-in {
+  display: flex;
+  gap: 4px;
+}
+.isle .need {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  width: 46px;
+}
+.isle .need svg,
+.isle .recipe-out svg {
+  width: 38px;
+  height: 38px;
+}
+.isle .need b {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.isle .need.lack b {
+  color: #c23e6a;
+}
+.isle .need.lack svg {
+  opacity: 0.55;
+}
+.isle .recipe-arrow {
+  justify-self: center;
+  width: 0;
+  height: 0;
+  border-left: 11px solid var(--ink);
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+.isle .recipe-out {
+  display: grid;
+  justify-items: center;
+  min-width: 52px;
+}
+.isle .recipe-out small {
+  font-family: var(--display);
+  font-size: 13px;
+}
+.isle .chip-button,
+.isle .big-action {
+  position: relative;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: linear-gradient(#a6e07f, #6fcb45);
+  box-shadow: 0 4px 0 #3d7a22;
+  font-family: var(--display) !important;
+  white-space: nowrap;
+  transition:
+    transform 0.1s,
+    box-shadow 0.1s;
+}
+.isle .chip-button {
+  grid-column: 5;
+  min-width: 68px;
+  padding: 7px 14px;
+  font-size: 15px;
+}
+.isle .big-action {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 13px;
+  font-size: 19px;
+}
+@media (hover: hover) {
+  .isle .chip-button:hover:not(:disabled),
+  .isle .big-action:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #3d7a22;
+  }
+}
+.isle .chip-button:active:not(:disabled),
+.isle .big-action:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #3d7a22;
+}
+.isle .chip-button:disabled,
+.isle .big-action:disabled {
+  border-color: #cdb48e;
+  background: #efe4cf;
+  box-shadow: none;
+  color: #9a7d63 !important;
+  cursor: not-allowed !important;
+  font-family: var(--body) !important;
+  font-size: 13px;
+}
+.isle .big-action:disabled {
+  font-size: 16px;
+}
+.isle .chip-button.busy,
+.isle .big-action.busy {
+  color: transparent !important;
+  pointer-events: none;
+}
+
+.isle .cargo-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 2.5px solid #d8c4a0;
+  border-radius: 16px;
+  background: var(--card);
+}
+.isle .cargo-row.on {
+  border-color: var(--ink);
+}
+.isle .cargo-row svg {
+  width: 38px;
+  height: 38px;
+}
+.isle .cargo-row > span:first-of-type {
+  font-weight: 800;
+}
+.isle .stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.isle .stepper button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 2.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--card);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+}
+.isle .stepper button:disabled {
+  border-color: #d8c4a0;
+  color: #cdb48e;
+  cursor: not-allowed !important;
+}
+.isle .stepper b {
+  min-width: 20px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.isle .note-field {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  margin: 12px 0 4px;
+  font-weight: 800;
+  font-size: 14px;
+}
+.isle .note-field textarea {
+  padding: 10px 12px 18px;
+  resize: none;
+  border: 2.5px solid var(--ink);
+  border-radius: 14px;
+  background:
+    repeating-linear-gradient(transparent 0 27px, #eadbbd 27px 28px) 0 9px,
+    #fffdf6;
+  font: 16px/28px var(--body);
+  color: var(--ink);
+}
+.isle .note-field small {
+  position: absolute;
+  right: 12px;
+  bottom: 6px;
+  font-size: 11px;
+  font-weight: 400;
+  color: #9a7d63;
+}
+
+.isle .build-row {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 2.5px solid var(--ink);
+  border-radius: 18px;
+  background: var(--card);
+}
+.isle .build-row svg {
+  width: 42px;
+  height: 42px;
+}
+.isle .build-text {
+  display: grid;
+  gap: 3px;
+}
+.isle .build-text b {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 15px;
+}
+.isle .build-bar {
+  position: relative;
+  height: 12px;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #efe4cf;
+}
+.isle .build-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(#a6e07f, #5fae4c);
+  transition: width 0.5s;
+}
+.isle .build-text small {
+  font-size: 12px;
+  color: #6b4f3a;
+  font-variant-numeric: tabular-nums;
+}
+.isle .build-row .chip-button {
+  grid-column: 3;
+}
+
+.isle .letter-paper {
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  border: 2.5px solid var(--ink);
+  border-radius: 6px 20px 6px 20px;
+  background:
+    repeating-linear-gradient(transparent 0 29px, #eadbbd 29px 30px) 0 13px,
+    #fffdf6;
+  font-size: 17px;
+  line-height: 30px;
+  transform: rotate(-1deg);
+}
+
+/* ---------- 升级与提示 ---------- */
+.isle .level-up {
+  position: fixed;
+  left: 50%;
+  top: 30%;
+  z-index: 85;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 18px 28px;
+  transform: translate(-50%, -50%);
+  border: 3px solid var(--ink);
+  border-radius: 26px;
+  background: var(--paper);
+  box-shadow: 0 8px 0 rgba(58, 38, 24, 0.35);
+  animation: isle-level-up 2.6s cubic-bezier(0.3, 1.5, 0.5, 1) forwards;
+}
+.isle .level-up .shell-badge {
+  width: 84px;
+  height: 84px;
+  margin: 0;
+}
+.isle .level-up b {
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 400;
+}
+.isle .level-up span {
+  font-size: 14px;
+  color: #6b4f3a;
+}
+.isle .isle-toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  z-index: 90;
+  margin: 0;
+  padding: 9px 18px;
+  transform: translateX(-50%);
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: 0 4px 0 rgba(58, 38, 24, 0.35);
+  font-weight: 800;
+  white-space: nowrap;
+  animation: isle-toast-in 0.22s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+/* ---------- 大厅入口 ---------- */
 .isle-entry {
   display: flex;
   align-items: center;
@@ -6,13 +1119,11 @@
   width: 100%;
   margin-bottom: 12px;
   padding: 10px 16px 10px 10px;
-  border: 0;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #d8f5c4, #8fd36b);
-  box-shadow:
-    0 0 0 3px #4f9a2e,
-    0 5px 0 #3d7a22;
-  color: var(--ink);
+  border: 3px solid #3a2618;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #e2f7d2, #8fd36b);
+  box-shadow: 0 5px 0 #3d7a22;
+  color: #3a2618;
   text-align: left;
   transition: transform 0.15s;
 }
@@ -20,18 +1131,21 @@
   transform: translateY(3px);
 }
 .isle-entry.alert {
-  box-shadow:
-    0 0 0 3px #ffb21e,
-    0 5px 0 #c98410;
+  background: linear-gradient(135deg, #fff2c2, #ffd23f);
+  box-shadow: 0 5px 0 #c98410;
 }
 .isle-entry-icon {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.7);
-  font-size: 28px;
+  width: 52px;
+  height: 52px;
+  border: 2.5px solid #3a2618;
+  border-radius: 16px;
+  background: #bfe6ff;
+}
+.isle-entry-icon svg {
+  width: 44px;
+  height: 44px;
 }
 .isle-entry-text {
   display: grid;
@@ -41,13 +1155,14 @@
 .isle-entry-text b {
   font-family: var(--display);
   font-size: 20px;
+  font-weight: 400;
 }
 .isle-entry-text small {
   font-size: 14px;
-  color: var(--ink-2);
+  color: #6b4f3a;
 }
 .isle-entry.alert small {
-  color: #a35c00;
+  color: #8a4b00;
   font-weight: 800;
 }
 .isle-entry-level {
@@ -55,423 +1170,108 @@
   font-size: 20px;
 }
 
-/* 岛 */
-.isle {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  display: flex;
-  flex-direction: column;
-  padding: max(10px, env(safe-area-inset-top)) 14px
-    max(12px, env(safe-area-inset-bottom));
-  background: linear-gradient(#bfe6ff, #8fd3ff 55%, #5ab4e6);
-  overflow-y: auto;
+@keyframes isle-crop-in {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
 }
-.isle > * {
-  width: 100%;
-  max-width: 460px;
-  margin-left: auto;
-  margin-right: auto;
+@keyframes isle-sway {
+  50% {
+    transform: rotate(2.5deg) translateY(-2px);
+  }
 }
-.isle-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.isle-level {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 14px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 3px 0 rgba(58, 38, 24, 0.18);
-  color: var(--ink);
-}
-.isle-level b {
-  font-family: var(--display);
-  font-size: 18px;
-}
-.isle-meter {
-  width: 90px;
-  height: 10px;
-  border-radius: 5px;
-  background: #e6dccb;
-  overflow: hidden;
-}
-.isle-meter i {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, #8fd36b, #4f9a2e);
-  transition: width 0.5s;
-}
-
-.isle-shore {
-  padding: 10px;
-  border-radius: 26px;
-  background: linear-gradient(#a6e07f, #6fcb45);
-  box-shadow:
-    inset 0 -10px 0 #c8975c,
-    0 4px 0 rgba(58, 38, 24, 0.2);
-}
-.isle-shore.theirs {
-  margin-top: 10px;
-  opacity: 0.94;
-}
-.isle-shore h3 {
-  margin: 0 4px 8px;
-  font-size: 14px;
-  color: #2f5d18;
-}
-.isle-shore.mine h3 {
-  margin: 8px 4px 2px;
-}
-.isle-plots {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-.isle-shore.theirs .isle-plots {
-  grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
-}
-.isle-plot {
-  position: relative;
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  border-radius: 14px;
-  background: #9b6a3c;
-  box-shadow: inset 0 3px 0 rgba(0, 0, 0, 0.18);
-  color: #fff;
-}
-.isle-plot:disabled {
-  opacity: 1;
-}
-.isle-plot.empty {
-  background: repeating-linear-gradient(0deg, #8b5a31 0 6px, #9b6a3c 6px 12px);
-}
-.isle-plot.ready {
-  box-shadow:
-    inset 0 3px 0 rgba(0, 0, 0, 0.18),
-    0 0 0 3px #ffd23f;
-}
-.isle-plot.thirsty {
-  box-shadow:
-    inset 0 3px 0 rgba(0, 0, 0, 0.18),
-    0 0 0 3px #7fd4f5;
-}
-.isle-crop {
-  font-size: 30px;
-  line-height: 1;
-  transform: scale(var(--grow, 1));
-  transition: transform 0.6s;
-}
-.isle-shore.theirs .isle-crop {
-  font-size: 20px;
-}
-.isle-crop.bob {
-  animation: isle-bob 1.6s ease-in-out infinite;
-}
-.isle-plot small {
-  position: absolute;
-  bottom: 3px;
-  left: 0;
-  right: 0;
-  font-size: 10px;
-  font-weight: 800;
-  text-align: center;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
-}
-.isle-shore.theirs .isle-plot small {
-  display: none;
-}
-.isle-drop {
-  position: absolute;
-  top: 2px;
-  right: 3px;
-  font-size: 12px;
-  font-style: normal;
-}
-.isle-water {
-  position: absolute;
-  inset: auto 2px 2px;
-  border-radius: 6px;
-  background: #2f8fcf;
-  font-size: 10px;
-  font-style: normal;
-  font-weight: 800;
-}
-.isle-plus {
-  font-size: 26px;
-  opacity: 0.7;
-}
-
-.isle-sea {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 64px;
-  margin: 8px auto;
-}
-.isle-boat {
-  display: grid;
-  justify-items: center;
-  padding: 0;
-  border: 0;
-  background: none;
-  font-size: 30px;
-  line-height: 1;
-  color: var(--ink);
-}
-.isle-boat small {
-  font-size: 11px;
-  font-weight: 800;
-}
-.isle-boat.drifting {
-  animation: isle-drift 3s ease-in-out infinite;
-}
-.isle-boat.away {
-  opacity: 0.55;
-  transform: scale(0.8);
-}
-.isle-boat.docked {
-  animation: isle-bob 1.2s ease-in-out infinite;
-}
-.isle-boat.docked small {
-  padding: 1px 8px;
-  border-radius: 8px;
-  background: #ffb21e;
-  color: #fff;
-}
-
-.isle-dock {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: auto !important;
-  padding-top: 12px;
-}
-.isle-dock button {
-  position: relative;
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  padding: 10px 4px;
-  border: 0;
-  border-radius: 18px;
-  background: #fffaf0;
-  box-shadow: 0 4px 0 #c99a52;
-  font-size: 26px;
-  color: var(--ink);
-}
-.isle-dock span {
-  font-size: 14px;
-  font-weight: 800;
-}
-.isle-dock b {
-  position: absolute;
-  top: -6px;
-  right: 8px;
-  min-width: 22px;
-  height: 22px;
-  border-radius: 11px;
-  background: var(--ink);
-  color: #fff;
-  font-size: 12px;
-  line-height: 22px;
-}
-.isle-toast {
-  position: fixed;
-  left: 50%;
-  bottom: 110px;
-  z-index: 62;
-  width: auto !important;
-  margin: 0 !important;
-  padding: 8px 16px;
-  border-radius: 999px;
-  background: rgba(58, 38, 24, 0.88);
-  color: #fff;
-  font-weight: 700;
-  transform: translateX(-50%);
-  white-space: nowrap;
-}
-
-.isle-sheet-back {
-  position: fixed;
-  inset: 0;
-  z-index: 61;
-  display: flex;
-  align-items: flex-end;
-  max-width: none !important;
-  background: rgba(30, 20, 10, 0.35);
-}
-.isle-sheet {
-  width: 100%;
-  max-width: 460px;
-  max-height: 78dvh;
-  margin: 0 auto;
-  padding: 18px 16px max(16px, env(safe-area-inset-bottom));
-  overflow-y: auto;
-  border-radius: 24px 24px 0 0;
-  background: #fff8e1;
-  animation: isle-up 0.22s ease-out;
-}
-.isle-sheet h3 {
-  margin: 0 0 12px;
-  font-family: var(--display);
-  font-size: 20px;
-}
-.isle-list {
-  display: grid;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.isle-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 8px 12px;
-  border: 0;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 2px 0 #e3cfa5;
-  color: var(--ink);
-  text-align: left;
-}
-.isle-row:disabled {
-  opacity: 0.5;
-}
-.isle-row > span:nth-of-type(2),
-.isle-row > span:first-of-type + span {
-  flex: 1;
-  font-weight: 800;
-}
-.isle-row small {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--ink-2);
-}
-.isle-row small em {
-  font-style: normal;
-}
-.isle-row small em.short {
-  color: #c23e6a;
-}
-.isle-row .secondary {
-  padding: 6px 12px;
-  font-size: 14px;
-}
-.isle-emoji {
-  font-size: 26px;
-  line-height: 1;
-}
-.isle-card-icon {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 36px;
-  border-radius: 6px;
-  background: #fffaf0;
-  box-shadow: 0 0 0 2px #d8b680;
-}
-.isle-card-icon svg {
-  width: 24px;
-  height: 24px;
-}
-.isle-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.isle-cell {
-  position: relative;
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  padding: 10px 4px 6px;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 2px 0 #e3cfa5;
-}
-.isle-cell small {
-  font-size: 12px;
-  color: var(--ink-2);
-}
-.isle-cell b {
-  position: absolute;
-  top: 4px;
-  right: 8px;
-  font-size: 13px;
-}
-.isle-stepper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0 !important;
-}
-.isle-stepper button {
-  width: 32px;
-  height: 32px;
-  border: 0;
-  border-radius: 50%;
-  background: #f3dfb4;
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--ink);
-}
-.isle-stepper b {
-  min-width: 18px;
-  text-align: center;
-}
-.isle-note {
-  width: 100%;
-  margin-bottom: 12px;
-  padding: 12px 14px;
-  border: 2px solid #e3cfa5;
-  border-radius: 14px;
-  background: #fff;
-  font: inherit;
-}
-.isle-letter {
-  margin: 0 0 12px;
-  padding: 14px;
-  border-radius: 14px;
-  background: #fff;
-  font-size: 17px;
-  line-height: 1.5;
-}
-
-@keyframes isle-bob {
+@keyframes isle-nudge {
   50% {
     transform: translateY(-4px);
   }
 }
-@keyframes isle-drift {
+@keyframes isle-bob {
   50% {
-    transform: translateX(6px) rotate(-4deg);
+    transform: translateY(-5px) rotate(-3deg);
   }
 }
-@keyframes isle-up {
+@keyframes isle-rock {
+  50% {
+    margin-top: -4px;
+  }
+}
+@keyframes isle-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes isle-shake {
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+@keyframes isle-bump {
+  40% {
+    transform: scale(1.18);
+  }
+}
+@keyframes isle-fly {
+  0% {
+    transform: translate(0, 0) scale(0.6);
+  }
+  25% {
+    transform: translate(calc(var(--dx) * 0.1), -46px) scale(1.15);
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(0.5);
+    opacity: 0.4;
+  }
+}
+@keyframes isle-pop-up {
   from {
-    transform: translateY(40px);
+    opacity: 0;
+    scale: 0.9;
+  }
+}
+@keyframes isle-sheet-up {
+  from {
+    transform: translateY(60px);
     opacity: 0;
   }
 }
+@keyframes isle-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes isle-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 16px);
+  }
+}
+@keyframes isle-level-up {
+  0% {
+    opacity: 0;
+    scale: 0.6;
+  }
+  12%,
+  80% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 0.95;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .isle-crop.bob,
-  .isle-boat.drifting,
-  .isle-boat.docked,
-  .isle-sheet {
-    animation: none;
+  .isle *,
+  .isle *::before,
+  .isle *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
