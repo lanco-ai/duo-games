@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import type { Subscription } from "./push";
 import type { AsyncMatch } from "./tide-async";
+import type { Island } from "../shared/island/rules";
 import type { CustomItem } from "../shared/games/types";
 import { dirname, resolve, join } from "node:path";
 import type {
@@ -68,6 +69,25 @@ export class Store {
       data TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS tide_room ON tide_matches(room_code, created_at);`);
+    this.db.exec(`CREATE TABLE IF NOT EXISTS islands(
+      room_code TEXT PRIMARY KEY REFERENCES rooms(code) ON DELETE CASCADE,
+      version INTEGER NOT NULL,
+      data TEXT NOT NULL
+    );`);
+  }
+  island(code: string): { version: number; island: Island } | null {
+    const row = this.db
+      .prepare("SELECT version, data FROM islands WHERE room_code=?")
+      .get(code) as { version: number; data: string } | undefined;
+    return row ? { version: row.version, island: JSON.parse(row.data) } : null;
+  }
+  saveIsland(code: string, version: number, island: Island) {
+    this.db
+      .prepare(
+        `INSERT INTO islands VALUES(?,?,?)
+      ON CONFLICT(room_code) DO UPDATE SET version=excluded.version, data=excluded.data`,
+      )
+      .run(code, version, JSON.stringify(island));
   }
   tideLatest(code: string): AsyncMatch | null {
     const row = this.db

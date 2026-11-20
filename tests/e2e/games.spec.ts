@@ -1295,3 +1295,81 @@ test("tide-chess async — the table card shows whose turn it is and survives a 
     await b.close();
   }
 });
+test("island — plant, partner waters, harvest after real time, craft and ship a paper boat", async ({
+  browser,
+}) => {
+  test.setTimeout(180000);
+  const advance = async (hours: number) => {
+    for (let ms = hours * 3600000; ms > 0; ms -= 300000)
+      await fetch("http://127.0.0.1:8792/advance", {
+        method: "POST",
+        body: JSON.stringify({ ms: Math.min(ms, 300000) }),
+      });
+  };
+  const a = await browser.newContext({ viewport: { width: 390, height: 844 } }),
+    b = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const one = await a.newPage(),
+    two = await b.newPage(),
+    errors: string[] = [];
+  one.on("pageerror", (e) => errors.push(e.message));
+  two.on("pageerror", (e) => errors.push(e.message));
+  const plant = async (p: Page, i: number, name: string) => {
+    await p.locator(".isle-shore.mine .isle-plot").nth(i).click();
+    await p.locator(".isle-row", { hasText: name }).click();
+    await expect(p.locator(".isle-sheet")).toBeHidden();
+  };
+  try {
+    await one.goto("/");
+    await one.getByRole("button", { name: /创建房间，邀请/ }).click();
+    await one.getByLabel("你的昵称").fill("岛主甲");
+    await one.getByRole("button", { name: "创建我们的房间 ❤" }).click();
+    await expect(one).toHaveURL(/\/r\//);
+    await two.goto(one.url());
+    await two.getByLabel("你的昵称").fill("岛主乙");
+    await two.getByRole("button", { name: "进入房间 ❤" }).click();
+    await one.locator(".isle-entry").click();
+    await expect(one).toHaveURL(/#island$/);
+    await expect(one.locator(".isle-shore.mine .isle-plot")).toHaveCount(3);
+    // 东岸只能种自己的特产
+    await one.locator(".isle-shore.mine .isle-plot").first().click();
+    await expect(one.locator(".isle-row", { hasText: "珊瑚芽" })).toHaveCount(
+      0,
+    );
+    await one.locator(".isle-row", { hasText: "石花" }).click();
+    await plant(one, 1, "月麦");
+    await two.locator(".isle-entry").click();
+    await expect(
+      two.locator(".isle-shore.theirs .isle-plot.thirsty"),
+    ).toHaveCount(2);
+    await two.locator(".isle-shore.theirs .isle-plot.thirsty").first().click();
+    await expect(one.locator(".isle-shore.mine .isle-drop")).toHaveCount(1);
+    await advance(8.1);
+    await expect(one.locator(".isle-shore.mine .isle-plot.ready")).toHaveCount(
+      1,
+      {
+        timeout: 15000,
+      },
+    );
+    await one.locator(".isle-shore.mine .isle-plot.ready").click();
+    await one.getByRole("button", { name: /工坊/ }).click();
+    await one.locator(".isle-row", { hasText: "纸" }).first().click();
+    await expect(one.locator(".isle-toast")).toHaveText("做好了 纸");
+    await one.locator(".isle-sheet-back").click({ position: { x: 10, y: 10 } });
+    await one.getByRole("button", { name: /纸船/ }).click();
+    await one.getByLabel("夹一句话").fill("想你");
+    await one.getByRole("button", { name: "放船" }).click();
+    await expect(two.locator(".isle-boat.drifting")).toHaveCount(1);
+    await advance(1.1);
+    await two
+      .getByRole("button", { name: "打开纸船" })
+      .click({ force: true, timeout: 15000 });
+    await expect(two.locator(".isle-letter")).toHaveText("想你");
+    // 重新打开页面，岛还是原样
+    await one.reload();
+    await expect(one.locator(".isle-shore.mine .isle-crop")).toHaveCount(1);
+    expect(errors).toEqual([]);
+  } finally {
+    await a.close();
+    await b.close();
+  }
+});

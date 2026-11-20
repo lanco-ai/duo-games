@@ -18,6 +18,7 @@ import { Matchmaking } from "./matchmaking";
 import { Presence } from "./presence";
 import { Bucket } from "./ratelimit";
 import { AsyncTides } from "./tide-async";
+import { apply as islandApply, newIsland } from "../shared/island/rules";
 import { loadKeys, Pusher, validSubscription, type PushMessage } from "./push";
 import {
   VERSION,
@@ -477,6 +478,41 @@ export function createApp(options: Options = {}) {
             expiresIn: 600,
             origin: process.env.PUBLIC_ORIGIN || null,
           });
+          return;
+        }
+        if (route[2] === "island" && route.length === 3) {
+          const now = Date.now();
+          let saved = store.island(code);
+          if (!saved) {
+            saved = { version: 0, island: newIsland(now) };
+            store.saveIsland(code, 0, saved.island);
+          }
+          if (req.method === "POST") {
+            const result = islandApply(
+              saved.island,
+              seat,
+              await body(req),
+              now,
+              randomUUID,
+            );
+            saved = { version: saved.version + 1, island: result.island };
+            store.saveIsland(code, saved.version, saved.island);
+            for (const p of room.peers)
+              p?.send({
+                t: "extra",
+                event: { run: "room", kind: "island", at: now, data: {} },
+              });
+            if (result.tell) {
+              const name = room.data.profiles[seat]?.nickname || "TA";
+              void notify(code, (1 - seat) as Seat, {
+                title: "半途岛",
+                body: name + result.tell,
+                url: "r/" + code + "#island",
+                tag: "island-" + code,
+              }).catch(() => {});
+            }
+          } else if (req.method !== "GET") throw new Error("INVALID");
+          json(res, 200, { ...saved, now });
           return;
         }
         if (route[2] === "tide" && route.length === 3) {

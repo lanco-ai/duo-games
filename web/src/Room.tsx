@@ -30,7 +30,6 @@ import {
 } from "./api";
 import { Transport } from "./net/transport";
 import { Catalog, GameInfo } from "./ui/catalog";
-import { TideTable } from "./ui/TideTable";
 import { Couple, Modal, ProfileForm, copyText, unlockSound } from "./ui/common";
 import { Critter, GameIcon, Scene, TetheredPair } from "./art/ui";
 import { Icon } from "./ui/icons";
@@ -48,6 +47,13 @@ const Setup = lazy(() => import("./games/Setup"));
 const ResultDetails = lazy(() => import("./ui/ResultDetails"));
 const Keepsakes = lazy(() => import("./ui/Keepsakes"));
 const Talk = lazy(() => import("./games/Talk"));
+// 岛和棋桌连同样式按需加载，不进首屏
+const IslandEntry = lazy(() =>
+  import("./ui/Island").then((m) => ({ default: m.IslandEntry })),
+);
+const TideTable = lazy(() =>
+  import("./ui/TideTable").then((m) => ({ default: m.TideTable })),
+);
 type PublicRoom = {
   exists: boolean;
   full: boolean;
@@ -821,14 +827,28 @@ export function Room({ code }: { code: string }) {
           </section>
           <div class="lobby-games underground">
             {p1 && token && (
-              <TideTable
-                code={code}
-                token={token}
-                seat={seat}
-                profiles={room.profiles}
-                transport={transport.current}
-                now={now}
-              />
+              <Suspense fallback={null}>
+                <IslandEntry
+                  code={code}
+                  token={token}
+                  seat={seat}
+                  profiles={room.profiles}
+                  transport={transport.current}
+                  now={now}
+                />
+              </Suspense>
+            )}
+            {p1 && token && (
+              <Suspense fallback={null}>
+                <TideTable
+                  code={code}
+                  token={token}
+                  seat={seat}
+                  profiles={room.profiles}
+                  transport={transport.current}
+                  now={now}
+                />
+              </Suspense>
             )}
             <Catalog
               pick={setSelected}

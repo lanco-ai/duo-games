@@ -40,7 +40,7 @@ const OUTCOME: Record<Outcome, string> = {
   discard: "弃牌",
 };
 
-function PieceIcon({ kind, color }: { kind: Card; color?: string }) {
+export function PieceIcon({ kind, color }: { kind: Card; color?: string }) {
   const c = color || "#3a2618";
   return (
     <svg viewBox="0 0 32 32" class={"tide-piece " + kind} aria-hidden="true">
