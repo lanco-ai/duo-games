@@ -122,7 +122,7 @@ export function ProfileForm({
         ))}
       </div>
       <button class="go wide big" disabled={busy || !name.trim()}>
-        {busy ? "请稍等…" : label + " ❤"}
+        {busy ? "请稍等…" : name.trim() ? label + " ❤" : "先写个昵称"}
       </button>
     </form>
   );

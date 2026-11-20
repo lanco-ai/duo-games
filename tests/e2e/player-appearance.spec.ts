@@ -9,9 +9,8 @@ test("selected avatars and colors stay consistent on home and while reconnecting
     two = await b.newPage();
   try {
     await one.goto("/");
-    await expect(
-      one.locator('.hero-couple [data-pair-seat="1"]'),
-    ).toContainText("?");
+    // 新访客没有房间，首页不画两人小像
+    await expect(one.locator(".home-pair")).toHaveCount(0);
     await one.getByRole("button", { name: /创建房间，邀请/ }).click();
     await one.getByRole("button", { name: "狐狸", exact: true }).click();
     await one.getByRole("button", { name: "薰衣草", exact: true }).click();
@@ -41,12 +40,12 @@ test("selected avatars and colors stay consistent on home and while reconnecting
       await page.goto("/");
       await expect
         .poll(() =>
-          page.locator('.hero-couple [data-pair-seat="0"]').innerHTML(),
+          page.locator('.home-pair [data-pair-seat="0"]').innerHTML(),
         )
         .toBe(fox);
       await expect
         .poll(() =>
-          page.locator('.hero-couple [data-pair-seat="1"]').innerHTML(),
+          page.locator('.home-pair [data-pair-seat="1"]').innerHTML(),
         )
         .toBe(penguin);
     }

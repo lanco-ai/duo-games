@@ -107,7 +107,6 @@ img {
   pointer-events: none;
   background: linear-gradient(#55b5ff 0%, #9fd9ff 58%, #dcf3ff 100%);
 }
-.home-hero > .scene,
 .join-page > .scene,
 .status-page > .scene {
   position: absolute;
@@ -718,16 +717,6 @@ dialog[open] .sheet {
 }
 
 /* ---------- home ---------- */
-.home-hero {
-  position: relative;
-  min-height: 100svh;
-  padding: calc(env(safe-area-inset-top) + 12px) 16px
-    calc(max(22vh, 130px) - 7px);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
 .home-top {
   position: relative;
   width: 100%;
@@ -757,37 +746,6 @@ dialog[open] .sheet {
     transform: translateY(-6px) rotate(0.6deg);
   }
 }
-.home-title .ribbon {
-  margin-top: -2px;
-  font-size: 19px;
-}
-.rainbow {
-  position: absolute;
-  right: -34px;
-  top: -10px;
-  width: 54%;
-  opacity: 0.95;
-  transform: rotate(14deg);
-}
-.rainbow-rider {
-  position: absolute;
-  right: 6%;
-  top: -20px;
-  width: 58px;
-  height: 58px;
-  animation: bob 2.8s ease-in-out 3;
-  will-change: transform;
-}
-.menu-panel {
-  position: relative;
-  z-index: 2;
-  width: min(100%, 360px);
-  margin-top: 16px;
-  padding: 22px 22px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
 .code-form {
   display: flex;
   gap: 10px;
@@ -804,21 +762,6 @@ dialog[open] .sheet {
 }
 .code-form button {
   flex: none;
-}
-.side-buttons {
-  position: relative;
-  z-index: 3;
-  margin-top: 18px;
-  display: flex;
-  gap: 18px;
-}
-.hero-couple {
-  position: relative;
-  z-index: 1;
-  margin-top: auto;
-  padding-top: 14px;
-  display: flex;
-  align-items: flex-end;
 }
 .tethered-pair {
   display: block;
@@ -864,33 +807,6 @@ dialog[open] .sheet {
   opacity: 0.6;
   animation: none;
 }
-.home-main.underground {
-  border-top: 0;
-  margin-top: -1px;
-}
-.home-main.underground::before {
-  display: none;
-}
-.home-main {
-  padding: 18px 14px 30px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.home-main > * {
-  width: min(100%, 1060px);
-}
-.home-main footer {
-  margin-top: 26px;
-  text-align: center;
-  color: #ffe9c9;
-  font-size: 13px;
-}
-.home-main footer .text-button {
-  color: #fff3dc;
-  text-decoration-color: rgba(255, 243, 220, 0.5);
-}
-
 /* ---------- catalog ---------- */
 .catalog {
   width: 100%;
@@ -3779,20 +3695,6 @@ dialog[open] .sheet {
   .game-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .home-hero {
-    min-height: max(100vh, 720px);
-  }
-  .side-buttons {
-    position: absolute;
-    right: max(16px, calc(50% - 470px));
-    top: calc(env(safe-area-inset-top) + 120px);
-    flex-direction: column;
-    margin: 0;
-  }
-  .hero-couple {
-    align-self: flex-start;
-    margin-left: max(10px, calc(50% - 420px));
-  }
 }
 @media (min-width: 980px) {
   .game-grid {
@@ -3823,14 +3725,6 @@ dialog[open] .sheet {
   }
   .game-name {
     font-size: 18px;
-  }
-  .side-buttons {
-    gap: 12px;
-  }
-  .side-buttons .icon {
-    width: 24px;
-    height: 24px;
-    padding: 9px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -3956,83 +3850,6 @@ dialog[open] .sheet {
 }
 
 /* 首页：两个主角玩法 + 收起来的小游戏 */
-.home-links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 4px 14px;
-  margin-top: 4px;
-  font-size: 14px;
-}
-.home-links .text-button {
-  font-size: 14px;
-}
-.home-links .online-count {
-  margin: 0;
-}
-.home-features {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  max-width: 560px;
-  margin: 0 auto 16px;
-}
-.feature {
-  display: grid;
-  justify-items: start;
-  align-content: start;
-  gap: 4px;
-  padding: 14px;
-  border: 0;
-  border-radius: 22px;
-  color: var(--ink);
-  text-align: left;
-  transition: transform 0.15s;
-}
-.feature:active {
-  transform: translateY(3px);
-}
-.feature-island {
-  background: linear-gradient(160deg, #e2f7d2, #8fd36b);
-  box-shadow:
-    0 0 0 3px #4f9a2e,
-    0 5px 0 #3d7a22;
-}
-.feature-tide {
-  background: linear-gradient(160deg, #d6f1fd, #7fc8ee);
-  box-shadow:
-    0 0 0 3px #2f8fcf,
-    0 5px 0 #23709f;
-}
-.feature-art {
-  font-size: 40px;
-  line-height: 1.1;
-}
-.feature b {
-  font-family: var(--display);
-  font-size: 22px;
-}
-.feature span:last-child {
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--ink-2);
-}
-.more-games {
-  display: block;
-  margin: 0 auto 16px;
-  padding: 10px 22px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 248, 225, 0.9);
-  box-shadow: 0 3px 0 rgba(58, 38, 24, 0.25);
-  font-weight: 800;
-  color: var(--ink);
-}
-.more-games[aria-expanded="true"] {
-  opacity: 0.75;
-}
-
 /* 大厅：和半途岛、潮汐棋同一套视觉（深棕描边、奶油底、实色投影）。只作用于大厅，不改小游戏里的按钮。 */
 .room-page.lobby .round-small {
   border: 3px solid var(--ink);
@@ -4093,4 +3910,452 @@ dialog[open] .sheet {
     transform: translateY(-2px);
     box-shadow: 0 6px 0 rgba(58, 38, 24, 0.45);
   }
+}
+
+/* ---------- 首页：和岛、潮汐棋同一套视觉（深棕描边、奶油底、实色投影）---------- */
+.home-page {
+  position: relative;
+  min-height: 100svh;
+  overflow-x: hidden;
+  color: var(--ink);
+}
+.home-page > .scene {
+  position: fixed;
+  inset: 0;
+}
+.home-shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 16px;
+  width: min(100%, 1080px);
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + 14px) 16px
+    calc(env(safe-area-inset-bottom) + 24px);
+}
+.home-lead {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  width: min(100%, 400px);
+}
+.home-title {
+  width: min(100%, 340px);
+}
+.logo {
+  position: relative;
+  width: 100%;
+  display: block;
+  font-family: var(--display);
+  filter: drop-shadow(0 6px 8px rgba(40, 60, 120, 0.25));
+  animation: pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.home-panel {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  padding: 18px 18px 12px;
+  border: 3px solid var(--ink);
+  border-radius: 26px;
+  background: #fff8e1;
+  box-shadow: 0 6px 0 rgba(58, 38, 24, 0.35);
+}
+.home-panel.with-pair {
+  margin-top: 46px;
+}
+.home-pair {
+  display: grid;
+  place-items: center;
+  margin: -64px 0 -6px;
+  pointer-events: none;
+}
+.home-go,
+.home-alt {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 56px;
+  padding: 0 20px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  font-family: var(--display);
+  font-size: 21px;
+  color: var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.1s,
+    box-shadow 0.1s;
+}
+.home-go {
+  background: linear-gradient(#a6e07f, #6fcb45);
+  box-shadow: 0 5px 0 #3d7a22;
+}
+.home-alt {
+  background: #fffdf6;
+  box-shadow: 0 5px 0 rgba(58, 38, 24, 0.4);
+}
+@media (hover: hover) {
+  .home-go:hover,
+  .home-alt:hover {
+    transform: translateY(-2px);
+  }
+  .home-go:hover {
+    box-shadow: 0 7px 0 #3d7a22;
+  }
+  .home-alt:hover {
+    box-shadow: 0 7px 0 rgba(58, 38, 24, 0.4);
+  }
+}
+.home-go:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #3d7a22;
+}
+.home-alt:active,
+.home-alt[aria-expanded="true"] {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 rgba(58, 38, 24, 0.4);
+}
+.home-go:focus-visible,
+.home-alt:focus-visible,
+.home-chip:focus-visible,
+.feature:focus-visible,
+.more-games:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+.home-panel .code-form {
+  display: flex;
+  gap: 8px;
+}
+.home-panel
+  .code-form
+  input:not([type="checkbox"]):not([type="range"]):not([type="file"]) {
+  min-width: 0;
+  flex: 1;
+  border-color: var(--ink);
+  text-align: center;
+  letter-spacing: 0.3em;
+  font-family: var(--display);
+  font-size: 20px;
+  text-transform: uppercase;
+}
+.home-panel .code-form input:focus {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 4px rgba(255, 210, 63, 0.6);
+}
+.home-panel .code-form button {
+  flex: none;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  background: #fffdf6;
+  box-shadow: 0 3px 0 rgba(58, 38, 24, 0.4);
+  font-family: var(--display);
+  font-size: 17px;
+  color: var(--ink);
+}
+.home-panel .code-form .go {
+  background: linear-gradient(#a6e07f, #6fcb45);
+  box-shadow: 0 3px 0 #3d7a22;
+}
+.home-panel .code-form button:disabled {
+  border-color: #cdb48e;
+  background: #efe4cf;
+  box-shadow: none;
+  color: #9a7d63;
+  filter: none;
+  opacity: 1;
+}
+.home-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px 14px;
+  font-size: 14px;
+}
+.home-links .text-button {
+  font-size: 14px;
+  color: #6b4f3a;
+}
+.home-links .online-count {
+  margin: 0;
+}
+
+.home-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: min(100%, 400px);
+}
+.feature {
+  position: relative;
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: 4px;
+  padding: 12px 14px 14px;
+  border: 3px solid var(--ink);
+  border-radius: 22px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+.feature-island {
+  background: linear-gradient(160deg, #e2f7d2, #9ad884);
+  box-shadow: 0 5px 0 #3d7a22;
+}
+.feature-tide {
+  background: linear-gradient(160deg, #d6f1fd, #8fd0f2);
+  box-shadow: 0 5px 0 #23709f;
+}
+@media (hover: hover) {
+  .feature:hover {
+    transform: translateY(-3px);
+  }
+}
+.feature:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(58, 38, 24, 0.4);
+}
+.feature-art {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 2.5px solid var(--ink);
+  border-radius: 16px;
+  background: #fffdf6;
+}
+.feature-art svg {
+  width: 46px;
+  height: 46px;
+}
+.feature b {
+  margin-top: 4px;
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 400;
+}
+.feature span:last-child {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #4a3626;
+}
+
+.home-more {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  width: 100%;
+}
+.more-games {
+  padding: 10px 24px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: #fffdf6;
+  box-shadow: 0 4px 0 rgba(58, 38, 24, 0.4);
+  font-family: var(--display);
+  font-size: 17px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.more-games[aria-expanded="true"] {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(58, 38, 24, 0.4);
+}
+.home-more .catalog {
+  padding: 16px 12px;
+  border: 3px solid var(--ink);
+  border-radius: 26px;
+  background: rgba(138, 90, 49, 0.92);
+}
+.home-foot {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  text-align: center;
+  font-size: 12px;
+  color: #fff3dc;
+}
+.home-foot p {
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(58, 38, 24, 0.35);
+}
+.home-foot div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.home-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: #fffdf6;
+  box-shadow: 0 3px 0 rgba(58, 38, 24, 0.4);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink);
+  cursor: pointer;
+}
+.home-chip .icon {
+  width: 16px;
+  height: 16px;
+}
+.home-chip:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+@media (min-width: 900px) {
+  /* 桌面：左边标志和操作，右边两张主角卡片，首屏都看得到 */
+  .home-shell {
+    grid-template-columns: 400px minmax(0, 460px);
+    grid-template-areas: "lead features" "more more" "foot foot";
+    justify-content: center;
+    align-items: center;
+    column-gap: 48px;
+    row-gap: 22px;
+    padding-top: max(40px, calc(50svh - 300px));
+  }
+  .home-lead {
+    grid-area: lead;
+  }
+  .home-features {
+    grid-area: features;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    width: 100%;
+  }
+  .home-more {
+    grid-area: more;
+  }
+  .home-foot {
+    grid-area: foot;
+  }
+  .feature {
+    grid-template-columns: 84px 1fr;
+    grid-template-rows: auto 1fr;
+    column-gap: 16px;
+    align-items: center;
+    padding: 18px 20px;
+  }
+  .feature-art {
+    grid-row: span 2;
+    width: 84px;
+    height: 84px;
+    border-radius: 22px;
+  }
+  .feature-art svg {
+    width: 70px;
+    height: 70px;
+  }
+  .feature b {
+    margin: 0;
+    align-self: end;
+    font-size: 28px;
+  }
+  .feature span:last-child {
+    align-self: start;
+    font-size: 15px;
+  }
+}
+
+/* ---------- 首页和大厅的弹窗：同一套纸面 ---------- */
+:is(.home-page, .room-page.lobby) dialog .sheet {
+  background: #fff8e1;
+  border: 3px solid var(--ink);
+  border-radius: 26px;
+  box-shadow:
+    0 8px 0 rgba(58, 38, 24, 0.35),
+    0 18px 40px rgba(20, 20, 60, 0.3);
+}
+:is(.home-page, .room-page.lobby) dialog .sheet-top {
+  margin-top: -18px;
+}
+:is(.home-page, .room-page.lobby) dialog .ribbon {
+  padding: 4px 18px 6px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: #fffdf6;
+  box-shadow: 0 4px 0 rgba(58, 38, 24, 0.35);
+  color: var(--ink);
+  text-shadow: none;
+  font-size: 20px;
+}
+:is(.home-page, .room-page.lobby) dialog .close-button {
+  border: 3px solid var(--ink);
+  background: #fffdf6;
+  color: var(--ink);
+  box-shadow: 0 3px 0 rgba(58, 38, 24, 0.4);
+  text-shadow: none;
+}
+:is(.home-page, .room-page.lobby) dialog .close-button:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+:is(.home-page, .room-page.lobby)
+  dialog
+  input:not([type="checkbox"]):not([type="range"]):not([type="file"]) {
+  border-color: var(--ink);
+}
+:is(.home-page, .room-page.lobby) dialog input:focus {
+  box-shadow: 0 0 0 4px rgba(255, 210, 63, 0.6);
+}
+:is(.home-page, .room-page.lobby) dialog .go {
+  border: 3px solid var(--ink);
+  background: linear-gradient(#a6e07f, #6fcb45);
+  box-shadow: 0 5px 0 #3d7a22;
+  color: var(--ink);
+}
+:is(.home-page, .room-page.lobby) dialog .go:disabled {
+  border-color: #cdb48e;
+  background: #fbf3e2;
+  box-shadow: 0 4px 0 #e3cfa5;
+  color: #8a6d52;
+  filter: none;
+  opacity: 1;
+}
+:is(.home-page, .room-page.lobby) dialog .option {
+  border-color: #d8c4a0;
+}
+:is(.home-page, .room-page.lobby) dialog .option.selected {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--gold);
+}
+:is(.home-page, .room-page.lobby) dialog .secondary {
+  border: 3px solid var(--ink);
+  background: #fffdf6;
+  box-shadow: 0 4px 0 rgba(58, 38, 24, 0.4);
+  color: var(--ink);
+}
+:is(.home-page, .room-page.lobby) dialog .secondary:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(58, 38, 24, 0.4);
+}
+:is(.home-page, .room-page.lobby) dialog .secondary:disabled {
+  border-color: #cdb48e;
+  background: #efe4cf;
+  box-shadow: none;
+  color: #9a7d63;
+  filter: none;
+  opacity: 1;
 }
