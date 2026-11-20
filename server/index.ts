@@ -18,7 +18,15 @@ import { Matchmaking } from "./matchmaking";
 import { Presence } from "./presence";
 import { Bucket } from "./ratelimit";
 import { AsyncTides } from "./tide-async";
-import { apply as islandApply, newIsland } from "../shared/island/rules";
+import {
+  apply as islandApply,
+  grantReward,
+  newIsland,
+  normalize as normalizeIsland,
+  rewardFor,
+  withdrawCards,
+  type Island,
+} from "../shared/island/rules";
 import { loadKeys, Pusher, validSubscription, type PushMessage } from "./push";
 import {
   VERSION,
@@ -80,6 +88,41 @@ export function createApp(options: Options = {}) {
     }
     return sent;
   }
+  // 半途岛的存档：读出来补齐旧字段；改完版本 +1 并通知房间里的人刷新
+  function loadIsland(code: string, now = Date.now()) {
+    const saved = store.island(code);
+    if (saved)
+      return { version: saved.version, island: normalizeIsland(saved.island) };
+    const fresh = { version: 0, island: newIsland(now) };
+    store.saveIsland(code, 0, fresh.island);
+    return fresh;
+  }
+  function saveIsland(code: string, version: number, island: Island) {
+    store.saveIsland(code, version, island);
+    for (const p of manager.rooms.get(code)?.peers ?? [])
+      p?.send({
+        t: "extra",
+        event: { run: "room", kind: "island", at: Date.now(), data: {} },
+      });
+  }
+  const islandLink = {
+    takeCards(code: string, seat: Seat) {
+      const saved = loadIsland(code);
+      const r = withdrawCards(saved.island, seat);
+      if (r.cards.length) saveIsland(code, saved.version + 1, r.island);
+      return r.cards;
+    },
+    reward(code: string, seat: Seat, won: boolean) {
+      const saved = loadIsland(code);
+      const reward = rewardFor(saved.island, seat, won, Math.random);
+      saveIsland(
+        code,
+        saved.version + 1,
+        grantReward(saved.island, seat, reward),
+      );
+      return reward;
+    },
+  };
   // 异步潮汐棋：变化时通知房间里在线的人刷新，需要时给对方发提醒
   const tides = new AsyncTides(
     store,
@@ -95,6 +138,7 @@ export function createApp(options: Options = {}) {
       const profiles = manager.require(code).data.profiles;
       return [profiles[0]?.nickname || "TA", profiles[1]?.nickname || "TA"];
     },
+    islandLink,
   );
   const tideTimer = setInterval(() => tides.tick(Date.now()), 500);
   tideTimer.unref();
@@ -482,11 +526,7 @@ export function createApp(options: Options = {}) {
         }
         if (route[2] === "island" && route.length === 3) {
           const now = Date.now();
-          let saved = store.island(code);
-          if (!saved) {
-            saved = { version: 0, island: newIsland(now) };
-            store.saveIsland(code, 0, saved.island);
-          }
+          let saved = loadIsland(code, now);
           if (req.method === "POST") {
             const result = islandApply(
               saved.island,
@@ -496,12 +536,7 @@ export function createApp(options: Options = {}) {
               randomUUID,
             );
             saved = { version: saved.version + 1, island: result.island };
-            store.saveIsland(code, saved.version, saved.island);
-            for (const p of room.peers)
-              p?.send({
-                t: "extra",
-                event: { run: "room", kind: "island", at: now, data: {} },
-              });
+            saveIsland(code, saved.version, saved.island);
             if (result.tell) {
               const name = room.data.profiles[seat]?.nickname || "TA";
               void notify(code, (1 - seat) as Seat, {

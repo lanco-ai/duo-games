@@ -14,6 +14,9 @@ import {
   RECIPES,
   SHORE_NAMES,
   upgradeNeeds,
+  unlockAt,
+  DECOR,
+  LANDMARKS,
   type Boat,
   type Crop,
   type Island as IslandState,
@@ -28,6 +31,8 @@ import {
   DockArt,
   DropArt,
   IslandMini,
+  DecorArt,
+  LandmarkArt,
   ItemArt,
   ShellBadge,
   WorkshopArt,
@@ -52,7 +57,7 @@ const stageOf = (p: Plot, now: number): 0 | 1 | 2 => {
 const KINDS: [string, (i: Item) => boolean][] = [
   ["作物", (i) => i in CROPS],
   ["材料", (i) => !(i in CROPS) && !i.startsWith("card-")],
-  ["牌", (i) => i.startsWith("card-")],
+  ["牌 · 下一盘潮汐棋带上", (i) => i.startsWith("card-")],
 ];
 // 服务器只回“操作无效”；按动作说清楚是哪里不行
 const WHY: Partial<Record<IslandAction["cmd"], string>> = {
@@ -300,6 +305,27 @@ export function IslandEntry(p: {
   const progress = (b: Boat) =>
     Math.min(1, Math.max(0, (now - b.sentAt) / (b.arrivesAt - b.sentAt)));
   const mineFirst = me === 1; // 横屏时按地理：西岸在左
+  const decorRow = (seat: Seat) => {
+    const list = s.decor?.[seat] ?? [];
+    return list.length ? (
+      <div
+        class="decor-row"
+        aria-label={
+          "装饰：" +
+          list.map((d) => DECOR.find((x) => x.id === d)?.name).join("、")
+        }
+      >
+        {list.map((d) => (
+          <span class="decor">
+            <DecorArt id={d} />
+          </span>
+        ))}
+      </div>
+    ) : null;
+  };
+  const landmarks = Object.entries(LANDMARKS).filter(
+    ([lv]) => s.level >= Number(lv),
+  );
   const shoreTheirs = (
     <section
       class={"shore theirs " + (other === 1 ? "west" : "east")}
@@ -311,6 +337,7 @@ export function IslandEntry(p: {
       <div class="plots" style={{ "--n": s.plots[other].length }}>
         {s.plots[other].map((x, i) => plot(x, i, false))}
       </div>
+      {decorRow(other)}
       {s.boats
         .filter((b) => b.from === me && b.arrivesAt <= now)
         .map(() => (
@@ -329,6 +356,7 @@ export function IslandEntry(p: {
       <div class="plots" style={{ "--n": s.plots[me].length }}>
         {s.plots[me].map((x, i) => plot(x, i, true))}
       </div>
+      {decorRow(me)}
       <div class="buildings">
         <button
           class="building"
@@ -392,6 +420,20 @@ export function IslandEntry(p: {
           <div class={"world" + (mineFirst ? " mine-west" : "")}>
             {mineFirst ? shoreMine : shoreTheirs}
             <div class="strait" aria-label="海峡">
+              {landmarks.length > 0 && (
+                <div
+                  class="landmarks"
+                  aria-label={
+                    "地标：" + landmarks.map(([, l]) => l.name).join("、")
+                  }
+                >
+                  {landmarks.map(([, l]) => (
+                    <span class="landmark" title={l.name}>
+                      <LandmarkArt id={l.id} />
+                    </span>
+                  ))}
+                </div>
+              )}
               {sailing.map((b) => {
                 const t = progress(b),
                   toMe = b.from === other;
@@ -710,6 +752,11 @@ export function IslandEntry(p: {
                 {panel.kind === "build" &&
                   (s.level < MAX_LEVEL ? (
                     <div class="build">
+                      {unlockAt(s.level + 1) && (
+                        <p class="build-unlock">
+                          升到 Lv {s.level + 1}：{unlockAt(s.level + 1)}
+                        </p>
+                      )}
                       {(Object.keys(needs) as Item[]).map((k) => {
                         const inBox = s.box[k] ?? 0,
                           want = needs[k]! - inBox,

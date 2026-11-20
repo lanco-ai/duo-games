@@ -615,3 +615,173 @@ export function IslandMini() {
     </svg>
   );
 }
+
+/** 赢潮汐棋得到的装饰，摆在自己的岸上 */
+export function DecorArt({ id }: { id: string }) {
+  return (
+    <svg viewBox="0 0 64 64" class="decor-art" aria-hidden="true">
+      <ellipse cx="32" cy="58" rx="24" ry="4" fill="rgba(58,38,24,.2)" />
+      {id === "flowerbed" && (
+        <g>
+          <path d="M10 44h44v12H10z" fill="#B97A3D" {...S} />
+          <path d="M10 44h44" stroke="#D9A066" stroke-width="3" />
+          {[
+            [18, 34, "#FF6F91"],
+            [32, 28, "#FFD23F"],
+            [46, 34, "#9B6BFF"],
+          ].map(([x, y, c]) => (
+            <g>
+              <path
+                d={`M${x} 44V${(y as number) + 4}`}
+                {...S}
+                stroke="#4E9E3F"
+                stroke-width="3"
+              />
+              <circle
+                cx={x as number}
+                cy={y as number}
+                r="6"
+                fill={c as string}
+                {...S}
+                stroke-width="2.4"
+              />
+              <circle cx={x as number} cy={y as number} r="2" fill="#FFF8E1" />
+            </g>
+          ))}
+        </g>
+      )}
+      {id === "bench" && (
+        <g>
+          <path d="M8 30h48v8H8z" fill="#D9A066" {...S} />
+          <path d="M8 42h48v6H8z" fill="#C8975C" {...S} />
+          <path d="M14 48v8M50 48v8M14 38v4M50 38v4" {...S} stroke-width="4" />
+        </g>
+      )}
+      {id === "shells" && (
+        <g>
+          <path d="M14 54c0-10 6-16 12-16s12 6 12 16z" fill="#FFB3C1" {...S} />
+          <path
+            d="M20 54c0-8 3-12 6-14M32 54c0-8-3-12-6-14"
+            stroke={INK}
+            stroke-width="2"
+            fill="none"
+          />
+          <path d="M34 54c1-8 6-12 12-12s10 6 8 12z" fill="#FFE0B2" {...S} />
+          <path
+            d="M44 32c4-6 12-4 12 2s-8 6-12 2z"
+            fill="#BFE6FF"
+            {...S}
+            stroke-width="2.4"
+          />
+        </g>
+      )}
+    </svg>
+  );
+}
+
+/** 7–10 级的地标，立在两岸之间 */
+export function LandmarkArt({ id }: { id: string }) {
+  return (
+    <svg viewBox="0 0 80 96" class="landmark-art" aria-hidden="true">
+      <ellipse cx="40" cy="90" rx="30" ry="5" fill="rgba(20,80,120,.25)" />
+      <path d="M12 88c4-10 14-14 28-14s24 4 28 14z" fill="#F3D9A4" {...S} />
+      {id === "windmill" && (
+        <g>
+          <path d="M30 78l4-40h12l4 40z" fill="#FFF8E1" {...S} />
+          <path d="M34 46h12" {...S} stroke-width="2" />
+          <rect
+            x="36"
+            y="64"
+            width="8"
+            height="12"
+            rx="2"
+            fill="#8A5A31"
+            {...S}
+            stroke-width="2"
+          />
+          <g transform="translate(40 36)">
+            {[0, 90, 180, 270].map((a) => (
+              <path
+                d="M0 0l4-24h6l-6 24z"
+                fill="#FF8A65"
+                {...S}
+                stroke-width="2.4"
+                transform={`rotate(${a})`}
+              />
+            ))}
+            <circle r="4" fill="#FFD23F" {...S} stroke-width="2.4" />
+          </g>
+        </g>
+      )}
+      {id === "swing" && (
+        <g>
+          <path
+            d="M18 78L28 20h24l10 58"
+            fill="none"
+            {...S}
+            stroke-width="5"
+            stroke="#8A5A31"
+          />
+          <path
+            d="M18 78L28 20h24l10 58"
+            fill="none"
+            stroke="#C8975C"
+            stroke-width="2"
+          />
+          <path d="M34 22v34M46 22v34" {...S} stroke-width="2.4" />
+          <path d="M30 56h20v6H30z" fill="#FF6F91" {...S} />
+          <path d="M24 20h32" {...S} stroke-width="5" stroke="#8A5A31" />
+        </g>
+      )}
+      {id === "observatory" && (
+        <g>
+          <path d="M24 78V48h32v30z" fill="#E6DCC8" {...S} />
+          <path d="M20 50c0-14 9-22 20-22s20 8 20 22z" fill="#5A6BE0" {...S} />
+          <path d="M40 28v-4" {...S} />
+          <path
+            d="M44 34l14-10 4 6-14 8z"
+            fill="#B9B3A8"
+            {...S}
+            stroke-width="2.4"
+          />
+          <path
+            d="M28 18l2 4 4 1-4 1-2 4-2-4-4-1 4-1zM58 12l1.5 3 3 1-3 1-1.5 3-1.5-3-3-1 3-1z"
+            fill="#FFD23F"
+          />
+          <rect
+            x="35"
+            y="62"
+            width="10"
+            height="16"
+            rx="2"
+            fill="#8A5A31"
+            {...S}
+            stroke-width="2"
+          />
+        </g>
+      )}
+      {id === "lighthouse" && (
+        <g>
+          <path d="M30 78l4-48h12l4 48z" fill="#FFF8E1" {...S} />
+          <path
+            d="M31.5 60h17M32.7 44h14.6"
+            stroke="#E8436D"
+            stroke-width="7"
+          />
+          <path d="M30 78l4-48h12l4 48z" fill="none" {...S} />
+          <rect
+            x="31"
+            y="18"
+            width="18"
+            height="12"
+            rx="2"
+            fill="#FFD23F"
+            {...S}
+          />
+          <path d="M28 18h24l-12-10z" fill="#E8436D" {...S} />
+          <path d="M49 22l18-6v14z" fill="#FFE27A" opacity=".7" />
+        </g>
+      )}
+    </svg>
+  );
+}

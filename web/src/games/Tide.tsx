@@ -74,6 +74,8 @@ export interface TideBoardProps {
   back?: () => void;
   /** 棋盘下方的附加内容（结束这局） */
   footer?: ComponentChildren;
+  /** 侧栏顶部的一行说明（异步对局开局时：带了几张岛上的牌） */
+  note?: ComponentChildren;
   /** 房间里的实时对局：空间紧，结算浮在棋盘上几秒后淡出 */
   compact?: boolean;
 }
@@ -442,6 +444,7 @@ export function TideBoard(p: TideBoardProps) {
         </div>
 
         <aside class="tide-panel">
+          {p.note && <p class="tide-note">{p.note}</p>}
           {reveal && !p.compact && revealCard}
           {finished ? null : d.pick ? (
             <div class="tide-waiting">

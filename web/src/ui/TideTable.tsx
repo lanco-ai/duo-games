@@ -6,6 +6,8 @@ import type { Transport } from "../net/transport";
 import type { Profile, Seat } from "../../../shared/protocol";
 import { TideBoard } from "../games/Tide";
 import { TideMini } from "../art/tide";
+import { DecorArt, ItemArt } from "../art/island";
+import { DECOR, type Item } from "../../../shared/island/rules";
 import "../games/tide.css";
 
 export function TideTable(p: {
@@ -129,6 +131,11 @@ export function TideTable(p: {
             send={(cmd, payload) => call({ cmd, ...payload })}
             runKey={m.id}
             back={() => show(false)}
+            note={
+              m.turn === 0 && !m.finished && m.brought > 0
+                ? `这盘带了 ${m.brought} 张岛上做的牌`
+                : null
+            }
             extra={
               !m.finished &&
               (m.together || m.deadline > 0) && (
@@ -179,6 +186,34 @@ export function TideTable(p: {
                 <em>你</em> {m.scores[me]} : {m.scores[other]}{" "}
                 <em>{partner}</em>
               </span>
+              {m.reward && (
+                <div class="tide-reward">
+                  {m.reward.kind === "decor" ? (
+                    <>
+                      <span class="tide-reward-art">
+                        <DecorArt id={m.reward.decor} />
+                      </span>
+                      <span>
+                        得到
+                        {DECOR.find((d) => d.id === m.reward.decor)?.name}
+                        ，摆在你的岸上了
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span class="tide-reward-items">
+                        {(Object.keys(m.reward.items) as Item[]).map((k) => (
+                          <span>
+                            <ItemArt item={k} />
+                            <b>{m.reward.items[k]}</b>
+                          </span>
+                        ))}
+                      </span>
+                      <span>得到一包种子，已放进背包</span>
+                    </>
+                  )}
+                </div>
+              )}
               <button class="tide-go" onClick={() => void call({ cmd: "new" })}>
                 再来一局
               </button>

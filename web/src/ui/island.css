@@ -36,6 +36,8 @@
 .isle .world {
   position: absolute;
   inset: calc(var(--hud-top) + 84px) 12px max(16px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
   display: grid;
   grid-template-rows: auto clamp(48px, 9vh, 96px) auto;
   align-content: center;
@@ -152,7 +154,8 @@
 
 /* ---------- 地块 ---------- */
 .isle .plots {
-  --size: clamp(64px, 21vw, 100px);
+  /* 手机上一行最多 4 块，按屏幕宽度缩，地多了也放得下 */
+  --size: min(clamp(56px, 21vw, 100px), calc((100vw - 150px) / 4));
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -160,7 +163,7 @@
   max-width: calc(var(--size) * 4 + 36px);
 }
 .isle .shore.theirs .plots {
-  --size: clamp(48px, 14vw, 76px);
+  --size: min(clamp(44px, 14vw, 76px), calc((100vw - 170px) / 4));
   gap: 10px;
 }
 @media (min-aspect-ratio: 5/4) and (min-width: 900px) {
@@ -405,6 +408,8 @@
 /* ---------- 海峡与航行的纸船 ---------- */
 .isle .strait {
   position: relative;
+  justify-self: stretch;
+  width: 100%;
 }
 .isle .sailing {
   --t: 0;
@@ -1274,4 +1279,57 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* 装饰：摆在各自岸上；地标：立在海峡里 */
+.isle .decor-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  max-width: calc(var(--size, 96px) * 4 + 36px);
+}
+.isle .decor {
+  width: clamp(34px, 9vw, 52px);
+  height: clamp(34px, 9vw, 52px);
+  animation: isle-crop-in 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.isle .decor svg {
+  width: 100%;
+  height: 100%;
+}
+.isle .landmarks {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  pointer-events: none;
+}
+.isle .landmark {
+  width: clamp(44px, 12vw, 64px);
+  height: clamp(52px, 14vw, 76px);
+}
+.isle .landmark svg {
+  width: 100%;
+  height: 100%;
+}
+@media (min-aspect-ratio: 5/4) and (min-width: 900px) {
+  .isle .landmarks {
+    flex-direction: column;
+  }
+  .isle .landmark {
+    width: 72px;
+    height: 86px;
+  }
+}
+.isle .build-unlock {
+  margin: 0 0 4px;
+  padding: 6px 12px;
+  border: 2.5px dashed #c99a52;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 14px;
+  text-align: center;
 }

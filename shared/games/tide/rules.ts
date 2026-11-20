@@ -129,10 +129,23 @@ export function tideTable(random: () => number) {
   return t;
 }
 
-export function newGame(seed: number): TideState {
+/** 牌组：先放自己带来的牌（最多 12 张，来自半途岛），不足的从洗过的基础牌组里补，再整体洗一次 */
+export function buildDeck(own: Card[], random: () => number): Card[] {
+  const mine = own.slice(0, BASE_DECK.length);
+  const fill = shuffle(BASE_DECK, random).slice(
+    0,
+    BASE_DECK.length - mine.length,
+  );
+  return shuffle([...mine, ...fill], random);
+}
+
+export function newGame(
+  seed: number,
+  own: [Card[], Card[]] = [[], []],
+): TideState {
   const random = rng(seed);
   const tides = tideTable(random);
-  const decks = [shuffle(BASE_DECK, random), shuffle(BASE_DECK, random)] as [
+  const decks = [buildDeck(own[0], random), buildDeck(own[1], random)] as [
     Card[],
     Card[],
   ];

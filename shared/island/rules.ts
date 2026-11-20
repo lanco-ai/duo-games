@@ -6,7 +6,7 @@
 import type { Seat } from "../protocol";
 
 export const HOUR = 3_600_000;
-export const MAX_LEVEL = 5;
+export const MAX_LEVEL = 10;
 export const BOAT_MS = HOUR;
 export const NOTE_MAX = 40;
 
@@ -76,7 +76,34 @@ export const BOAT_COST: Partial<Record<Item, number>> = { paper: 1 };
 export function upgradeNeeds(level: number): Partial<Record<Item, number>> {
   return { cloth: level * 2, stone: level * 2, coral: level * 2 };
 }
-export const plotCount = (level: number) => 2 + level;
+/** 每边地块：1 级 3 块，每升一级加 1 块，8 块封顶（6 级） */
+export const plotCount = (level: number) => Math.min(8, 2 + level);
+/** 7–10 级各解锁一座地标，摆在两岸之间 */
+export const LANDMARKS: Record<number, { id: string; name: string }> = {
+  7: { id: "windmill", name: "风车" },
+  8: { id: "swing", name: "秋千" },
+  9: { id: "observatory", name: "观星台" },
+  10: { id: "lighthouse", name: "灯塔" },
+};
+/** 升到这一级时解锁什么（给建设箱面板看） */
+export function unlockAt(level: number): string {
+  if (LANDMARKS[level]) return "地标 · " + LANDMARKS[level].name;
+  return plotCount(level) > plotCount(level - 1) ? "两边各多一块地" : "";
+}
+/** 赢一盘潮汐棋得到的装饰，按顺序轮换 */
+export const DECOR = [
+  { id: "flowerbed", name: "花坛" },
+  { id: "bench", name: "长椅" },
+  { id: "shells", name: "贝壳堆" },
+] as const;
+export type DecorId = (typeof DECOR)[number]["id"];
+const CARD_OF: Record<CardItem, "lamp" | "boat" | "net" | "stone" | "coral"> = {
+  "card-lamp": "lamp",
+  "card-boat": "boat",
+  "card-net": "net",
+  "card-stone": "stone",
+  "card-coral": "coral",
+};
 
 export interface Plot {
   crop: Crop | null;
@@ -100,6 +127,8 @@ export interface Island {
   box: Partial<Record<Item, number>>;
   boats: Boat[];
   createdAt: number;
+  /** 两边岸上的装饰（赢潮汐棋得来）；旧存档没有这个字段 */
+  decor?: [DecorId[], DecorId[]];
 }
 
 const emptyPlot = (): Plot => ({
@@ -119,7 +148,58 @@ export function newIsland(now: number): Island {
     box: {},
     boats: [],
     createdAt: now,
+    decor: [[], []],
   };
+}
+
+/** 读出旧存档时补上新字段 */
+export function normalize(s: Island): Island {
+  if (!s.decor) s.decor = [[], []];
+  return s;
+}
+
+/** 开潮汐棋时带走背包里做好的牌（最多 max 张），返回牌和新的岛 */
+export function withdrawCards(s0: Island, seat: Seat, max = 12) {
+  const s = normalize(structuredClone(s0)),
+    bag = s.bags[seat],
+    cards: ("lamp" | "boat" | "net" | "stone" | "coral")[] = [];
+  for (const item of Object.keys(CARD_OF) as CardItem[])
+    while ((bag[item] ?? 0) > 0 && cards.length < max) {
+      cards.push(CARD_OF[item]);
+      bag[item]! -= 1;
+      if (!bag[item]) delete bag[item];
+    }
+  return { island: s, cards };
+}
+
+export type Reward =
+  | { kind: "decor"; decor: DecorId }
+  | { kind: "seeds"; items: Partial<Record<Item, number>> };
+
+/** 潮汐棋下完的奖励：赢家得装饰（按已有数量轮换），其余得一包 3 个作物 */
+export function rewardFor(
+  s: Island,
+  seat: Seat,
+  won: boolean,
+  random: () => number,
+): Reward {
+  if (won) {
+    const owned = normalize(s).decor![seat].length;
+    return { kind: "decor", decor: DECOR[owned % DECOR.length].id };
+  }
+  const pool: Crop[] = ["berry", "wheat", "kelp", "cotton"],
+    items: Partial<Record<Item, number>> = {};
+  for (let i = 0; i < 3; i++) {
+    const c = pool[Math.floor(random() * pool.length)];
+    items[c] = (items[c] ?? 0) + 1;
+  }
+  return { kind: "seeds", items };
+}
+export function grantReward(s0: Island, seat: Seat, r: Reward): Island {
+  const s = normalize(structuredClone(s0));
+  if (r.kind === "decor") s.decor![seat].push(r.decor);
+  else give(s.bags[seat], r.items);
+  return s;
 }
 
 function fail(): never {

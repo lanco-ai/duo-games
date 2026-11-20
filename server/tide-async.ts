@@ -9,9 +9,11 @@ import {
   resolve,
   validPlay,
   winner,
+  type Card,
   type Play,
   type TideState,
 } from "../shared/games/tide/rules";
+import type { Reward } from "../shared/island/rules";
 import type { PushMessage } from "./push";
 
 export interface AsyncMatch {
@@ -22,6 +24,15 @@ export interface AsyncMatch {
   state: TideState;
   picks: [Play | null, Play | null];
   ended?: "abandoned";
+  /** 两人各从半途岛带来几张牌 */
+  brought?: [number, number];
+  /** 下完后两人各拿到的奖励 */
+  rewards?: [Reward, Reward];
+}
+/** 和半途岛的连接：开局取牌、下完发奖励 */
+export interface IslandLink {
+  takeCards(code: string, seat: Seat): Card[];
+  reward(code: string, seat: Seat, won: boolean): Reward;
 }
 export interface TideStore {
   tideLatest(code: string): AsyncMatch | null;
@@ -39,6 +50,7 @@ export class AsyncTides {
     private changed: (code: string) => void,
     private notify: (code: string, seat: Seat, message: PushMessage) => void,
     private names: (code: string) => [string, string],
+    private island?: IslandLink,
   ) {}
 
   private bothWatching(code: string, now: number) {
@@ -72,6 +84,8 @@ export class AsyncTides {
       ended: m.ended ?? null,
       winner: m.finishedAt !== null && !m.ended ? winner(s) : null,
       updatedAt: m.updatedAt,
+      brought: m.brought?.[seat] ?? 0,
+      reward: m.rewards?.[seat] ?? null,
     };
   }
 
@@ -95,13 +109,18 @@ export class AsyncTides {
     };
     if (cmd === "new") {
       if (m && m.finishedAt === null) throw new Error("INVALID");
+      const own: [Card[], Card[]] = [
+        this.island?.takeCards(code, 0) ?? [],
+        this.island?.takeCards(code, 1) ?? [],
+      ];
       m = {
         id: randomUUID(),
         createdAt: now,
         updatedAt: now,
         finishedAt: null,
-        state: newGame(randomInt(2 ** 31)),
+        state: newGame(randomInt(2 ** 31), own),
         picks: [null, null],
+        brought: [own[0].length, own[1].length],
       };
       this.store.tideSave(code, m);
       this.live.delete(code);
@@ -154,6 +173,13 @@ export class AsyncTides {
     if (m.state.turn >= TURNS) {
       m.finishedAt = now;
       this.live.delete(code);
+      if (this.island) {
+        const w = winner(m.state);
+        m.rewards = [
+          this.island.reward(code, 0, w === 0),
+          this.island.reward(code, 1, w === 1),
+        ];
+      }
     } else if (this.live.has(code))
       this.live.set(code, now + REVEAL_MS + SECONDS * 1000);
     if (tellSeat === undefined || this.seen(code, tellSeat, now)) return;

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  DECOR,
+  LANDMARKS,
+  grantReward,
+  normalize,
+  rewardFor,
+  unlockAt,
+  withdrawCards,
   BOAT_MS,
   HOUR,
   MAX_LEVEL,
@@ -128,7 +135,7 @@ describe("island rules", () => {
     let now = T0;
     const visits = [8, 12.5, 22];
     let day = 0;
-    for (; day < 14 && s.level < MAX_LEVEL; day++)
+    for (; day < 14 && s.level < 5; day++)
       for (const h of visits) {
         now = T0 + day * 24 * HOUR + h * HOUR;
         for (const seat of [0, 1] as Seat[]) {
@@ -165,8 +172,97 @@ describe("island rules", () => {
           );
         }
       }
-    expect(s.level).toBe(MAX_LEVEL);
+    expect(s.level).toBe(5);
     expect(day).toBeGreaterThanOrEqual(6);
     expect(day).toBeLessThanOrEqual(9);
+  });
+
+  it("caps plots at 8 per side and unlocks a landmark at levels 7–10", () => {
+    expect([1, 5, 6, 7, 10].map(plotCount)).toEqual([3, 7, 8, 8, 8]);
+    expect(MAX_LEVEL).toBe(10);
+    expect(unlockAt(6)).toBe("两边各多一块地");
+    expect(unlockAt(7)).toBe("地标 · " + LANDMARKS[7].name);
+    expect(Object.keys(LANDMARKS)).toEqual(["7", "8", "9", "10"]);
+  });
+
+  it("hands island-made cards to the tide deck and removes them from the bag", () => {
+    const s = newIsland(T0);
+    s.bags[0] = { "card-lamp": 9, "card-net": 5, berry: 2 };
+    const r = withdrawCards(s, 0);
+    expect(r.cards).toHaveLength(12);
+    expect(r.cards.filter((c) => c === "lamp")).toHaveLength(9);
+    expect(r.cards.filter((c) => c === "net")).toHaveLength(3);
+    expect(r.island.bags[0]).toEqual({ "card-net": 2, berry: 2 });
+    expect(s.bags[0]["card-lamp"]).toBe(9); // 不改原对象
+    expect(withdrawCards(s, 1).cards).toEqual([]);
+  });
+
+  it("rewards the winner with rotating decor and the other with a 3-crop seed pack", () => {
+    let s = newIsland(T0);
+    let random = 0.1;
+    const rnd = () => (random = (random * 7.3) % 1);
+    for (let i = 0; i < 4; i++)
+      s = grantReward(s, 0, rewardFor(s, 0, true, rnd));
+    expect(s.decor![0]).toEqual([
+      DECOR[0].id,
+      DECOR[1].id,
+      DECOR[2].id,
+      DECOR[0].id,
+    ]);
+    const pack = rewardFor(s, 1, false, rnd);
+    expect(pack.kind).toBe("seeds");
+    s = grantReward(s, 1, pack);
+    expect(Object.values(s.bags[1]).reduce((a, b) => a! + b!, 0)).toBe(3);
+  });
+
+  it("upgrades islands saved before decorations existed", () => {
+    const old = newIsland(T0) as any;
+    delete old.decor;
+    expect(normalize(old).decor).toEqual([[], []]);
+  });
+
+  it("reaches level 10 in roughly three weeks of daily play", () => {
+    let s = newIsland(T0),
+      day = 0;
+    for (; day < 40 && s.level < MAX_LEVEL; day++)
+      for (const h of [8, 12.5, 22]) {
+        const now = T0 + day * 24 * HOUR + h * HOUR;
+        for (const seat of [0, 1] as Seat[]) {
+          const tryAct = (a: IslandAction) => {
+            try {
+              s = act(s, seat, a, now);
+              return true;
+            } catch {
+              return false;
+            }
+          };
+          for (const b of [...s.boats]) tryAct({ cmd: "open", boat: b.id });
+          s.plots[seat].forEach((_, i) => tryAct({ cmd: "harvest", plot: i }));
+          s.plots[1 - seat].forEach((_, i) =>
+            tryAct({ cmd: "water", plot: i }),
+          );
+          for (const out of ["cloth", "stone", "coral", "paper"] as const)
+            while (tryAct({ cmd: "craft", out }));
+          for (const item of ["cloth", "stone", "coral"] as const)
+            while (tryAct({ cmd: "contribute", item, count: 1 }));
+          const special = seat === 0 ? "stone" : "coral";
+          if ((s.bags[seat][special] ?? 0) > 0 && (s.bags[seat].paper ?? 0) > 0)
+            tryAct({
+              cmd: "send",
+              items: { [special]: s.bags[seat][special]! },
+              note: "",
+            });
+          const crops =
+            seat === 0
+              ? (["stoneflower", "cotton", "wheat"] as const)
+              : (["coralbud", "cotton", "wheat"] as const);
+          s.plots[seat].forEach((_, i) =>
+            tryAct({ cmd: "plant", plot: i, crop: crops[i % crops.length] }),
+          );
+        }
+      }
+    expect(s.level).toBe(MAX_LEVEL);
+    expect(day).toBeGreaterThanOrEqual(14);
+    expect(day).toBeLessThanOrEqual(28);
   });
 });
